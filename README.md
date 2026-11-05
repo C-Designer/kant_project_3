@@ -44,6 +44,28 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 미정. 스택 확정 후 작성한다. 데이터셋은 `data/`에 두고 커밋하지 않는다. 키는 `.env`에만 둔다(`.env.example` 참고).
 
+### 데이터셋 받기
+
+원본 ZIP은 레포에 넣지 않고 [Releases](https://github.com/C-Designer/kant_project_3/releases)에 난이도별로 둔다 (Notion 원본, 파일명·내용 수정 없음). Basic만 받으면 된다. Intermediate·Advanced는 Basic을 끝내고 여유가 있을 때만 쓴다.
+
+| 태그 | 내용 | ZIP |
+|---|---|---|
+| `data-basic-v1` | 해운 Basic, PDF 15개 (360쪽) | 2개 |
+| `data-intermediate-v1` | 해운 Intermediate, PDF 50개 (3,750쪽) | 4개 |
+| `data-advanced-v1` | 해운 Advanced, PDF 120개 (18,000쪽) | 9개 |
+
+```bash
+mkdir -p data/shipping && cd data/shipping
+gh release download data-basic-v1 -R C-Designer/kant_project_3 -p '*.zip' -p 'SHA256SUMS*'
+shasum -a 256 -c SHA256SUMS_Basic.txt
+for z in *.zip; do unzip -oq "$z"; done
+ls documents | wc -l   # 15
+```
+
+- ZIP을 **같은 폴더에 각각** 푼다. 이어붙이지 않는다. 중복된 `evaluation/*.json`은 동일하므로 덮어써도 된다.
+- 다른 난이도는 별도 폴더(`data/shipping-intermediate/` 등)에 푼다. 섞지 않는다.
+- `gh`가 없으면 Release 페이지에서 직접 받는다.
+
 ## Langfuse 확인 방법
 
 미정. 프로젝트·필터·대표 요청 ID를 여기 적는다.
