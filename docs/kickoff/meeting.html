@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html,body{margin:0}body{font-size:14px}</style>
+<title>proj_3rd 킥오프</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --bg:#f5f7f9; --paper:#ffffff; --fg:#1b2731; --muted:#5b6b78; --line:#d6dde3; --soft:#eaeff3;
+  --accent:#0f6e8c; --warn:#b4452c;
+  --search:#1e7f8f; --answer:#a86b0a; --metrics:#6a58b5; --judge:#b5436e; --platform:#4b6578; --skeleton:#7a7f85; --docs:#8a7f5a;
+  --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1000px;margin:0 auto}
+header.top{padding-block:28px 8px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:.3em 0 .35em;text-wrap:balance;font-weight:700}
+h2{font-size:20px;margin:40px 0 10px;text-wrap:balance}
+h3{font-size:15.5px;margin:22px 0 6px}
+p,li{max-width:70ch}
+.lede{color:var(--muted);font-size:15px;margin:0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+figure{margin:16px 0 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+.fig svg{display:block;min-width:720px;max-width:100%;height:auto;margin:0 auto;font-family:var(--sans)}
+figcaption{font-size:13px;color:var(--muted);margin:8px 4px 0;max-width:none}
+svg text{fill:currentColor;font-size:12px}
+svg .t{font-weight:600;font-size:12.5px}
+svg .f{font-family:var(--mono);font-size:12px;font-weight:500}
+svg .s{font-size:10.5px;fill:var(--muted)}
+svg .lbl{font-size:10.5px;fill:var(--muted)}
+svg .box rect{fill:var(--paper);stroke:currentColor;stroke-width:1.1;rx:5}
+svg .box.search rect{fill:var(--search);stroke:none} svg .box.answer rect{fill:var(--answer);stroke:none}
+svg .box.metrics rect{fill:var(--metrics);stroke:none} svg .box.judge rect{fill:var(--judge);stroke:none}
+svg .box.platform rect{fill:var(--platform);stroke:none} svg .box.skeleton rect{fill:var(--skeleton);stroke:none}
+svg .box.docs rect{fill:var(--docs);stroke:none}
+svg .box.search text,svg .box.answer text,svg .box.metrics text,svg .box.judge text,svg .box.platform text,svg .box.skeleton text,svg .box.docs text{fill:#fff}
+svg .box.search .s,svg .box.answer .s,svg .box.metrics .s,svg .box.judge .s,svg .box.platform .s,svg .box.skeleton .s,svg .box.docs .s{fill:rgba(255,255,255,.85)}
+svg .ar{fill:none;stroke:currentColor;stroke-width:1.2}
+svg .ar.dash{stroke-dasharray:4 3;stroke:var(--muted)}
+svg .ar.ban{stroke:var(--warn);stroke-dasharray:5 3;stroke-width:1.4}
+svg .band rect{fill:var(--soft);stroke:var(--line);rx:6}
+svg .col rect{fill:var(--paper);stroke:var(--line);rx:8}
+svg .milestone rect{fill:var(--accent);rx:3}
+svg .milestone text{fill:#fff;font-weight:600;font-size:10.5px}
+svg .freeze{stroke:var(--warn);stroke-width:1.4;stroke-dasharray:5 3}
+svg .grid{stroke:var(--line);stroke-width:1}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.tbl{overflow-x:auto}
+.chip{display:inline-block;font-family:var(--mono);font-size:11.5px;color:#fff;padding:1px 7px;border-radius:4px;line-height:1.5}
+.chip.search{background:var(--search)}.chip.answer{background:var(--answer)}.chip.metrics{background:var(--metrics)}
+.chip.judge{background:var(--judge)}.chip.platform{background:var(--platform)}.chip.skeleton{background:var(--skeleton)}.chip.docs{background:var(--docs)}
+.chip.iface{background:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12.5px;color:var(--muted);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.card{display:block;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;color:inherit;text-decoration:none;min-width:0}
+.card:hover,.card:focus-visible{border-color:var(--accent);outline:none}
+.card b{display:block;font-size:15.5px;margin-bottom:4px}
+.card span{font-size:13px;color:var(--muted)}
+.note{border-left:3px solid var(--accent);padding:6px 12px;background:var(--paper);font-size:14px;margin:14px 0}
+.note.warn{border-color:var(--warn)}
+pre.tree{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:12px 0 0}
+pre.tree i{font-style:normal;color:var(--muted)}
+ol.steps{padding-left:1.3em}
+ol.steps li{margin:4px 0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.two>div{min-width:0}
+nav.back{font-size:13px;margin-top:10px}
+a{color:var(--accent)}
+footer{margin-top:48px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.agenda{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:0 0 8px;padding:8px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.agenda a{flex:0 0 auto;font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;background:var(--paper);white-space:nowrap}
+nav.agenda a:hover,nav.agenda a:focus-visible{border-color:var(--accent);outline:none}
+section.item{padding:28px 0 8px;border-top:1px solid var(--line);scroll-margin-top:64px}
+section.item:first-of-type{border-top:0}
+.q{font-size:clamp(20px,3vw,26px);margin:4px 0 6px;text-wrap:balance}
+.say{font-size:15.5px;max-width:72ch;margin:0 0 12px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.tile b{display:block;margin-bottom:3px}
+.tile span{font-size:13px;color:var(--muted)}
+.check{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.check li{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14.5px}
+.check li::before{content:"";flex:0 0 18px;height:18px;border:1.6px solid var(--muted);border-radius:4px;margin-top:3px}
+.steps2{counter-reset:s;display:grid;gap:10px;margin-top:10px}
+.step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.step>div{min-width:0}
+.step b{display:block;margin-bottom:2px}
+.step p{margin:2px 0;font-size:14px}
+pre.cmd{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;margin:6px 0 0}
+pre.cmd i{font-style:normal;color:var(--muted)}
+.appendix{font-size:13.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px;margin-top:8px}
+.kv b{color:var(--muted);font-weight:500}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="eyebrow">KANT 3차 프로젝트 · kant_project_3 · 2026-11-05 킥오프 · 같이 보며 넘기는 자료</div>
+<h1>proj_3rd 킥오프</h1>
+<p class="lede">위에서 아래로 한 번 내려가면 끝. 안건마다 질문 하나, 그림 하나, 말할 것 세 줄. 더 깊은 내용은 각 안건 끝의 부록 링크.</p></header>
+<nav class="agenda" aria-label="안건">
+<a href="#s1">1 만드는 것</a><a href="#s2">2 누가 무엇을</a><a href="#s3">3 돌아가는 길</a><a href="#s4">4 비교 실험</a><a href="#s5">5 레포</a><a href="#s6">6 일하는 법</a><a href="#s7">7 일정</a><a href="#s8">8 오늘 정할 것</a>
+</nav>
+
+<section class="item" id="s1"><div class="eyebrow">안건 1 · 3분</div>
+<h2 class="q">우리는 무엇을 만드나?</h2>
+<p class="say">해운 회사 물류 담당자가 PDF 15개를 뒤지지 않고 물어보면, 근거 문서와 페이지를 붙여 답하는 서비스. 그리고 검색 방식 세 가지를 같은 질문으로 돌려 어느 것이 나은지 숫자로 보여주는 비교표.</p>
+<figure><div class="fig"><svg viewBox="0 0 980 230" role="img" aria-label="PDF 15개를 색인하고, 질문에 검색·답변·출처로 응답하는 서비스를 세 검색 방식으로 돌려 비교표를 만든다" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><g class="box "><rect x="20" y="40" width="170" height="56"/><text class="t" x="105.0" y="65.0" text-anchor="middle">PDF 15개 · 360쪽</text><text class="s" x="105.0" y="80.0" text-anchor="middle">해운 · Basic · data/shipping/</text></g><g class="box search"><rect x="230" y="40" width="170" height="56"/><text class="f" x="315.0" y="65.0" text-anchor="middle">색인</text><text class="s" x="315.0" y="80.0" text-anchor="middle">청킹 → E5 임베딩 → Qdrant</text></g><g class="box platform"><rect x="440" y="40" width="250" height="56"/><text class="f" x="565.0" y="65.0" text-anchor="middle">질문 → 검색 → 답변 → 출처</text><text class="s" x="565.0" y="80.0" text-anchor="middle">gpt-6-luna · 문서명·페이지 · 되묻기·보류</text></g><g class="box metrics"><rect x="730" y="40" width="230" height="56"/><text class="f" x="845.0" y="65.0" text-anchor="middle">같은 질문 × 3방식 → 비교표</text><text class="s" x="845.0" y="80.0" text-anchor="middle">Hit/Recall · Faithfulness · Judge · 시간·토큰</text></g><polyline class="ar " points="190,68 230,68" marker-end="url(#a)"/><polyline class="ar " points="400,68 440,68" marker-end="url(#a)"/><polyline class="ar " points="690,68 730,68" marker-end="url(#a)"/><text class="lbl" x="710" y="30" text-anchor="middle">수십 번 반복</text><g class="box search"><rect x="400" y="150" width="180" height="52"/><text class="f" x="490.0" y="173.0" text-anchor="middle">naive</text><text class="s" x="490.0" y="188.0" text-anchor="middle">벡터 유사도만</text></g><g class="box search"><rect x="590" y="150" width="180" height="52"/><text class="f" x="680.0" y="173.0" text-anchor="middle">hybrid</text><text class="s" x="680.0" y="188.0" text-anchor="middle">벡터 + 키워드 결합</text></g><g class="box search"><rect x="780" y="150" width="180" height="52"/><text class="f" x="870.0" y="173.0" text-anchor="middle">hybrid_rerank</text><text class="s" x="870.0" y="188.0" text-anchor="middle">hybrid 후보를 리랭커로 재정렬</text></g><polyline class="ar " points="565,96 565,130 490,130 490,150" marker-end="url(#a)"/><polyline class="ar " points="565,130 680,130 680,150" marker-end="url(#a)"/><polyline class="ar " points="680,130 870,130 870,150" marker-end="url(#a)"/><text class="lbl" x="380" y="135" text-anchor="end">검색 방식만 바꿔 세 번 실행 (PDF·청크·임베딩·프롬프트·k는 동일)</text><text class="t" x="20" y="150" text-anchor="start">필수 4과제</text><text class="lbl" x="20" y="172" text-anchor="start">① PDF 근거로 답하고 문서명·페이지 표시</text><text class="lbl" x="20" y="188" text-anchor="start">② 세 방식을 같은 조건으로 비교해 하나 선택</text><text class="lbl" x="20" y="204" text-anchor="start">③ FastAPI + LangChain + Langfuse 로 한 요청에 연결</text><text class="lbl" x="20" y="220" text-anchor="start">④ 평가셋으로 검색·답변·운영·보안 지표 확인</text></svg></div><figcaption>그림. 왼쪽에서 오른쪽으로: 문서 → 색인 → 서비스 → 비교. 아래 세 상자가 비교 대상인 검색 방식. 나머지는 전부 같게 두고 검색만 바꾼다.</figcaption></figure>
+<div class="grid4">
+<div class="tile"><b>제출</b><span>11/13(금) 13:00. 당일 오후 발표. 오늘부터 8일</span></div>
+<div class="tile"><b>완료 기준</b><span>맞히는 수가 아니라 "다시 실행할 수 있는가"와 "모두가 자기 작업을 설명할 수 있는가"</span></div>
+<div class="tile"><b>안 하는 것</b><span>대화 메모리, 화면 UI, 파인튜닝, 배포, OCR. 필수 4개 끝내기 전엔 선택 과제도 안 한다</span></div>
+<div class="tile"><b>금지</b><span>정답 파일을 검색·프롬프트에 넣기, 키·데이터 커밋, 좋은 결과만 골라 싣기</span></div>
+</div>
+<p class="appendix">부록: <code>docs/requirements.md</code>(발제 요약), <code>docs/evaluation.md</code>(채점 규칙)</p>
+</section>
+
+<section class="item" id="s2"><div class="eyebrow">안건 2 · 3분</div>
+<h2 class="q">누가 무엇을 맡나?</h2>
+<p class="say">영역 다섯 개를 한 사람씩. 레이어(DB·API·화면)가 아니라 "무엇의 품질을 책임지나"로 나눴다. 전원이 에이전트로 코드를 쓰니 코드 양이 아니라 판단과 합치기가 병목이기 때문이다. 소통은 Slack <code>proj_3rd</code>, 모임은 시간 될 때 모이고 리드가 참석한다.</p>
+<figure><div class="fig"><svg viewBox="0 0 720 240" role="img" aria-label="다섯 영역과 담당자, 그리고 데이터를 직접 주고받는 짝 세 쌍: search와 answer, metrics와 judge, platform과 metrics" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><g class="box search"><rect x="20" y="40" width="130" height="46"/><text class="f" x="85.0" y="60.0" text-anchor="middle">search</text><text class="s" x="85.0" y="75.0" text-anchor="middle">윤승환</text></g><g class="box answer"><rect x="200" y="40" width="130" height="46"/><text class="f" x="265.0" y="60.0" text-anchor="middle">answer</text><text class="s" x="265.0" y="75.0" text-anchor="middle">천희재</text></g><g class="box metrics"><rect x="400" y="40" width="130" height="46"/><text class="f" x="465.0" y="60.0" text-anchor="middle">metrics</text><text class="s" x="465.0" y="75.0" text-anchor="middle">오주헌</text></g><g class="box judge"><rect x="580" y="40" width="130" height="46"/><text class="f" x="645.0" y="60.0" text-anchor="middle">judge</text><text class="s" x="645.0" y="75.0" text-anchor="middle">김경민</text></g><g class="box platform"><rect x="400" y="160" width="130" height="46"/><text class="f" x="465.0" y="180.0" text-anchor="middle">platform</text><text class="s" x="465.0" y="195.0" text-anchor="middle">김창동 · 리드</text></g><polyline class="ar " points="150,63 200,63" marker-end="url(#a)"/><text class="lbl" x="175" y="30" text-anchor="middle">조각(청크)</text><polyline class="ar " points="530,63 580,63" marker-end="url(#a)"/><text class="lbl" x="555" y="30" text-anchor="middle">실행 결과 ↔ 채점</text><polyline class="ar " points="465,160 465,86" marker-end="url(#a)"/><text class="lbl" x="472" y="126" text-anchor="start">run_query() · 측정값</text><text class="lbl" x="20" y="130" text-anchor="start">짝 = 데이터를 직접 주고받는 둘. 바꾸기 전에 서로 알려준다.</text><text class="lbl" x="20" y="150" text-anchor="start">리드 = platform 담당 + 모든 PR 리뷰·머지 + 보드 점검.</text><text class="lbl" x="20" y="170" text-anchor="start">리뷰는 리드 혼자. 짝은 리뷰 의무 없음.</text><text class="lbl" x="20" y="206" text-anchor="start">platform ↔ 나머지 전부: llm.call(), tracing.span() 같은 공용 함수를 제공</text></svg></div><figcaption>그림. 다섯 영역과 짝. 화살표가 있는 둘은 데이터를 직접 주고받으므로 바꾸기 전에 서로 알려준다.</figcaption></figure>
+<div class="tbl"><table>
+<tr><th>영역</th><th>담당 · GitHub</th><th>한 줄로</th><th>가장 어려운 것</th></tr>
+<tr><td><span class="chip search">search</span></td><td>윤승환<br><span class="mono" style="color:var(--muted)">@yshzjq</span></td><td>PDF를 조각내 색인하고, 질문에 맞는 조각을 세 방식으로 찾아준다</td><td>표·단위·적용일이 끊기지 않게 청킹</td></tr>
+<tr><td><span class="chip answer">answer</span></td><td>천희재<br><span class="mono" style="color:var(--muted)">@rjqnrll7-cmyk</span></td><td>조각을 보고 답을 쓰고, 되물을지·보류할지 판단하고, 출처를 붙인다</td><td>프롬프트 튜닝은 끝이 없음</td></tr>
+<tr><td><span class="chip metrics">metrics</span></td><td>오주헌<br><span class="mono" style="color:var(--muted)">@ohjuhun1119</span></td><td>질문 묶음을 세 방식으로 자동 실행하고 검색·운영 지표를 집계해 비교표를 만든다</td><td>None을 0으로 만들지 않는 집계</td></tr>
+<tr><td><span class="chip judge">judge</span></td><td>김경민<br><span class="mono" style="color:var(--muted)">@kokoball-eval</span></td><td>답변을 정답과 대조해 채점한다(RAGAS, Judge 4항목). 대표 사례는 사람이 원문 확인</td><td>해당 없음/평가 불가 규칙의 함정</td></tr>
+<tr><td><span class="chip platform">platform</span></td><td>김창동(리드)<br><span class="mono" style="color:var(--muted)">@C-Designer</span></td><td>뼈대, API, 공통 설정, LLM 호출 래퍼, Langfuse, README, 보안 비교, 시연. 그리고 모든 PR 리뷰·머지</td><td>platform이 밀리면 리뷰가 우선</td></tr>
+</table></div>
+<p class="appendix">부록: <a href="flow.html">질문이 답이 되는 과정</a> 3·4절(주고받는 데이터와 짝) · <code>docs/adr/0002</code></p>
+</section>
+
+<section class="item" id="s3"><div class="eyebrow">안건 3 · 5분</div>
+<h2 class="q">질문 하나는 어떻게 답이 되나?</h2>
+<p class="say">입구(platform)가 질문을 받아 번호표를 붙이고, search가 조각을 찾고, answer가 그 조각만 보고 답을 쓰고, platform이 시간·토큰을 재서 Langfuse에 남긴다. 실험 러너도 같은 함수를 부른다.</p>
+<figure><div class="fig"><svg viewBox="0 0 1040 390" role="img" aria-label="질문이 /query로 들어와 platform, search, answer를 거쳐 응답으로 돌아오는 경로와, 모든 단계가 request_id 하나로 Langfuse에 남는 구조" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><g class="box "><rect x="20" y="70" width="150" height="52"/><text class="t" x="95.0" y="93.0" text-anchor="middle">사용자</text><text class="s" x="95.0" y="108.0" text-anchor="middle">FastAPI docs / 러너</text></g><g class="box platform"><rect x="190" y="70" width="150" height="52"/><text class="f" x="265.0" y="93.0" text-anchor="middle">POST /query</text><text class="s" x="265.0" y="108.0" text-anchor="middle">빈 질문·잘못된 mode는 422</text></g><g class="box platform"><rect x="360" y="70" width="150" height="52"/><text class="f" x="435.0" y="93.0" text-anchor="middle">run_query()</text><text class="s" x="435.0" y="108.0" text-anchor="middle">request_id(번호표) 생성</text></g><g class="box search"><rect x="530" y="70" width="150" height="52"/><text class="f" x="605.0" y="93.0" text-anchor="middle">retrieve()</text><text class="s" x="605.0" y="108.0" text-anchor="middle">조각 k개 찾기 · mode</text></g><g class="box answer"><rect x="700" y="70" width="150" height="52"/><text class="f" x="775.0" y="93.0" text-anchor="middle">build_context()</text><text class="s" x="775.0" y="108.0" text-anchor="middle">S1,S2 번호 · 토큰 한도</text></g><g class="box answer"><rect x="870" y="70" width="150" height="52"/><text class="f" x="945.0" y="93.0" text-anchor="middle">generate()</text><text class="s" x="945.0" y="108.0" text-anchor="middle">프롬프트 · JSON 검증</text></g><polyline class="ar " points="170,92 190,92" marker-end="url(#a)"/><text class="lbl" x="180.0" y="82" text-anchor="middle">question, mode</text><polyline class="ar " points="340,92 360,92" marker-end="url(#a)"/><text class="lbl" x="350.0" y="82" text-anchor="middle">QueryRequest</text><polyline class="ar " points="510,92 530,92" marker-end="url(#a)"/><text class="lbl" x="520.0" y="82" text-anchor="middle">query</text><polyline class="ar " points="680,92 700,92" marker-end="url(#a)"/><text class="lbl" x="690.0" y="82" text-anchor="middle">list[RetrievedChunk]</text><polyline class="ar " points="850,92 870,92" marker-end="url(#a)"/><text class="lbl" x="860.0" y="82" text-anchor="middle">list[ContextChunk]</text><polyline class="ar " points="900,122 900,150 430,150 430,122" marker-end="url(#a)"/><text class="lbl" x="665" y="144" text-anchor="middle">LLMOutput + list[Citation]  (source_ids ⊆ 문맥 ID 검증 후)</text><polyline class="ar " points="400,122 400,200 90,200 90,122" marker-end="url(#a)"/><text class="lbl" x="240" y="194" text-anchor="middle">QueryResponse · status / answer / reason / citations</text><text class="lbl" x="240" y="214" text-anchor="middle">status ∈ answered · needs_clarification · abstained · error(코드가 정함)</text><polyline class="ar " points="980,122 980,210" marker-end="url(#a)"/><text class="lbl" x="988" y="170" text-anchor="start">messages · kind=service</text><g class="box platform"><rect x="870" y="210" width="150" height="52"/><text class="f" x="945.0" y="233.0" text-anchor="middle">platform.llm.call()</text><text class="s" x="945.0" y="248.0" text-anchor="middle">timeout·재시도·토큰·시간</text></g><polyline class="ar " points="940,262 940,300" marker-end="url(#a)"/><g class="box "><rect x="870" y="300" width="150" height="52"/><text class="f" x="945.0" y="323.0" text-anchor="middle">gpt-6-luna</text><text class="s" x="945.0" y="338.0" text-anchor="middle">발제 지정 생성 모델</text></g><text class="lbl" x="945" y="375" text-anchor="middle">llm.call()이 유일한 LLM 진입점</text><g class="band"><rect x="20" y="290" width="720" height="70"/></g><text class="t" x="380" y="314" text-anchor="middle">Langfuse 트레이스 — request_id 하나로 묶임</text><text class="lbl" x="380" y="333" text-anchor="middle">스팬 retrieve → build_context → generate → validate · 실제 모델 입출력 · 토큰 · 시간 · 비밀값 제외</text><text class="lbl" x="380" y="349" text-anchor="middle">retrieve 결과와 build_context 결과를 둘 다 남겨 “못 찾음”과 “찾았지만 잘림”을 구분</text><polyline class="ar dash" points="415,122 415,290" marker-end="url(#am)"/><text class="lbl" x="422" y="250" text-anchor="start">tracing.span()</text><polyline class="ar dash" points="870,236 800,236 800,325 740,325" marker-end="url(#am)"/><text class="lbl" x="806" y="290" text-anchor="start">generation 기록</text></svg></div><figcaption>그림. 윗줄이 가는 길, 아래 두 줄이 돌아오는 값. 색은 책임자. 회색 띠는 모든 단계가 번호표 하나로 Langfuse에 남는다는 뜻.</figcaption></figure>
+<ul>
+<li><b>왜 한 길인가.</b> API 응답과 실험 결과가 같은 코드를 지나야 비교가 공정하고, 측정 코드가 한 곳(<code>run_query</code>, <code>llm.call</code>)에만 있어도 된다.</li>
+<li><b>LLM은 직접 부르지 않는다.</b> <code>platform.llm.call()</code>을 통해야 timeout·재시도·토큰·기록이 붙는다.</li>
+<li><b>출처는 LLM이 만들지 않는다.</b> LLM은 <code>S1, S2</code> 같은 자료 번호만 쓰고, 코드가 문서명·페이지로 바꾼다. 없는 번호가 나오면 다시 만들게 한다.</li>
+</ul>
+<p class="appendix">부록: <a href="flow.html">질문이 답이 되는 과정</a> · <code>docs/specs/platform.md</code></p>
+</section>
+
+<section class="item" id="s4"><div class="eyebrow">안건 4 · 5분</div>
+<h2 class="q">세 방식은 어떻게 비교하나?</h2>
+<p class="say">metrics가 고른 질문을 세 방식으로 돌려 결과를 한 줄씩 저장하고, judge가 정답과 대조해 점수를 매기고, metrics가 둘을 합쳐 표로 만든다. 정답 파일은 채점에만 쓴다.</p>
+<figure><div class="fig"><svg viewBox="0 0 1090 380" role="img" aria-label="평가 루프: metrics가 질문을 세 방식으로 run_query에 돌려 RunRecord를 만들고, judge가 GroundTruth와 대조해 EvalRecord를 만들고, metrics가 비교표로 합친다. GroundTruth는 run_query 입력에 들어가지 않는다" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><g class="box "><rect x="20" y="40" width="150" height="52"/><text class="f" x="95.0" y="63.0" text-anchor="middle">evaluation/*.json</text><text class="s" x="95.0" y="78.0" text-anchor="middle">질문 · 정답 · 채점 기준</text></g><g class="box metrics"><rect x="200" y="40" width="150" height="52"/><text class="f" x="275.0" y="63.0" text-anchor="middle">metrics.loader</text><text class="s" x="275.0" y="78.0" text-anchor="middle">질문과 정답을 분리</text></g><g class="box metrics"><rect x="380" y="40" width="150" height="52"/><text class="f" x="455.0" y="63.0" text-anchor="middle">metrics.run</text><text class="s" x="455.0" y="78.0" text-anchor="middle">질문 × 3방식 실행</text></g><g class="box platform"><rect x="560" y="40" width="150" height="52"/><text class="f" x="635.0" y="63.0" text-anchor="middle">platform.run_query()</text><text class="s" x="635.0" y="78.0" text-anchor="middle">API와 같은 길</text></g><g class="box metrics"><rect x="740" y="40" width="150" height="52"/><text class="f" x="815.0" y="63.0" text-anchor="middle">RunRecord</text><text class="s" x="815.0" y="78.0" text-anchor="middle">&lt;mode&gt;.jsonl 한 줄씩</text></g><g class="box metrics"><rect x="200" y="180" width="150" height="52"/><text class="f" x="275.0" y="203.0" text-anchor="middle">GroundTruth</text><text class="s" x="275.0" y="218.0" text-anchor="middle">정답 문서 · 기대 동작 · 기준</text></g><g class="box judge"><rect x="740" y="180" width="150" height="52"/><text class="f" x="815.0" y="203.0" text-anchor="middle">judge.score()</text><text class="s" x="815.0" y="218.0" text-anchor="middle">RAGAS · Judge 4항목</text></g><g class="box platform"><rect x="920" y="180" width="150" height="52"/><text class="f" x="995.0" y="203.0" text-anchor="middle">llm.call(kind=eval)</text><text class="s" x="995.0" y="218.0" text-anchor="middle">채점 호출은 따로 센다</text></g><g class="box metrics"><rect x="380" y="310" width="150" height="52"/><text class="f" x="455.0" y="333.0" text-anchor="middle">Hit@k · Recall@k</text><text class="s" x="455.0" y="348.0" text-anchor="middle">정답 문서를 찾았나</text></g><g class="box metrics"><rect x="560" y="310" width="150" height="52"/><text class="f" x="635.0" y="333.0" text-anchor="middle">metrics.report</text><text class="s" x="635.0" y="348.0" text-anchor="middle">comparison.md (+CSV)</text></g><g class="box judge"><rect x="740" y="310" width="150" height="52"/><text class="f" x="815.0" y="333.0" text-anchor="middle">EvalRecord</text><text class="s" x="815.0" y="348.0" text-anchor="middle">eval.jsonl</text></g><g class="box platform"><rect x="920" y="310" width="150" height="52"/><text class="f" x="995.0" y="333.0" text-anchor="middle">record_score()</text><text class="s" x="995.0" y="348.0" text-anchor="middle">점수를 Langfuse에</text></g><polyline class="ar " points="170,62 200,62" marker-end="url(#a)"/><polyline class="ar " points="350,62 380,62" marker-end="url(#a)"/><text class="lbl" x="365" y="52" text-anchor="middle">id, question</text><polyline class="ar " points="530,62 560,62" marker-end="url(#a)"/><text class="lbl" x="545" y="52" text-anchor="middle">question, mode</text><polyline class="ar " points="710,62 740,62" marker-end="url(#a)"/><text class="lbl" x="725" y="52" text-anchor="middle">RunRecord</text><polyline class="ar " points="275,92 275,180" marker-end="url(#a)"/><text class="lbl" x="268" y="140" text-anchor="end">정답 측만 분리</text><polyline class="ar " points="815,92 815,180" marker-end="url(#a)"/><text class="lbl" x="822" y="140" text-anchor="start">runs (실패도 포함)</text><polyline class="ar " points="350,206 740,206" marker-end="url(#a)"/><text class="lbl" x="545" y="174" text-anchor="middle">truths · 답변이 만들어진 뒤에만</text><polyline class="ar " points="300,232 300,270 420,270 420,310" marker-end="url(#a)"/><text class="lbl" x="306" y="262" text-anchor="start">evidence_book_ids</text><polyline class="ar " points="760,92 760,125 490,125 490,310" marker-end="url(#a)"/><text class="lbl" x="496" y="160" text-anchor="start">retrieved_book_ids</text><polyline class="ar " points="890,206 920,206" marker-end="url(#a)"/><polyline class="ar " points="815,232 815,310" marker-end="url(#a)"/><text class="lbl" x="822" y="280" text-anchor="start">EvalRecord</text><polyline class="ar " points="870,232 870,280 995,280 995,310" marker-end="url(#a)"/><text class="lbl" x="932" y="275" text-anchor="middle">점수 붙이기</text><polyline class="ar " points="740,336 710,336" marker-end="url(#a)"/><text class="lbl" x="725" y="302" text-anchor="middle">question_id + mode 조인</text><polyline class="ar " points="530,336 560,336" marker-end="url(#a)"/><polyline class="ar ban" points="300,180 300,105 622,105" marker-end="url(#ab)"/><circle cx="635" cy="105" r="11" fill="none" stroke="var(--warn)" stroke-width="1.6"/><line x1="627" y1="113" x2="643" y2="97" stroke="var(--warn)" stroke-width="1.6"/><text x="652" y="101" class="lbl" style="fill:var(--warn)">금지: 정답·기준을</text><text x="652" y="115" class="lbl" style="fill:var(--warn)">run_query에 넣지 않음</text></svg></div><figcaption>그림. 실험이 도는 순서. 붉은 점선이 절대 가면 안 되는 길: 정답을 검색이나 프롬프트에 넣는 것.</figcaption></figure>
+<div class="tbl"><table>
+<tr><th>무엇을 재나</th><th>어떻게</th><th>담당</th></tr>
+<tr><td>검색이 정답 문서를 찾았나</td><td>Hit@k(하나라도), Recall@k(몇 개나). 문서 단위, k는 세 방식 동일</td><td><span class="chip metrics">metrics</span></td></tr>
+<tr><td>답이 찾은 자료에 근거했나</td><td>RAGAS Faithfulness. 입력은 실제 최종 문맥</td><td><span class="chip judge">judge</span></td></tr>
+<tr><td>답이 맞나</td><td>LLM Judge 4항목: 사실·조건·근거·판단 각 0/1. 해당 없음·평가 불가는 null</td><td><span class="chip judge">judge</span></td></tr>
+<tr><td>얼마나 걸리고 얼마나 쓰나</td><td>응답 시간, 오류율, 입·출력 토큰. 채점 호출은 따로 센다</td><td><span class="chip platform">platform</span> 측정 · <span class="chip metrics">metrics</span> 집계</td></tr>
+<tr><td>공격 문장에 넘어가나</td><td>최종 구성 1개 × 보안 질문 2개 × 기본/방어 프롬프트 = 답변 4개</td><td><span class="chip platform">platform</span></td></tr>
+</table></div>
+<p class="appendix">부록: <code>docs/evaluation.md</code> · <code>docs/specs/metrics.md</code>, <code>judge.md</code></p>
+</section>
+
+<section class="item" id="s5"><div class="eyebrow">안건 5 · 3분</div>
+<h2 class="q">레포에서 내 자리는 어디인가?</h2>
+<p class="say">지금 레포는 문서가 전부다. 코드는 영역별 README 한 줄씩. 뼈대가 11/6 오전에 들어오면 각자 <code>src/&lt;내 영역&gt;/</code>에서 시작한다.</p>
+<div class="two">
+<div><h3>내가 손대는 곳</h3>
+<div class="kv">
+<b>코드</b><span><code>src/&lt;내 영역&gt;/</code> 안에서만</span>
+<b>문서</b><span><code>docs/specs/&lt;내 영역&gt;.md</code>. "미정"을 값으로 채우는 것이 첫 작업</span>
+<b>README</b><span>제출 전 내 영역 절(실행 방법·설정·한계·기여)</span>
+<b>Issue</b><span>내 이름으로 열린 것. 새 작업은 내가 Issue를 만든다</span>
+</div></div>
+<div><h3>안 건드리는 곳</h3>
+<div class="kv">
+<b>남의 영역 폴더</b><span>읽기는 자유, 수정은 Issue나 PR 코멘트로 부탁</span>
+<b><code>contracts.py</code> · <code>config.py</code></b><span>바꾸려면 PR 제목에 <code>[interface]</code> + 짝에게 먼저</span>
+<b><code>data/</code> · <code>.env</code></b><span>절대 커밋하지 않는다. 키 이름만 <code>.env.example</code>에</span>
+<b>ADR</b><span>고치지 않는다. 결정이 바뀌면 새 번호로</span>
+</div></div>
+</div>
+<p class="appendix">부록: <a href="repo.html">레포에 무엇이 어디 있나</a> (파일 트리, 문서 세 종류) · <code>AGENTS.md</code></p>
+</section>
+
+<section class="item" id="s6"><div class="eyebrow">안건 6 · 7분</div>
+<h2 class="q">일은 어떻게 받아서 어떻게 넣나?</h2>
+<p class="say">할 일 하나 = Issue 하나. 바꾼 것 한 묶음 = PR 하나. main에 넣는 것은 리드만. 보드는 그 상태를 보여주는 창이다. 할 일은 Issue에 라벨(영역)·마일스톤(기한 묶음)·담당자가 붙어 있고, GitHub 마일스톤은 M1(11/6)·M3(11/10)·M6(11/13) 셋뿐이다. GitHub가 처음이면 아래 부록의 안내를 미팅 뒤에 꼭 읽는다.</p>
+<figure><div class="fig"><svg viewBox="0 0 1040 230" role="img" aria-label="보드 네 칸과 카드를 누가 옮기는지. Review로 옮기는 것만 내가 직접 한다" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><g class="col"><rect x="20" y="60" width="225" height="150"/></g><text class="t" x="132.5" y="86" text-anchor="middle">Todo</text><g class="col"><rect x="285" y="60" width="225" height="150"/></g><text class="t" x="397.5" y="86" text-anchor="middle">In Progress</text><g class="col"><rect x="550" y="60" width="225" height="150"/></g><text class="t" x="662.5" y="86" text-anchor="middle">Review</text><g class="col"><rect x="815" y="60" width="225" height="150"/></g><text class="t" x="927.5" y="86" text-anchor="middle">Done</text><text class="lbl" x="32" y="114" text-anchor="start">할 일 카드</text><text class="lbl" x="32" y="130" text-anchor="start">Issue 만들면 자동으로 생김</text><text class="lbl" x="32" y="146" text-anchor="start">라벨 = 영역, 마일스톤, 담당자 1명</text><text class="lbl" x="297" y="114" text-anchor="start">브랜치에서 작업 중</text><text class="lbl" x="297" y="130" text-anchor="start">PR 올리고 본문에 Closes #N</text><text class="lbl" x="297" y="146" text-anchor="start">(안 움직이면 내가 옮긴다)</text><text class="lbl" x="562" y="114" text-anchor="start">리드가 봐 주세요</text><text class="lbl" x="562" y="130" text-anchor="start">PR 올린 사람이 카드를 여기로</text><text class="lbl" x="562" y="146" text-anchor="start">수정 요청 → 같은 브랜치에 push</text><text class="lbl" x="827" y="114" text-anchor="start">끝</text><text class="lbl" x="827" y="130" text-anchor="start">리드가 Squash and merge</text><text class="lbl" x="827" y="146" text-anchor="start">Issue 자동 닫힘, 브랜치 자동 삭제</text><polyline class="ar " points="245,72 285,72" marker-end="url(#a)"/><text class="lbl" x="265" y="62" text-anchor="middle">자동</text><polyline class="ar " points="510,72 550,72" marker-end="url(#a)"/><text class="lbl" x="530" y="62" text-anchor="middle">수동: 내가</text><polyline class="ar " points="775,72 815,72" marker-end="url(#a)"/><text class="lbl" x="795" y="62" text-anchor="middle">자동</text><text class="lbl" x="20" y="44" text-anchor="start">Issue 생성 → Todo (자동)</text><text class="lbl" x="1030" y="44" text-anchor="end">GitHub 마일스톤은 M1·M3·M6 셋뿐. M0·M2·M4·M5는 일정표 이름</text></svg></div><figcaption>그림. 카드 하나가 Todo에서 Done까지 가는 길. 칸 이동 중 Review로 옮기는 것만 내가 직접 한다.</figcaption></figure>
+<div class="steps2">
+<div class="step"><div><b>Issue를 고른다</b><p>보드 상단 탭 "담당별"에서 내 이름 아래 카드. 본문에 할 일·완료 조건·기준 문서가 있다. 지금 내 Issue는 전부 M3(11/10까지) 아니면 M6(11/13까지).</p></div></div>
+<div class="step"><div><b>최신 main에서 브랜치를 판다</b><p><code>git switch main && git pull</code> → <code>git switch -c feat/chunking</code></p></div></div>
+<div class="step"><div><b>작업하고 커밋·push한다</b><p><code>git add &lt;파일&gt;</code> → <code>git commit -m "feat: 청킹 v1"</code> → <code>git push -u origin feat/chunking</code>. 에이전트로 해도 되지만 내가 설명할 수 있는 코드만.</p></div></div>
+<div class="step"><div><b>반나절 단위로 PR을 올린다</b><p>제목 <code>feat: 청킹 v1</code>, 본문은 템플릿: 무엇을 왜 / 실행 명령과 결과 캡처 / 체크 4개 / 맨 아래 <code>Closes #13</code>(이게 있어야 Issue와 연결된다). 올린 뒤 보드 탭 "보드"에서 카드를 Review 칸으로 드래그한다(또는 카드 클릭 → Status를 Review로).</p></div></div>
+<div class="step"><div><b>리드가 보고 머지한다</b><p>보는 것 4가지: 돌아가나(증거), spec과 맞나, 키·데이터 없나, 내가 설명할 수 있나. 스타일은 안 본다. 수정 요청이 오면 같은 브랜치에 push.</p></div></div>
+<div class="step"><div><b>머지 뒤 정리</b><p>원격 브랜치는 자동 삭제. 로컬은 <code>git switch main && git pull && git branch -D feat/chunking</code></p></div></div>
+</div>
+<p class="appendix">부록: <a href="guide.html">GitHub가 처음이라면</a> (처음 한 번 설정, 용어, 어디서 보나, 명령 복붙, PR 본문 예시, 캡처 붙이기, 자주 하는 실수) · <a href="github.html">일을 받아서 main에 넣는 순서</a> (규칙 전체, Issue 40개 표)</p>
+</section>
+
+<section class="item" id="s7"><div class="eyebrow">안건 7 · 4분</div>
+<h2 class="q">8일을 어떻게 쓰나?</h2>
+<p class="say">11/6 뼈대, 11/9까지 각자 영역 완성, 11/10 아침 설정을 잠그고 전체 실행, 11/11 비교표, 11/12에 발표본까지 전부 끝, 11/13은 리허설하고 13:00 제출. 11/10부터는 영역과 상관없이 전원이 실행과 원문 대조에 참여한다.</p>
+<figure><div class="fig"><svg viewBox="0 0 1000 430" role="img" aria-label="11월 5일부터 13일까지 영역별 피크 기간과 마일스톤 M0~M6, 11/10 설정 동결선, 11/12 발표본 포함 최종 완료선, 11/13은 리허설과 13시 제출" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><text class="t" x="197.0" y="30" text-anchor="middle">11/5 목</text><rect x="181.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="197.0" y="50" text-anchor="middle">M0</text><line class="grid" x1="150" y1="60" x2="150" y2="370"/><text class="t" x="291.0" y="30" text-anchor="middle">11/6 금</text><g class="milestone"><rect x="275.0" y="38" width="32" height="16"/><text x="291.0" y="50" text-anchor="middle">M1</text></g><line class="grid" x1="244" y1="60" x2="244" y2="370"/><text class="t" x="385.0" y="30" text-anchor="middle">11/7 토</text><line class="grid" x1="338" y1="60" x2="338" y2="370"/><text class="t" x="479.0" y="30" text-anchor="middle">11/8 일</text><line class="grid" x1="432" y1="60" x2="432" y2="370"/><text class="t" x="573.0" y="30" text-anchor="middle">11/9 월</text><rect x="557.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="573.0" y="50" text-anchor="middle">M2</text><line class="grid" x1="526" y1="60" x2="526" y2="370"/><text class="t" x="667.0" y="30" text-anchor="middle">11/10 화</text><g class="milestone"><rect x="651.0" y="38" width="32" height="16"/><text x="667.0" y="50" text-anchor="middle">M3</text></g><line class="grid" x1="620" y1="60" x2="620" y2="370"/><text class="t" x="761.0" y="30" text-anchor="middle">11/11 수</text><rect x="745.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="761.0" y="50" text-anchor="middle">M4</text><line class="grid" x1="714" y1="60" x2="714" y2="370"/><text class="t" x="855.0" y="30" text-anchor="middle">11/12 목</text><rect x="839.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="855.0" y="50" text-anchor="middle">M5</text><line class="grid" x1="808" y1="60" x2="808" y2="370"/><text class="t" x="949.0" y="30" text-anchor="middle">11/13 금</text><g class="milestone"><rect x="933.0" y="38" width="32" height="16"/><text x="949.0" y="50" text-anchor="middle">M6</text></g><line class="grid" x1="902" y1="60" x2="902" y2="370"/><line class="grid" x1="996" y1="60" x2="996" y2="370"/><text class="t" x="140" y="97.0" text-anchor="end">리드 (뼈대)</text><g class="box platform" opacity=".38"><rect x="293.0" y="84" width="701.0" height="18"/></g><text class="s" x="299.0" y="97.0" text-anchor="start">모든 PR 리뷰·머지, 보드 점검 (전 기간)</text><g class="box platform"><rect x="152" y="78" width="137.0" height="30"/><text class="s" x="158" y="97.0" style="fill:#fff">뼈대 → 11/6 오전 머지</text></g><text class="t" x="140" y="135.0" text-anchor="end">search</text><g class="box search" opacity=".38"><rect x="528" y="122" width="90" height="18"/></g><text class="s" x="534" y="135.0" text-anchor="start">rerank 11/9</text><g class="box search"><rect x="246" y="116" width="278" height="30"/><text class="s" x="252" y="135.0" style="fill:#fff">청킹 v1 → hybrid → hybrid_rerank</text></g><text class="t" x="140" y="173.0" text-anchor="end">answer</text><g class="box answer" opacity=".38"><rect x="246" y="160" width="90" height="18"/></g><text class="s" x="252" y="173.0" text-anchor="start">mock</text><g class="box answer"><rect x="340" y="154" width="278" height="30"/><text class="s" x="346" y="173.0" style="fill:#fff">프롬프트 v1 · 검증·재생성 · 방어</text></g><text class="t" x="140" y="211.0" text-anchor="end">metrics</text><g class="box metrics" opacity=".38"><rect x="246" y="198" width="184" height="18"/></g><text class="s" x="252" y="211.0" text-anchor="start">mock으로 로더·러너</text><g class="box metrics" opacity=".38"><rect x="716" y="198" width="90" height="18"/></g><text class="s" x="722" y="211.0" text-anchor="start">비교표 완성</text><g class="box metrics"><rect x="434" y="192" width="278" height="30"/><text class="s" x="440" y="211.0" style="fill:#fff">지표 · 표 초안 · 질문 확정 · 전체 실행</text></g><text class="t" x="140" y="249.0" text-anchor="end">judge</text><g class="box judge" opacity=".38"><rect x="340" y="236" width="278" height="18"/></g><text class="s" x="346" y="249.0" text-anchor="start">프롬프트·null 테스트·RAGAS</text><g class="box judge"><rect x="622" y="230" width="184" height="30"/><text class="s" x="628" y="249.0" style="fill:#fff">자동 채점 · 원문 대조</text></g><text class="t" x="140" y="287.0" text-anchor="end">platform</text><g class="box platform" opacity=".38"><rect x="622" y="274" width="90" height="18"/></g><text class="s" x="628" y="287.0" text-anchor="start">보안 4개</text><g class="box platform" opacity=".38"><rect x="904" y="274" width="46.75999999999992" height="18"/></g><text class="s" x="910" y="287.0" text-anchor="start">리허설</text><g class="box platform"><rect x="246" y="268" width="372" height="30"/><text class="s" x="252" y="287.0" style="fill:#fff">Langfuse · llm.call · 오류 응답 · 보안 스크립트</text></g><g class="box platform"><rect x="810" y="268" width="90" height="30"/><text class="s" x="816" y="287.0" style="fill:#fff">재실행·녹화</text></g><text class="t" x="140" y="325.0" text-anchor="end">전원 공통</text><g class="box skeleton" opacity=".38"><rect x="904" y="312" width="46.75999999999992" height="18"/></g><text class="s" x="910" y="325.0" text-anchor="start">리허설</text><g class="box skeleton"><rect x="622" y="306" width="184" height="30"/><text class="s" x="628" y="325.0" style="fill:#fff">전체 실행 · 원문 대조 · 슬라이드</text></g><g class="box skeleton"><rect x="810" y="306" width="90" height="30"/><text class="s" x="816" y="325.0" style="fill:#fff">발표본 최종</text></g><line class="freeze" x1="620" y1="60" x2="620" y2="390"/><text class="lbl" x="624" y="386" style="fill:var(--warn)">config.py 동결 (11/10 아침)</text><line class="freeze" x1="808" y1="60" x2="808" y2="390"/><text class="lbl" x="812" y="386" style="fill:var(--warn)">버그만 · 이날 발표본까지 끝</text><line class="freeze" x1="952.76" y1="60" x2="952.76" y2="390"/><text class="lbl" x="948.76" y="404" text-anchor="end" style="fill:var(--warn)">리허설 → 13:00 제출 → 발표</text><text class="lbl" x="150" y="422" text-anchor="start">진한 막대 = 그 영역의 피크(work-plan 기준). 연한 막대 = 그 밖의 계획된 작업. 색 채운 M1·M3·M6만 GitHub 마일스톤. 모임은 시간 될 때.</text></svg></div><figcaption>그림. 진한 막대가 그 영역이 가장 바쁜 날. 붉은 선 세 개가 잠금(11/10)·발표본 포함 최종 완료(11/12)·제출(11/13 13:00). 금요일은 리허설만.</figcaption></figure>
+<div class="grid4">
+<div class="tile"><b>11/6 (금) M1</b><span>뼈대 머지. 전원 로컬에서 naive 1문항 실행. 각자 첫 PR. 오전까지 안 들어오면 contracts.py만 보고 mock으로 시작</span></div>
+<div class="tile"><b>11/9 (월) M2</b><span>세 방식·프롬프트·채점 파이프라인 완성. 잠글 설정 합의</span></div>
+<div class="tile"><b>11/10 (화) M3</b><span>아침 config 잠금 → 전체 실행 → 자동 채점 → 보안 4개</span></div>
+<div class="tile"><b>11/11 (수) M4</b><span>비교표 완성. 대표 사례 원문 대조(자기 영역 아닌 것). 최종 구성 선택. 영역별 슬라이드</span></div>
+<div class="tile"><b>11/12 (목) M5 · 최종 완료</b><span>기능 추가 금지, 버그만. 구현 안 한 사람이 README대로 설치 성공. 슬라이드 통합해 발표본(PPTX+PDF)까지 끝. 시연 녹화</span></div>
+<div class="tile"><b>11/13 (금) M6 · 리허설·제출</b><span>오전 리허설. 팀 Notion에 저장소·발표자료 연결. 13:00 제출. 오후 발표. 새 작업 없음</span></div>
+</div>
+<p class="appendix">부록: <a href="schedule.html">8일 동안 누가 언제 무엇을</a> (날짜별 완료 상태, 밀리면 빼는 순서, 리스크) · <code>docs/work-plan.md</code></p>
+</section>
+
+<section class="item" id="s8"><div class="eyebrow">안건 8 · 10분</div>
+<h2 class="q">오늘 정할 것과 오늘 할 것</h2>
+<p class="say">정하면 담당자가 자기 spec의 "미정"을 지우고 값을 적는다. 그 PR이 각자의 첫 PR이어도 좋다.</p>
+<div class="two">
+<div><h3>미팅에서 정한다</h3>
+<ul class="check">
+<li><b>k 기본값</b>&nbsp;— 답 만들 때 쓰는 조각 수. 세 방식 공통 (search·answer·metrics 모두 영향)</li>
+<li><b>평가 LLM</b>&nbsp;— 생성 모델과 같아도 됨. 비용이 질문 수를 정한다 (judge)</li>
+<li><b>Langfuse Cloud vs 셀프호스트</b>&nbsp;— 팀 프로젝트 하나, 키는 각자 .env (platform)</li>
+<li><b>Python 버전 · 패키지 도구 · Qdrant 실행 방식(docker/embedded)</b>&nbsp;— 전원이 같은 환경. 11/12 재설치 검증 대상. 10분 안에 못 정하면 리드가 오늘 저녁 Slack에 설치 명령 공지 (platform)</li>
+<li><b>데이터 다운로드·PDF 15개 검수 당번</b>&nbsp;— 노션 수와 실제 파일 수 대조, 누락·실패 기록</li>
+<li><b>발표 목차 7장 합의 · 발표 시간 공지 확인</b>&nbsp;— ①문제·데이터 ②아키텍처 ③비교 결과 ④품질·보안 ⑤운영·선택 ⑥한계 ⑦기여. 시간 미공지면 누가 확인하나</li>
+</ul></div>
+<div><h3>미팅 끝나고 오늘 각자</h3>
+<ul class="check">
+<li>GitHub 알림 켜기, Project 보드 열어 내 카드 확인 (<a href="https://github.com/users/C-Designer/projects/1">보드</a>). GitHub가 처음이면 <a href="guide.html">안내</a>부터</li>
+<li>레포 clone (<code>git clone https://github.com/C-Designer/kant_project_3.git</code>), Python·Qdrant 로컬 준비, <code>.env.example</code>을 복사해 <code>.env</code></li>
+<li>내 영역 spec과 <code>docs/requirements.md</code> 읽기 (순서는 <code>AGENTS.md</code>)</li>
+<li>노션 발제 페이지(링크는 <code>docs/requirements.md</code> 첫 줄)에서 ZIP을 받아 빈 폴더 <code>data/shipping/</code>에 풀기 → 안에 <code>documents/</code>(PDF 15개)와 <code>evaluation/</code>이 있어야 함. 커밋 금지</li>
+<li>Langfuse: 운영 방식이 정해지면 리드가 팀 프로젝트를 만들고 초대 → 각자 키를 <code>.env</code>에</li>
+<li>리드: 오늘 저녁 뼈대 시작, 11/6 오전 머지</li>
+</ul></div>
+</div>
+</section>
+<footer>출처: <code>README.md</code>, <code>docs/work-plan.md</code>, <code>docs/specs/*.md</code>, <code>docs/adr/*.md</code>, <code>AGENTS.md</code>, GitHub Issue #8–#47 · 기준일 2026-11-05(main 7f4bd7f). 문서가 바뀌면 이 페이지가 아니라 레포 문서가 기준이다.</footer>
+</div>
+</body>
+</html>
