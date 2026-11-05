@@ -59,9 +59,9 @@
 | 11/8 (일) | **M3** | 영역 구현 완료(M3 Issue 전부 닫힘). search: hybrid 완성·hybrid_rerank / answer: 출력 검증·재생성 / metrics: 운영 지표 집계·표 초안·질문 목록 확정 / judge: RAGAS·Judge 1문항 통과·평가 모델·프롬프트 확정 / platform: LLM 래퍼 측정·오류 응답·보안 비교 스크립트. 리드: 슬라이드 뼈대. **저녁에 동결할 설정 합의** |
 | 11/9 (월) | **M4** | 아침 `config.py` 동결 → metrics 전체 실행 → judge 자동 채점 → platform 보안 4개. 실행·오류 분석은 5명이 질문 묶음으로 분담 |
 | 11/10 (화) | **M5** | metrics 비교표 완성. judge 대표 사례 원문 대조(전원 참여, 자기 영역 아닌 결과). 최종 구성 선택과 이유. 영역별 슬라이드 |
-| 11/11 (수) | **M6** | 기능 추가 금지, 버그 수정만. **구현 안 한 팀원이 README대로 설치·실행 성공**. 시연 경로 녹화 백업. 이날 끝에 구현·검증이 끝나고 제출물(코드·README·결과)이 전부 갖춰져 있어야 한다. M6 마감일 |
-| 11/12 (목) | M6 | 슬라이드 통합해 **발표본(PPTX + PDF) 최종 완료**. 미비한 것 다듬기(버그 수정 PR만) |
-| 11/13 (금) | M6 | 오전 **리허설**(발표 연습, 시연 경로 점검). 팀 Notion에 저장소·발표자료 연결. **13:00 제출**. 오후 발표. 새 작업은 하지 않는다 |
+| 11/11 (수) | **M6** | 기능 추가 금지, 버그 수정만. **구현 안 한 팀원이 README대로 설치·실행 성공**. 시연 경로 녹화 백업. 이날 끝에 구현·검증이 끝나고 제출물(코드·README·결과)이 전부 갖춰져 있어야 한다 |
+| 11/12 (목) | **M7** | 슬라이드 통합해 **발표본(PPTX + PDF) 최종 완료**. 미비한 것 다듬기(버그 수정 PR만) |
+| 11/13 (금) | M7 | 오전 **리허설**(발표 연습, 시연 경로 점검). 팀 Notion에 저장소·발표자료 연결. **13:00 제출**. 오후 발표. 새 작업은 하지 않는다 |
 
 ### 밀리면 자르는 순서
 
@@ -107,7 +107,7 @@
 - **Project 보드:** https://github.com/users/C-Designer/projects/1 (팀원 4명 Write). 뷰 2개: `보드`(Status 열), `담당별`(Assignee 그룹 + 라벨·마일스톤).
 - **열:** Todo → In Progress → Review(PR 올라감, 리드 리뷰 대기) → Done. 자동화: Issue 생성 → Todo, PR 연결 → In Progress, PR 머지/Issue 닫힘 → Done. **Review로 옮기는 것만 수동** (PR 올린 사람이).
 - **Issue = 작업 단위.** 반나절~하루. 본문에 할 일·완료 조건·기준 문서. 라벨 = 영역(`search` `answer` `metrics` `judge` `platform` `skeleton` `docs`), `interface`는 contracts/config 변경 PR에 추가. 담당자 1명. PR 본문에 `Closes #N`.
-- **마일스톤 3개:** [M1 뼈대 (11/6)](https://github.com/C-Designer/kant_project_3/milestone/1) · [M3 영역 구현 완료·동결 합의 (11/8)](https://github.com/C-Designer/kant_project_3/milestone/2) · [M6 구현 완료·제출 (11/11)](https://github.com/C-Designer/kant_project_3/milestone/3). 11/8까지 끝나야 하는 것은 전부 M3. 11/9 이후 것은 전부 M6: 마감일 11/11은 구현·검증 완료 기준이고, 발표본 통합·리허설·제출(11/12~13) Issue도 M6에 둔다.
+- **마일스톤 4개:** [M1 뼈대 (11/6)](https://github.com/C-Designer/kant_project_3/milestone/1) · [M3 영역 구현 완료·동결 합의 (11/8)](https://github.com/C-Designer/kant_project_3/milestone/2) · [M6 구현·검증 완료 (11/11)](https://github.com/C-Designer/kant_project_3/milestone/3) · [M7 발표본·제출 (11/12)](https://github.com/C-Designer/kant_project_3/milestone/4). 11/8까지 끝나야 하는 것은 전부 M3, 11/9~11은 M6, 발표본 통합·리허설·제출(11/12~13)은 M7.
 - **초기 Issue 40개** (#8~#47)는 2026-11-05에 생성됨: https://github.com/C-Designer/kant_project_3/issues. 영역별 목록은 라벨로 필터.
 - Issue보다 작은 수정(버그 하나)은 Issue 없이 PR만 올려도 된다. 새 작업이 생기면 담당자가 Issue를 만들고 라벨·마일스톤을 붙인다(자동으로 보드에 들어감).
 - 리드가 매일 보드를 보고 In Progress에 이틀 넘게 있는 카드를 묻는다.
