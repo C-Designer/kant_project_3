@@ -20,6 +20,19 @@
 - **동작이나 구조를 바꾸면 같은 PR에서 spec을 고친다.** 미정 항목을 결정했으면 spec의 "미정"을 지우고 값을 적는다.
 - **PR에는 실행 증거.** 명령과 결과(또는 캡처)를 PR 본문에 붙인다. 프롬프트를 바꿨으면 정상·되묻기·보류 1문항씩.
 - **테스트는 규칙을 고정하는 용도로만.** `None` 집계, `source_ids` 검증, `book_id` 파생 같은 발제 규칙은 단위 테스트로 잠근다. 커버리지 목표는 없다.
+- **실행 환경은 `uv`로 고정된 것만 쓴다.** Python 3.12, 패키지는 `uv.lock`. 설치는 `uv sync`, 실행은 `uv run ...`. `pip install`이나 다른 가상환경을 쓰지 않는다. 패키지 추가는 `uv add <패키지>`로 하고 `pyproject.toml`·`uv.lock`을 같은 PR에 넣는다(제목에 `[interface]`).
+- **LangChain은 0.3 계열이다(`langchain` 0.3.x, `langchain-core` 1.0 미만).** RAGAS 0.4.3과 맞추기 위한 고정이다(`docs/specs/judge.md` "실행 환경 제약"). 코드는 **LangChain 0.3 문서 기준**으로 쓴다. 1.x 전용 문법(`langchain_classic`, `langchain.agents.create_agent`, `langchain.messages` 등)은 쓰지 않는다. `uv add`가 1.x를 요구하며 실패하면 버전을 올리지 말고 judge 담당과 먼저 상의한다. 0.3에서 확인된 import 경로:
+
+  | 용도 | import |
+  |---|---|
+  | 문서·프롬프트·파서 | `from langchain_core.documents import Document`, `from langchain_core.prompts import ChatPromptTemplate`, `from langchain_core.output_parsers import StrOutputParser` |
+  | 청킹 | `from langchain_text_splitters import RecursiveCharacterTextSplitter` |
+  | 키워드 검색 (BM25) | `from langchain_community.retrievers import BM25Retriever` (`rank-bm25` 필요) |
+  | 벡터스토어 | `from langchain_qdrant import QdrantVectorStore` |
+  | hybrid 결합 | `from langchain.retrievers import EnsembleRetriever` (1.x의 `langchain_classic` 아님) |
+  | 임베딩 (E5) | `from langchain_huggingface import HuggingFaceEmbeddings` |
+  | 생성 모델 | `from langchain_openai import ChatOpenAI` |
+  | Langfuse 연결 | `from langfuse.langchain import CallbackHandler` |
 - 선택 과제(메모리, UI, 고급 RAG)는 구현하지 않는다. 필요하면 Issue로 제안.
 
 ## 에이전트에게
