@@ -330,6 +330,7 @@ pre.cmd i{font-style:normal;color:var(--muted)}
 <div><h3>미팅 끝나고 오늘 각자</h3>
 <ul class="check">
 <li>GitHub 알림 켜기, Project 보드 열어 내 카드 확인 (<a href="https://github.com/users/C-Designer/projects/1">보드</a>). GitHub가 처음이면 <a href="#guide">안내</a>부터</li>
+<li><code>gh auth login</code> 해 두기. 에이전트가 세션 시작 때 내 담당 영역을 자동으로 알아보는 데 필요</li>
 <li>레포 clone (<code>git clone https://github.com/C-Designer/kant_project_3.git</code>), Python·Qdrant 로컬 준비, <code>.env.example</code>을 복사해 <code>.env</code></li>
 <li>내 영역 spec과 <code>docs/requirements.md</code> 읽기 (순서는 <code>AGENTS.md</code>)</li>
 <li>노션 발제 페이지(링크는 <code>docs/requirements.md</code> 첫 줄)에서 ZIP을 받아 빈 폴더 <code>data/shipping/</code>에 풀기 → 안에 <code>documents/</code>(PDF 15개)와 <code>evaluation/</code>이 있어야 함. 커밋 금지</li>
@@ -457,6 +458,7 @@ git push</pre>
 <h2>10. 에이전트(Claude Code · Codex)로 작업할 때</h2>
 <ul>
 <li>레포의 <code>CLAUDE.md</code>·<code>AGENTS.md</code>가 규칙을 알려주므로 에이전트도 같은 순서로 문서를 읽는다. 다른 영역 폴더는 고치지 말라고 돼 있다.</li>
+<li>Claude Code는 세션을 열 때 <code>scripts/whoami.sh</code>가 GitHub 로그인으로 내 담당 영역을 알아내 알려준다. <b><code>gh auth login</code>이 돼 있어야</b> 동작하고, 안 돼 있으면 에이전트가 영역을 묻는다. Codex는 AGENTS.md 0번을 따라 스크립트를 직접 실행한다.</li>
 <li>에이전트가 PR을 만들 때는 템플릿을 채운 본문을 <code>--title</code>, <code>--body</code>로 넘기게 한다.</li>
 <li>머지 전에 내가 그 코드를 발표에서 설명할 수 있어야 한다. 설명 못 하면 머지하지 않는다(체크 ④).</li>
 </ul>
