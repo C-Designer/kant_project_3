@@ -14,12 +14,12 @@
 뼈대(11/6)에 `naive` + 단순 청킹이 들어 있다. 담당자가 아래 미정을 채우며 깊이 판다.
 
 색인
-- 데이터 위치 `data/<분야>/documents/*.pdf` (git 제외).
+- 데이터 위치 `data/shipping/documents/*.pdf` (git 제외).
 - `pypdf` 페이지 단위 추출, 첫 페이지 = 1.
 - 청킹: 크기·overlap 미정. 표는 행·열 제목, 단위, 각주를 같은 청크에. 대상·적용일·단위·출처가 끊기지 않게.
 - 임베딩: 로컬 E5 계열, 모델명·차원 미정. 질의 임베딩도 같은 모델.
 - Qdrant 컬렉션: 이름, 거리 함수, sparse 벡터 포함 여부 미정.
-- 명령 `python -m src.search.index --dataset data/<분야>` (예시). 결과 `data/<분야>/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
+- 명령 `python -m src.search.index --dataset data/shipping` (예시). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
 
 검색
 

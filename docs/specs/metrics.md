@@ -11,7 +11,7 @@
 
 ## 동작
 
-1. **로더**: `data/<분야>/evaluation/*.json`을 읽어 질문(`id`, `question`)과 정답(`evidence_groups`, `expected_action`, 채점 기준)을 분리한다. 정답 쪽은 `judge`와 검색 지표 계산에만 넘긴다. 절대 `run_query()` 입력에 섞지 않는다.
+1. **로더**: `data/shipping/evaluation/*.json`을 읽어 질문(`id`, `question`)과 정답(`evidence_groups`, `expected_action`, 채점 기준)을 분리한다. 정답 쪽은 `judge`와 검색 지표 계산에만 넘긴다. 절대 `run_query()` 입력에 섞지 않는다.
 2. **질문 선택**: 고른 `id`와 이유를 `results/questions.json`에. 답변 가능 / 추가 확인 / 보류 문항을 섞는다. 수는 미정.
 3. **러너**: 질문 × 3방식을 `platform.run_query()`로 실행. 실패도 기록. `results/runs/<run_id>/<mode>.jsonl`에 `RunRecord` 한 줄씩. 재실행 시 같은 `run_id`에 덮어쓰지 않는다.
 4. **검색 지표**: `evidence_groups`의 `book_id` 집합 vs `retrieved_book_ids`. 참고 목록이 비면 `hit_at_k = recall_at_k = None`, `not_applicable`에 이유.
