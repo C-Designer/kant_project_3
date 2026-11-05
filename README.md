@@ -43,7 +43,26 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 ## 설치·실행
 
-미정. 스택 확정 후 작성한다. 데이터셋은 `data/`에 두고 커밋하지 않는다. 키는 `.env`에만 둔다(`.env.example` 참고).
+데이터셋은 `data/`에 두고 커밋하지 않는다. 키는 `.env`에만 둔다(`.env.example` 참고).
+
+### Python 환경 (전원 동일, 강제)
+
+Python 버전과 패키지 버전은 레포 파일로 고정돼 있다. **[uv](https://docs.astral.sh/uv/)로만 설치한다.**
+
+| 파일 | 고정하는 것 |
+|---|---|
+| `.python-version` | Python **3.12**. PC 기본 Python이 3.14여도 uv가 3.12를 받아서 쓴다 |
+| `pyproject.toml` | `requires-python = "==3.12.*"`. 다른 버전으로 설치하려 하면 에러로 거부된다 |
+| `uv.lock` | 모든 패키지의 정확한 버전. 전원 같은 버전이 깔린다 |
+
+```bash
+uv sync            # .venv 생성, Python 3.12와 고정된 패키지 설치
+uv run pytest -q   # 실행은 uv run으로
+```
+
+- **3.14는 쓸 수 없다.** RAGAS 의존성(`scikit-network`)이 3.14에서 빌드에 실패한다. 근거는 [docs/specs/judge.md](docs/specs/judge.md) "실행 환경 제약".
+- 패키지를 추가할 때는 `pip install` 대신 `uv add <패키지>`를 쓰고, 바뀐 `pyproject.toml`과 `uv.lock`을 같은 PR에 넣는다. 의존성 변경은 다른 영역에도 영향을 주므로 PR 제목에 `[interface]`를 붙인다.
+- `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/12)에서 실패한다.
 
 ### 데이터셋 받기
 
