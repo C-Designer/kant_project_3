@@ -25,3 +25,8 @@ dev = [
 [tool.uv]
 # 배포용 패키지가 아니라 실행용 프로젝트다.
 package = false
+
+[tool.pytest.ini_options]
+# `uv run pytest`가 레포 폴더를 import 경로에 넣어, 테스트에서 `from src....`를 쓸 수 있게 한다.
+pythonpath = ["."]
+testpaths = ["tests"]
