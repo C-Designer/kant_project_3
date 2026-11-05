@@ -103,67 +103,13 @@
 
 ## GitHub Issue · Project 운영
 
-- **Issue = 작업 단위.** 영역 라벨(`search`, `answer`, `metrics`, `judge`, `platform`, `skeleton`, `docs`) + 마일스톤(M0~M6). 담당자 1명. PR 본문에 `Closes #N`.
-- **Project 보드** 열: Backlog / This milestone / In progress / Review / Done. 리드가 매일 확인하고 막힌 것은 당일 처리.
-- **PR**은 [branch-strategy.md](branch-strategy.md)대로. 동작이나 인터페이스를 바꾸면 같은 PR에서 spec 갱신([documentation.md](documentation.md)).
-- 인터페이스 변경은 Issue 제목 앞에 `[interface]`를 붙이고 의존 영역 담당자를 멘션한다.
-
-### 초기 Issue 골격 (M0 직후 리드가 생성)
-
-`skeleton` (김창동, 11/5 저녁~11/6 오전)
-- [ ] `src/contracts.py`: ChunkMeta, RetrievedChunk, ContextChunk, LLMOutput, Citation, QueryRequest/Response, RunRecord, EvalRecord
-- [ ] `src/config.py`: 동결 대상 설정 자리
-- [ ] PDF 1개 색인 → `naive` 검색 → 프롬프트 v0 → 출력 검증 → 출처 → `/query` 응답 → Langfuse 트레이스
-- [ ] `None` 집계·`source_ids` 검증·`book_id` 파생 단위 테스트
-- [ ] README 설치·실행 초안, `.env.example`
-
-`search` (윤승환)
-- [ ] 데이터셋 검수, `ingest-report.json`
-- [ ] 청킹 전략 (크기, overlap, 표 보존) 결정·구현
-- [ ] E5 모델명·컬렉션 스키마 확정 (sparse 여부는 hybrid 방식과 함께)
-- [ ] `hybrid`: 키워드 방식 + 결합
-- [ ] `hybrid_rerank`: 리랭커 선택·로컬 실행·후보 수
-- [ ] spec 미정 항목 갱신
-
-`answer` (천희재)
-- [ ] 문맥 조립: 자료 ID, 대응표, 토큰 한도, 잘린 청크 기록
-- [ ] 프롬프트 v1 (판단 순서, JSON 출력) + 정상·되묻기·보류 케이스 통과
-- [ ] 출력 검증·재생성·`ValidationFailed`
-- [ ] 빈 검색 결과 처리
-- [ ] 방어 프롬프트 변형 (`defense=True`)
-- [ ] spec 미정 항목 갱신
-
-`metrics` (오주헌)
-- [ ] 평가 JSON 로더: 질문과 정답(`GroundTruth`) 분리
-- [ ] 질문 선택 기준·목록 (`results/questions.json`)
-- [ ] 일괄 실행 러너 → `RunRecord` JSONL
-- [ ] Hit@k, Recall@k (해당 없음 `None`)
-- [ ] 운영 지표 집계 (정상 평균·건수, 오류율, 토큰 합계·확인 수, 평가 호출 분리)
-- [ ] 비교표 생성 (`EvalRecord` 조인, 평균 옆 건수)
-- [ ] spec 미정 항목 갱신
-
-`judge` (김경민)
-- [ ] Judge 프롬프트 v1 (4항목, `null` 구분) + 파싱
-- [ ] `null` 규칙 단위 테스트 (0으로 안 바뀜, 누락은 0)
-- [ ] RAGAS Faithfulness 연동 (해당 없음 처리)
-- [ ] `platform.llm.call(kind="eval")`·`record_score` 연결
-- [ ] 평가 모델·설정 확정 (`config.py`)
-- [ ] 대표 사례 원문 대조 템플릿 (`results/review.md`)
-- [ ] spec 미정 항목 갱신
-
-`platform` (김창동)
-- [ ] `/query` 오류 응답 정책 (HTTP 상태, reason 코드)
-- [ ] `llm.call`: timeout·재시도·토큰·시간 측정, `kind=eval` 분리
-- [ ] Langfuse 스팬 4개 + `record_score`, 운영 방식 결정
-- [ ] `config.py` 동결 항목 확정 (11/10 아침)
-- [ ] 보안 비교 4개 실행·기록
-- [ ] README 완성, 교차 재실행 (11/12), 시연 녹화
-- [ ] spec 미정 항목 갱신
-
-`docs` (리드)
-- [ ] 분야·난이도·담당 기록
-- [ ] 발표자료 뼈대 (11/8)
-- [ ] 팀 Notion 페이지에 저장소 연결
+- **Project 보드:** https://github.com/users/C-Designer/projects/1 (팀원 4명 Write). 뷰 2개: `보드`(Status 열), `담당별`(Assignee 그룹 + 라벨·마일스톤).
+- **열:** Todo → In Progress → Review(PR 올라감, 리드 리뷰 대기) → Done. 자동화: Issue 생성 → Todo, PR 연결 → In Progress, PR 머지/Issue 닫힘 → Done. **Review로 옮기는 것만 수동** (PR 올린 사람이).
+- **Issue = 작업 단위.** 반나절~하루. 본문에 할 일·완료 조건·기준 문서. 라벨 = 영역(`search` `answer` `metrics` `judge` `platform` `skeleton` `docs`), `interface`는 contracts/config 변경 PR에 추가. 담당자 1명. PR 본문에 `Closes #N`.
+- **마일스톤 3개:** [M1 뼈대 (11/6)](https://github.com/C-Designer/kant_project_3/milestone/1) · [M3 동결·전체 실행 (11/10)](https://github.com/C-Designer/kant_project_3/milestone/2) · [M6 제출 (11/13)](https://github.com/C-Designer/kant_project_3/milestone/3). 11/9까지 끝나야 하는 것은 전부 M3.
+- **초기 Issue 40개** (#8~#47)는 2026-11-05에 생성됨: https://github.com/C-Designer/kant_project_3/issues. 영역별 목록은 라벨로 필터.
+- Issue보다 작은 수정(버그 하나)은 Issue 없이 PR만 올려도 된다. 새 작업이 생기면 담당자가 Issue를 만들고 라벨·마일스톤을 붙인다(자동으로 보드에 들어감).
+- 리드가 매일 보드를 보고 In Progress에 이틀 넘게 있는 카드를 묻는다.
 
 ## 11/5 미팅 안건
 
