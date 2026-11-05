@@ -21,7 +21,7 @@
 | API | FastAPI + Pydantic | `/health`, `/query` |
 | 생성 모델 | `gpt-6-luna` | 발제 지정 |
 | 트레이싱 | Langfuse | Cloud / 셀프호스트는 `specs/platform.md`에서 고정 |
-| 평가 | RAGAS (Faithfulness) + 자체 Judge 스크립트 | 평가 LLM은 `specs/evaluation.md`에서 고정 |
+| 평가 | RAGAS (Faithfulness) + 자체 Judge 스크립트 | 평가 LLM은 `specs/judge.md`에서 고정 |
 
 설정값(API 키, Langfuse 키, 호스트)은 환경 변수로만 넣는다. `.env`는 커밋하지 않고 `.env.example`만 둔다.
 
