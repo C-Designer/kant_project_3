@@ -20,7 +20,7 @@
 6. `citations` = `source_ids`를 대응표로 변환. LLM이 문서명·페이지를 만들지 않는다.
 7. 검색 결과가 비면 "검색한 자료에서 확인하지 못했다"로 `abstained`, `source_ids = []`.
 
-미정: `k` 기본값과 문맥 토큰 한도(`config.py`에서 동결), 생성 설정, 재생성 횟수, 프롬프트 v1 본문, 방어 문장.
+미정: 문맥 토큰 한도(`config.py`에서 동결. `k`는 5로 확정), 생성 설정, 재생성 횟수, 프롬프트 v1 본문, 방어 문장.
 
 코드 위치: `src/answer/` (`context.py`, `chain.py`, `validate.py`, `prompts/`)
 

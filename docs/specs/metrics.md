@@ -18,7 +18,7 @@
 5. **운영 지표**: `RunRecord`의 `latency_ms`, `input_tokens`, `output_tokens`, `status == "error"`에서 정상 요청 평균 응답 시간과 건수, 오류율과 실패 건수, 토큰 합계와 확인 요청 수. `None`은 분모에서 뺀다.
 6. **비교표**: `judge`가 돌려준 `EvalRecord`를 `question_id` + `retrieval_mode`로 합쳐 `results/comparison.md`(+ CSV). 질문별 + 방식별 평균. 평균 옆에 평가 대상 수, 해당 없음, 평가 불가, 오류 건수. 평가 호출 토큰은 별도 열.
 
-미정: 질문 수, k(`config.py`), run_id 규칙, CSV 열 순서.
+미정: 질문 수, run_id 규칙, CSV 열 순서. (`k`는 5로 확정, `config.py`.)
 
 코드 위치: `src/metrics/` (`loader.py`, `questions.py`, `run.py`, `retrieval_metrics.py`, `ops_metrics.py`, `report.py`)
 
