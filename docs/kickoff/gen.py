@@ -311,7 +311,7 @@ tree = """<pre class="tree">kant_project_3/
 ├── README.md                 <i>프로젝트 입구. 팀·영역·흐름·스택. 설치·실행·기여는 미정(제출 전 작성)</i>
 ├── .env.example              <i>키 이름만. 실제 .env는 커밋 금지</i>
 ├── .github/
-│   ├── CODEOWNERS            <i>* → @C-Designer. 리드 승인 없이는 머지 버튼이 안 열림</i>
+│   ├── CODEOWNERS            <i>* → @C-Designer. 모든 PR에 리드를 리뷰어로 자동 지정 (강제 아님)</i>
 │   └── pull_request_template.md   <i>변경 내용 / 확인 방법(실행 증거) / 체크 4개</i>
 ├── docs/
 │   ├── requirements.md       <i>발제 요약: 필수 4과제, 데이터 규칙, API, 상태값, 완료 기준</i>
@@ -400,7 +400,7 @@ def lines(x,y,arr,cls="lbl"):
 b.append(lines(32,cy+48,["Issue #N 생성 (반나절~하루 단위)","· 라벨 = 영역 (search … platform, docs)","· 마일스톤 M1 / M3 / M6","· 담당자 1명","· 본문: 할 일 · 완료 조건 · 기준 문서","","작은 버그 하나는 Issue 없이 PR만 가능"]))
 b.append(lines(297,cy+48,["git switch main && git pull","git switch -c <type>/<짧은-설명>","커밋  <type>: <설명>","git push -u origin <브랜치>","PR: 제목 <type>: … · 본문 템플릿","    Closes #N · 실행 명령·결과 캡처","contracts/config 변경 →","    [interface] + 짝 알림"],cls="lbl"))
 b.append(lines(562,cy+48,["PR 올린 사람이 카드를 Review로 옮김","리드가 보는 4가지","① 돌아가는가 (실행 증거)","② spec·contracts와 맞는가, spec도 고쳤나","③ 키·개인정보·data/ 없는가","④ 에이전트 코드를 담당자가 설명 가능한가","새 push가 오면 이전 승인은 무효"]))
-b.append(lines(827,cy+48,["리드가 Squash and merge","(룰셋: 리드 승인 없이는 버튼 안 열림)","원격 브랜치 자동 삭제","Issue 자동 닫힘","로컬: git switch main && git pull","       git branch -D <브랜치>","main 커밋 제목 = 커밋 1개면","    그 메시지, 아니면 PR 제목"]))
+b.append(lines(827,cy+48,["리드가 Squash and merge","(버튼은 열려 있어도 리드만 누른다)","원격 브랜치 자동 삭제","Issue 자동 닫힘","로컬: git switch main && git pull","       git branch -D <브랜치>","main 커밋 제목 = 커밋 1개면","    그 메시지, 아니면 PR 제목"]))
 ay=cy-18
 b.append(arrow([(245,ay+30),(285,ay+30)],"자동: PR 연결(Closes #N)",lx=265,ly=ay+20))
 b.append(arrow([(510,ay+30),(550,ay+30)],"수동: 올린 사람",lx=530,ly=ay+20))
@@ -408,7 +408,7 @@ b.append(arrow([(775,ay+30),(815,ay+30)],"자동: 머지·닫힘",lx=795,ly=ay+2
 b.append(arrow([(0,ay+30),(20,ay+30)],"",))
 b.append(text(20,ay+2,"자동: Issue 생성 → Todo",cls="lbl"))
 # feedback loop from review to in progress
-b.append(arrow([(600,cy+ch),(600,cy+ch+28),(400,cy+ch+28),(400,cy+ch)],"수정 요청 → 다시 push (승인 무효, 재리뷰)",lx=500,ly=cy+ch+22))
+b.append(arrow([(600,cy+ch),(600,cy+ch+28),(400,cy+ch+28),(400,cy+ch)],"수정 요청 → 같은 브랜치에 다시 push",lx=500,ly=cy+ch+22))
 svgC = svg(W,H,"".join(b),"Project 보드의 네 열 Todo, In Progress, Review, Done과 각 열에서 하는 일. Review로 옮기는 것만 수동이고 나머지 이동은 자동이다")
 # lite version for the meeting page: column names + who moves the card
 W,H = 1040,230
@@ -461,13 +461,13 @@ pageC = head("일을 받아서 main에 넣는 순서") + f"""
 <tr><th>금지</th><th>대신</th></tr>
 <tr><td><code>main</code> 직접 push (리드도)</td><td>브랜치 → PR</td></tr>
 <tr><td><code>main</code> force push · 삭제</td><td>revert PR</td></tr>
-<tr><td>승인 1 + 코드오너(<code>@C-Designer</code>) 승인 없이 머지</td><td>리드가 리뷰·승인·머지. 본인 PR은 룰셋 우회</td></tr>
-<tr><td>새 push 후 이전 승인 유지</td><td>재승인</td></tr>
+<tr><td>Squash 외의 머지 방식</td><td>Squash and merge만</td></tr>
+<tr><td colspan="2">필수 승인은 없다(kant_project_2와 같은 설정). PR만 거치면 버튼이 열린다. CODEOWNERS는 리드를 리뷰어로 자동 지정만 한다</td></tr>
 </table></div>
 <p style="font-size:13px;color:var(--muted)">필수 status check는 없다(CI 없음). 그래서 PR 본문의 실행 증거가 CI 역할을 한다.</p></div>
 <div><h3>팀 규칙 (GitHub은 못 막음)</h3>
 <ul style="font-size:14px">
-<li><b>머지는 리드만.</b> 승인 뒤 다른 사람이 버튼을 누르지 않는다</li>
+<li><b>머지는 리드만.</b> 버튼이 열려 있어도 팀원은 누르지 않고 기다린다</li>
 <li><b>PR 하나에 목적 하나.</b> 반나절 단위. 하루 넘게 쌓이면 쪼갠다</li>
 <li><b>브랜치 <code>&lt;type&gt;/&lt;짧은-설명&gt;</code>, 커밋·PR 제목 <code>&lt;type&gt;: &lt;설명&gt;</code>.</b> type: feat fix refactor docs test chore</li>
 <li><b><code>[interface]</code>:</b> <code>contracts.py</code>·<code>config.py</code> 변경은 제목에 붙이고 짝에게 먼저 알림. 라벨 <span class="chip iface">interface</span></li>
@@ -862,7 +862,7 @@ def guide(urls):
 <tr><td><b>Project 보드</b></td><td>Issue를 칸(Status)별로 보여주는 칸반 화면</td><td>Todo → In Progress → Review → Done. Review로 옮기는 것만 내가 직접</td></tr>
 <tr><td><b>브랜치</b></td><td>main을 복사해 따로 작업하는 줄기</td><td>이름 <code>&lt;type&gt;/&lt;짧은-설명&gt;</code>, 예 <code>feat/chunking</code>. main에는 직접 못 올린다(GitHub가 막음)</td></tr>
 <tr><td><b>PR</b>(Pull Request)</td><td>"내 브랜치를 main에 넣어 주세요"라는 요청. 바뀐 내용과 설명이 같이 보인다</td><td>제목 <code>&lt;type&gt;: 설명</code>, 본문은 템플릿, <code>Closes #13</code>. 실행 증거 필수</td></tr>
-<tr><td><b>리뷰 · 승인</b></td><td>다른 사람이 PR을 보고 Approve 또는 수정 요청</td><td>리드만 한다. 새로 push하면 승인이 사라져서 다시 봐야 한다</td></tr>
+<tr><td><b>리뷰</b></td><td>다른 사람이 PR을 보고 코멘트 또는 수정 요청</td><td>리드만 한다. GitHub이 승인을 요구하진 않지만 리드가 보기 전엔 머지하지 않는다</td></tr>
 <tr><td><b>머지</b>(Squash and merge)</td><td>PR을 main에 합치기. Squash는 커밋 여러 개를 하나로</td><td>리드만 누른다. 머지되면 원격 브랜치 자동 삭제, Issue 자동 닫힘</td></tr>
 </table></div>
 
@@ -926,7 +926,7 @@ Closes #13</pre>
 <p style="font-size:13.5px">해당 없는 체크 칸(위의 [interface])은 비워 둔다. 프롬프트 파일을 바꾼 PR이면 "확인 방법"에 정상·되묻기·보류 질문 1개씩의 실행 결과를 붙인다.</p>
 
 <h2>7. 리뷰에서 수정 요청이 오면</h2>
-<p>같은 브랜치에서 고치고 push하면 PR에 자동으로 올라간다. 새 PR을 만들지 않는다. push하면 이전 승인이 사라지므로, PR 페이지 오른쪽 Reviewers의 C-Designer 옆 ↻(Re-request review)를 누르고 Slack <code>proj_3rd</code>에 한 줄 남긴다. 카드가 Review 칸 밖으로 나가 있으면 다시 Review로.</p>
+<p>같은 브랜치에서 고치고 push하면 PR에 자동으로 올라간다. 새 PR을 만들지 않는다. 고친 뒤 PR 페이지 오른쪽 Reviewers의 C-Designer 옆 ↻(Re-request review)를 누르고 Slack <code>proj_3rd</code>에 한 줄 남긴다. 카드가 Review 칸 밖으로 나가 있으면 다시 Review로.</p>
 <pre class="cmd">git add &lt;고친 파일&gt;
 git commit -m "fix: 리뷰 반영, 각주가 끊기던 청크 수정"
 git push</pre>
@@ -949,7 +949,7 @@ git push</pre>
 <tr><td>실행 증거 없이 PR</td><td>리드가 돌려보낸다(CI가 없어서 증거가 CI 역할)</td><td>명령과 결과 캡처를 본문에</td></tr>
 <tr><td>spec은 안 고치고 코드만</td><td>체크 항목 미충족으로 돌려보낸다</td><td>같은 PR에서 spec의 해당 줄을 고친다</td></tr>
 <tr><td><code>contracts.py</code>를 조용히 바꿈</td><td>짝의 코드가 깨진다</td><td>제목에 <code>[interface]</code>, 라벨 interface, 짝에게 먼저 말하기</td></tr>
-<tr><td>승인 떴다고 내가 머지 버튼</td><td>팀 규칙 위반(GitHub는 못 막음)</td><td>머지는 리드만</td></tr>
+<tr><td>머지 버튼이 열려 있다고 내가 누름</td><td>팀 규칙 위반(GitHub는 못 막음)</td><td>머지는 리드만</td></tr>
 <tr><td><code>gh pr create --fill</code></td><td>본문이 커밋 메시지로 채워져 템플릿이 사라진다</td><td><code>--body-file ~/pr.md</code> 또는 웹에서 템플릿 채우기</td></tr>
 <tr><td>PR 본문에 <code>Closes #N</code>을 안 씀</td><td>머지돼도 Issue가 안 닫히고 카드가 안 움직인다</td><td>본문 맨 아래 한 줄</td></tr>
 <tr><td>머지 뒤 <code>git branch -d</code></td><td>"not fully merged" 오류(Squash라 그렇다)</td><td><code>-D</code></td></tr>
@@ -1049,7 +1049,7 @@ def make_index(urls):
 <tr><td>Hit@k · Recall@k</td><td>검색이 정답 문서를 하나라도 찾았나(Hit), 몇 개나 찾았나(Recall). k = 답 만들 때 쓴 상위 조각 수</td></tr>
 <tr><td>RAGAS Faithfulness · Judge 4항목</td><td>답이 찾아온 자료에 근거했나(Faithfulness), 그리고 사실·조건·근거·판단이 각각 맞나(Judge, 0/1). 둘을 합산하지 않는다</td></tr>
 <tr><td>null (해당 없음 / 평가 불가)</td><td>점수를 매길 대상이 없거나 채점이 실패한 경우. 0으로 바꾸지 않고 평균에서 뺀다</td></tr>
-<tr><td>룰셋 · CODEOWNERS</td><td>GitHub 설정. main에 직접 push를 막고, 리드 승인이 없으면 머지 버튼이 안 열린다</td></tr>
+<tr><td>룰셋 · CODEOWNERS</td><td>GitHub 설정. main에 직접 push와 Squash 외 머지를 막는다. 승인은 요구하지 않고, CODEOWNERS는 리드를 리뷰어로 자동 지정만 한다</td></tr>
 <tr><td>Squash and merge</td><td>PR의 커밋 여러 개를 하나로 합쳐 main에 넣는 방식. 리드만 한다. 머지 뒤 로컬 브랜치는 <code>git branch -D</code>로 지운다</td></tr>
 <tr><td>M0 ~ M6</td><td>날짜별 마일스톤. M1 뼈대(11/6) · M3 동결·전체 실행(11/10) · M6 제출(11/13)이 GitHub 마일스톤으로 등록돼 있다. 발표본까지 전부 M5(11/12)에 끝내고 금요일은 리허설과 제출만</td></tr>
 </table></div>

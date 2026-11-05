@@ -72,7 +72,7 @@
 
 ## 코드 리뷰와 머지
 
-**리뷰와 머지는 리드가 전부 한다.** GitHub 룰셋으로 리드 승인 없이는 머지되지 않게 강제한다(설정은 [branch-strategy.md](branch-strategy.md)).
+**리뷰와 머지는 리드가 전부 한다.** GitHub 룰셋은 PR 필수·Squash만·직접 push 금지까지만 강제하고 승인은 요구하지 않으므로, 머지 버튼을 리드만 누르는 것은 팀 규칙이다(설정은 [branch-strategy.md](branch-strategy.md)).
 
 | 항목 | 규칙 |
 |---|---|
