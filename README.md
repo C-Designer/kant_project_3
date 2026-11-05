@@ -37,7 +37,7 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 짝(서로 변경을 먼저 알려주는 사이): `search`↔`answer`, `metrics`↔`judge`, `platform`↔`metrics`. 리뷰·머지는 리드가 한다.
 
-뼈대(`naive` 1문항 end-to-end + contracts + config)는 리드가 11/6 오전까지 머지한다. 그 뒤 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
+뼈대(`naive` 1문항 end-to-end + contracts + config)는 리드가 11/5에 머지한다. 그 뒤 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
 
 스택: Python, pypdf, LangChain, 로컬 E5, Qdrant, FastAPI, Langfuse, RAGAS. 결정은 [ADR 0003](docs/adr/0003-stack.md).
 
@@ -75,6 +75,16 @@ uv run pytest tests/test_environment.py   # 환경 확인: 4 passed가 나와야
 uv run pytest -q                          # 이후 실행은 모두 uv run으로
 ```
 
+**스켈레톤 실행** (`.env`에 키를 채운 뒤)
+
+```bash
+cp .env.example .env                          # 키는 .env에만 둔다
+uv run python -m src.search.index             # PDF 색인 (옵션: --only FB01.pdf)
+uv run uvicorn src.api.main:app               # API 서버
+curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
+  -d '{"question": "질문", "retrieval_mode": "naive"}'
+```
+
 **이미 다른 Python(3.13·3.14 등)으로 가상환경을 만들어 둔 경우**: 레포 안의 `.venv` 폴더를 지우고 `uv sync`를 다시 실행한다. 다른 곳에 만든 venv·conda 환경은 이 프로젝트에 쓰지 않는다. VS Code 등 에디터의 Python 인터프리터도 레포의 `.venv`로 바꾼다.
 
 **에디터나 AI 도구에서 import 오류가 나면** 먼저 `uv run pytest tests/test_environment.py`를 돌린다. 실패하면 환경이 어긋난 것이고, 메시지가 원인을 알려 준다.
@@ -91,7 +101,7 @@ uv run pytest -q                          # 이후 실행은 모두 uv run으로
   실제 실행으로 확인한 기능: 프롬프트→모델→파서 연결(LCEL), 청킹과 출처 메타데이터 유지, BM25 검색, Qdrant 저장·검색, hybrid 결합(EnsembleRetriever), FastAPI `/health`, Langfuse LangChain 콜백 import. E5 모델 실제 추론은 다운로드 용량 때문에 확인하지 않았다(설치만 확인).
 - **3.14는 쓸 수 없다.** RAGAS 의존성(`scikit-network`)이 3.14에서 빌드에 실패한다. 근거는 [docs/specs/judge.md](docs/specs/judge.md) "실행 환경 제약".
 - 패키지를 추가할 때는 `pip install` 대신 `uv add <패키지>`를 쓰고, 바뀐 `pyproject.toml`과 `uv.lock`을 같은 PR에 넣는다. 의존성 변경은 다른 영역에도 영향을 주므로 PR 제목에 `[interface]`를 붙인다.
-- `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/12)에서 실패한다.
+- `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/11)에서 실패한다.
 
 ### 데이터셋 받기
 
