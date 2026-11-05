@@ -19,7 +19,7 @@
 6. 점수는 `platform.tracing.record_score(request_id, ...)`로 Langfuse 트레이스에 붙인다.
 7. **사람 확인**: 대표 사례(좋아진·나빠진 것, 영역당 2~3건)를 PDF 원문과 대조해 `results/review.md`에. 자동 채점 오류를 발견하면 원래 점수와 수정 이유를 함께 남긴다. 사람 확인이 자동 평가를 대신하지 않는다.
 
-미정: 평가 LLM(생성 모델과 같아도 됨, `config.py`), Judge 프롬프트 파일(`src/judge/prompts/`), 재시도 정책.
+미정: Judge 프롬프트 파일(`src/judge/prompts/`), 재시도 정책. (평가 LLM은 `gpt-6-luna`로 확정, 2026-11-05. 생성 모델과 같고 `platform.llm.call(kind="eval")`로 분리 호출. `config.py`에 기록.)
 
 ## 실행 환경 제약
 

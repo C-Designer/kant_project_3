@@ -53,7 +53,7 @@
 
 | 날 | 마일스톤 | 이 날 끝에 돼 있어야 하는 것 |
 |---|---|---|
-| 11/5 (목) | **M0** | 분야 해운 · Basic, 담당 확정(완료). 각자 데이터 다운로드. 각자 로컬 환경(uv sync, Qdrant). Langfuse Cloud 프로젝트 초대. 발표 목차 합의. 리드가 뼈대 시작 |
+| 11/5 (목) | **M0** | 분야 해운 · Basic, 담당 확정(완료). 각자 데이터 다운로드. 각자 로컬 환경(uv sync). 리드가 팀 VM에 Langfuse·Qdrant 셀프호스트 시작. 발표 목차 합의. 리드가 뼈대 시작 |
 | 11/6 (금) | **M1** | 뼈대 머지. 전원 로컬에서 `naive` 1문항 실행 확인. 각자 영역 첫 PR |
 | 11/7 (토) | | search: 청킹 v1·hybrid 초안 / answer: 프롬프트 v1이 정상·되묻기·보류 각 1문항 통과 / metrics: 로더·러너·Hit/Recall / judge: Judge 프롬프트 초안·`null` 규칙 테스트 / platform: Langfuse 스팬·config |
 | 11/8 (일) | | search: hybrid 완성 / answer: 출력 검증·재생성 / metrics: 운영 지표 집계·표 초안 / judge: RAGAS·Judge 1문항 통과 / platform: LLM 래퍼 측정·오류 응답. 리드: 슬라이드 뼈대 |
@@ -118,7 +118,7 @@
 
 1. ~~분야·난이도~~ 해운 · Basic 확정
 2. 담당 확인 (Slack 투표 결과: search 윤승환 / answer 천희재 / metrics 오주헌 / judge 김경민 / platform 김창동)
-3. spec 미정 항목: ~~k 기본값~~ 5 · ~~Langfuse~~ Cloud · ~~Python 버전·패키지 관리~~ 3.12 + uv(#53) 확정. 남은 것: 평가 LLM
+3. spec 미정 항목: ~~k 기본값~~ 5 · ~~Langfuse~~ 셀프호스트(팀 VM) · ~~평가 LLM~~ gpt-6-luna · ~~Qdrant~~ 팀 VM 서버 · ~~Python 버전·패키지 관리~~ 3.12 + uv(#53) 모두 확정. 남은 것: VM 제공자, HTTP 상태 정책
 4. ~~데이터 다운로드와 PDF 수 검수 당번~~ 당번 없음. 각자 받는다
 5. 협업 짝 확인 (search↔answer, metrics↔judge, platform↔metrics)
 6. 발표 목차 7장 합의, 발표 시간 공지 확인
@@ -131,4 +131,5 @@
 | 프롬프트가 되묻기·보류를 못 가림 | 11/9 M2에서 추가 확인·보류 문항 각 1개 이상 통과를 조건으로 |
 | 동결 후 설정 변경 유혹 | 바꾸면 전체 재실행. 리드가 막는다 |
 | 평가 LLM 비용·한도 | 질문 수를 비용 안에서 정한다. 채점 토큰은 별도 집계 |
+| 팀 VM(Langfuse·Qdrant 셀프호스트)이 늦어지거나 불안정 | 로컬 `docker run qdrant/qdrant`로 개발을 계속한다. VM은 11/9까지, 안 되면 Langfuse만 Cloud 무료 티어로 대체 |
 | 재실행 실패 | 11/12에 구현 안 한 사람이 README대로 설치 |
