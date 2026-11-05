@@ -174,7 +174,7 @@ b.append(box(xs[5],y,bw,bh,"generate()","프롬프트 · JSON 검증",cls="answe
 ay = y+22
 labels = ["question, mode", "QueryRequest", "query", "list[RetrievedChunk]", "list[ContextChunk]"]
 for i in range(5):
-    b.append(arrow([(xs[i]+bw,ay),(xs[i+1],ay)], labels[i], lx=(xs[i]+bw+xs[i+1])/2, ly=ay-10))
+    b.append(arrow([(xs[i]+bw,ay),(xs[i+1],ay)], labels[i], lx=(xs[i]+bw+xs[i+1])/2, ly=y-8))
 # return LLMOutput+citations to run_query
 b.append(arrow([(900,y+bh),(900,150),(430,150),(430,y+bh)], "LLMOutput + list[Citation]  (source_ids ⊆ 문맥 ID 검증 후)", lx=665, ly=144))
 # response to client
@@ -1057,30 +1057,61 @@ def make_index(urls):
 
 STANDALONE_HEAD = '<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<style>html,body{margin:0}body{font-size:14px}</style>\n'
 
-def standalone(page):
-    """아티팩트 모드 페이지(머리말 없이 title·style·본문)를 브라우저에서 바로 열리는 완전한 HTML로 감싼다."""
-    head_part, body = page.split('<div class="wrap">', 1)
-    return STANDALONE_HEAD + head_part + '</head>\n<body>\n<div class="wrap">' + body + '\n</body>\n</html>\n'
+TABS = [("index","지도"),("meeting","킥오프 자료"),("guide","GitHub 안내"),("flow","① 과정"),("repo","② 레포"),("github","③ 운영"),("schedule","④ 일정")]
+
+def bundle(rendered):
+    """7장을 한 파일에 담는다. 링크는 전부 #이름 이라 어떤 뷰어에서 열어도 다른 파일로 가지 않는다."""
+    head_part = rendered["index"].split('<div class="wrap">',1)[0]
+    head_part = head_part.replace("<title>proj_3rd 킥오프 지도</title>","<title>proj_3rd 킥오프 자료</title>")
+    css = ('<style>.tabs{position:sticky;top:0;z-index:6;background:var(--bg);border-bottom:1px solid var(--line);'
+           'display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:8px max(16px,env(safe-area-inset-left,0px))}'
+           '.tabs a{flex:0 0 auto;font-size:13px;padding:5px 11px;border-radius:999px;color:var(--fg);text-decoration:none;white-space:nowrap;border:1px solid transparent}'
+           '.tabs a.on{background:var(--paper);border-color:var(--line);font-weight:600}'
+           '.tabs a:hover,.tabs a:focus-visible{border-color:var(--accent);outline:none}'
+           '.page[hidden]{display:none}nav.agenda{top:44px}section.item{scroll-margin-top:100px}</style>\n')
+    tabs = '<nav class="tabs" aria-label="페이지">' + "".join(f'<a href="#{n}">{html.escape(l)}</a>' for n,l in TABS) + '</nav>\n'
+    body = ""
+    for n,_ in TABS:
+        content = rendered[n].split('<div class="wrap">',1)[1]
+        body += f'<div class="page" data-page="{n}" hidden>\n<div class="wrap">{content}</div>\n'
+    script = r"""<script>
+(function(){
+  var names=%s;
+  function show(){
+    var h=decodeURIComponent(location.hash.slice(1))||'index', el=null, page=null;
+    if(names.indexOf(h)>=0){page=h;}else{el=document.getElementById(h);var p=el&&el.closest('.page');page=p?p.getAttribute('data-page'):'index';}
+    document.querySelectorAll('.page').forEach(function(p){p.hidden=p.getAttribute('data-page')!==page;});
+    document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+page);});
+    if(el){el.scrollIntoView();}else{window.scrollTo(0,0);}
+  }
+  window.addEventListener('hashchange',show); show();
+})();
+</script>""" % json.dumps([n for n,_ in TABS])
+    return STANDALONE_HEAD + head_part + css + '</head>\n<body>\n' + tabs + body + script + '\n</body>\n</html>\n'
 
 if __name__ == "__main__":
     # 사용법:
-    #   python3 gen.py                      → 이 폴더에 독립 HTML 7장 (서로 상대 링크). 레포용.
-    #   python3 gen.py --artifact '{json}'  → claude.ai 아티팩트용 (머리말 없음, 링크는 json의 URL)
+    #   python3 gen.py                      → 이 폴더에 index.html 한 파일 (7장을 탭으로). 레포용.
+    #   python3 gen.py --artifact '{json}'  → claude.ai 아티팩트용 7개 파일 (머리말 없음, 링크는 json의 URL)
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--artifact", help="아티팩트 URL json")
     ap.add_argument("--out", default=str(OUT))
     a = ap.parse_args()
     out = pathlib.Path(a.out)
-    names = ["index","meeting","guide","flow","repo","github","schedule"]
+    names = [n for n,_ in TABS]
     if a.artifact:
-        urls = json.loads(a.artifact); wrap = lambda x: x
+        urls = json.loads(a.artifact)
+        idx = urls.get("index","#")
+        for k,v in pages.items():
+            (out/f"{k}.html").write_text(v.replace("__INDEX__",idx),encoding="utf-8")
+        (out/"index.html").write_text(make_index(urls),encoding="utf-8")
+        (out/"meeting.html").write_text(meeting(urls),encoding="utf-8")
+        (out/"guide.html").write_text(guide(urls),encoding="utf-8")
+        print("ok artifact", names)
     else:
-        urls = {n: f"{n}.html" for n in names}; wrap = standalone
-    idx = urls.get("index","#")
-    for k,v in pages.items():
-        (out/f"{k}.html").write_text(wrap(v.replace("__INDEX__",idx)),encoding="utf-8")
-    (out/"index.html").write_text(wrap(make_index(urls)),encoding="utf-8")
-    (out/"meeting.html").write_text(wrap(meeting(urls)),encoding="utf-8")
-    (out/"guide.html").write_text(wrap(guide(urls)),encoding="utf-8")
-    print("ok", "artifact" if a.artifact else "standalone", names)
+        urls = {n: f"#{n}" for n in names}
+        rendered = {k: v.replace("__INDEX__","#index") for k,v in pages.items()}
+        rendered["index"] = make_index(urls); rendered["meeting"] = meeting(urls); rendered["guide"] = guide(urls)
+        (out/"index.html").write_text(bundle(rendered),encoding="utf-8")
+        print("ok bundle -> index.html")
