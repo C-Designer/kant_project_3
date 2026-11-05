@@ -75,6 +75,16 @@ uv run pytest tests/test_environment.py   # 환경 확인: 4 passed가 나와야
 uv run pytest -q                          # 이후 실행은 모두 uv run으로
 ```
 
+**스켈레톤 실행** (`.env`에 키를 채운 뒤)
+
+```bash
+cp .env.example .env                          # 키는 .env에만 둔다
+uv run python -m src.search.index             # PDF 색인 (옵션: --only FB01.pdf)
+uv run uvicorn src.api.main:app               # API 서버
+curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
+  -d '{"question": "질문", "retrieval_mode": "naive"}'
+```
+
 **이미 다른 Python(3.13·3.14 등)으로 가상환경을 만들어 둔 경우**: 레포 안의 `.venv` 폴더를 지우고 `uv sync`를 다시 실행한다. 다른 곳에 만든 venv·conda 환경은 이 프로젝트에 쓰지 않는다. VS Code 등 에디터의 Python 인터프리터도 레포의 `.venv`로 바꾼다.
 
 **에디터나 AI 도구에서 import 오류가 나면** 먼저 `uv run pytest tests/test_environment.py`를 돌린다. 실패하면 환경이 어긋난 것이고, 메시지가 원인을 알려 준다.
