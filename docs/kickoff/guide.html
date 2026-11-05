@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html,body{margin:0}body{font-size:14px}</style>
+<title>GitHub가 처음이라면</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --bg:#f5f7f9; --paper:#ffffff; --fg:#1b2731; --muted:#5b6b78; --line:#d6dde3; --soft:#eaeff3;
+  --accent:#0f6e8c; --warn:#b4452c;
+  --search:#1e7f8f; --answer:#a86b0a; --metrics:#6a58b5; --judge:#b5436e; --platform:#4b6578; --skeleton:#7a7f85; --docs:#8a7f5a;
+  --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1000px;margin:0 auto}
+header.top{padding-block:28px 8px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:.3em 0 .35em;text-wrap:balance;font-weight:700}
+h2{font-size:20px;margin:40px 0 10px;text-wrap:balance}
+h3{font-size:15.5px;margin:22px 0 6px}
+p,li{max-width:70ch}
+.lede{color:var(--muted);font-size:15px;margin:0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+figure{margin:16px 0 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+.fig svg{display:block;min-width:720px;max-width:100%;height:auto;margin:0 auto;font-family:var(--sans)}
+figcaption{font-size:13px;color:var(--muted);margin:8px 4px 0;max-width:none}
+svg text{fill:currentColor;font-size:12px}
+svg .t{font-weight:600;font-size:12.5px}
+svg .f{font-family:var(--mono);font-size:12px;font-weight:500}
+svg .s{font-size:10.5px;fill:var(--muted)}
+svg .lbl{font-size:10.5px;fill:var(--muted)}
+svg .box rect{fill:var(--paper);stroke:currentColor;stroke-width:1.1;rx:5}
+svg .box.search rect{fill:var(--search);stroke:none} svg .box.answer rect{fill:var(--answer);stroke:none}
+svg .box.metrics rect{fill:var(--metrics);stroke:none} svg .box.judge rect{fill:var(--judge);stroke:none}
+svg .box.platform rect{fill:var(--platform);stroke:none} svg .box.skeleton rect{fill:var(--skeleton);stroke:none}
+svg .box.docs rect{fill:var(--docs);stroke:none}
+svg .box.search text,svg .box.answer text,svg .box.metrics text,svg .box.judge text,svg .box.platform text,svg .box.skeleton text,svg .box.docs text{fill:#fff}
+svg .box.search .s,svg .box.answer .s,svg .box.metrics .s,svg .box.judge .s,svg .box.platform .s,svg .box.skeleton .s,svg .box.docs .s{fill:rgba(255,255,255,.85)}
+svg .ar{fill:none;stroke:currentColor;stroke-width:1.2}
+svg .ar.dash{stroke-dasharray:4 3;stroke:var(--muted)}
+svg .ar.ban{stroke:var(--warn);stroke-dasharray:5 3;stroke-width:1.4}
+svg .band rect{fill:var(--soft);stroke:var(--line);rx:6}
+svg .col rect{fill:var(--paper);stroke:var(--line);rx:8}
+svg .milestone rect{fill:var(--accent);rx:3}
+svg .milestone text{fill:#fff;font-weight:600;font-size:10.5px}
+svg .freeze{stroke:var(--warn);stroke-width:1.4;stroke-dasharray:5 3}
+svg .grid{stroke:var(--line);stroke-width:1}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.tbl{overflow-x:auto}
+.chip{display:inline-block;font-family:var(--mono);font-size:11.5px;color:#fff;padding:1px 7px;border-radius:4px;line-height:1.5}
+.chip.search{background:var(--search)}.chip.answer{background:var(--answer)}.chip.metrics{background:var(--metrics)}
+.chip.judge{background:var(--judge)}.chip.platform{background:var(--platform)}.chip.skeleton{background:var(--skeleton)}.chip.docs{background:var(--docs)}
+.chip.iface{background:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12.5px;color:var(--muted);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.card{display:block;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;color:inherit;text-decoration:none;min-width:0}
+.card:hover,.card:focus-visible{border-color:var(--accent);outline:none}
+.card b{display:block;font-size:15.5px;margin-bottom:4px}
+.card span{font-size:13px;color:var(--muted)}
+.note{border-left:3px solid var(--accent);padding:6px 12px;background:var(--paper);font-size:14px;margin:14px 0}
+.note.warn{border-color:var(--warn)}
+pre.tree{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:12px 0 0}
+pre.tree i{font-style:normal;color:var(--muted)}
+ol.steps{padding-left:1.3em}
+ol.steps li{margin:4px 0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.two>div{min-width:0}
+nav.back{font-size:13px;margin-top:10px}
+a{color:var(--accent)}
+footer{margin-top:48px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.agenda{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:0 0 8px;padding:8px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.agenda a{flex:0 0 auto;font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;background:var(--paper);white-space:nowrap}
+nav.agenda a:hover,nav.agenda a:focus-visible{border-color:var(--accent);outline:none}
+section.item{padding:28px 0 8px;border-top:1px solid var(--line);scroll-margin-top:64px}
+section.item:first-of-type{border-top:0}
+.q{font-size:clamp(20px,3vw,26px);margin:4px 0 6px;text-wrap:balance}
+.say{font-size:15.5px;max-width:72ch;margin:0 0 12px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.tile b{display:block;margin-bottom:3px}
+.tile span{font-size:13px;color:var(--muted)}
+.check{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.check li{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14.5px}
+.check li::before{content:"";flex:0 0 18px;height:18px;border:1.6px solid var(--muted);border-radius:4px;margin-top:3px}
+.steps2{counter-reset:s;display:grid;gap:10px;margin-top:10px}
+.step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.step>div{min-width:0}
+.step b{display:block;margin-bottom:2px}
+.step p{margin:2px 0;font-size:14px}
+pre.cmd{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;margin:6px 0 0}
+pre.cmd i{font-style:normal;color:var(--muted)}
+.appendix{font-size:13.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px;margin-top:8px}
+.kv b{color:var(--muted);font-weight:500}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="eyebrow">proj_3rd · kant_project_3 · GitHub 안내</div>
+<h1>GitHub가 처음이라면</h1>
+<p class="lede">이 팀에서 GitHub를 쓰는 방법만 적었다. 무엇이 무엇에 붙어 있나 → 용어 → 어디서 보나 → 처음 한 번 설정 → 내 하루 → PR 본문 예시 → 수정 요청·충돌 → 자주 하는 실수 → 새 Issue 만들기. 10분이면 읽는다.</p>
+<nav class="back">← <a href="meeting.html">킥오프 자료</a> · <a href="index.html">지도</a></nav></header>
+
+<h2>1. 한 장으로: 무엇이 무엇에 붙어 있나</h2>
+<p>GitHub에는 "할 일"을 적는 Issue와 "바꾼 코드"를 올리는 PR이 있고, 둘은 <code>Closes #번호</code>로 이어진다. Project 보드는 Issue를 카드로 보여주는 별도 화면이라 Issue를 만들면 알아서 나타난다.</p>
+<figure><div class="fig"><svg viewBox="0 0 900 330" role="img" aria-label="저장소 안의 Issue에 라벨·마일스톤·담당자가 붙고, 작업 브랜치의 PR이 Closes로 Issue를 가리키며, 머지되면 Issue가 닫힌다. Project 보드는 Issue를 카드로 보여주는 별도 화면이다" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><rect x="20" y="14" width="570" height="296" rx="10" fill="none" stroke="var(--line)"/><text class="t" x="32" y="52" text-anchor="start">저장소 github.com/C-Designer/kant_project_3</text><rect x="620" y="20" width="260" height="290" rx="10" fill="none" stroke="var(--line)"/><text class="t" x="632" y="42" text-anchor="start">Project 보드 (projects/1)</text><g class="box search"><rect x="40" y="62" width="200" height="60"/><text class="f" x="140.0" y="89.0" text-anchor="middle">Issue #13</text><text class="s" x="140.0" y="104.0" text-anchor="middle">[search] 청킹 전략 결정·구현</text></g><g class="box "><rect x="270" y="50" width="130" height="32"/><text class="t" x="335.0" y="70.0" text-anchor="middle">라벨: search</text></g><g class="box "><rect x="270" y="90" width="130" height="32"/><text class="t" x="335.0" y="110.0" text-anchor="middle">마일스톤: M3 (11/10)</text></g><g class="box "><rect x="270" y="130" width="130" height="32"/><text class="t" x="335.0" y="150.0" text-anchor="middle">담당자: @yshzjq</text></g><polyline class="ar " points="240,80 270,66" marker-end="url(#a)"/><polyline class="ar " points="240,92 270,106" marker-end="url(#a)"/><polyline class="ar " points="240,104 270,146" marker-end="url(#a)"/><text class="lbl" x="410" y="66" text-anchor="start">← Issue에 붙는 것 3개</text><text class="lbl" x="410" y="80" text-anchor="start">라벨: 영역으로 필터</text><text class="lbl" x="410" y="106" text-anchor="start">마일스톤: 기한 있는 묶음</text><text class="lbl" x="410" y="120" text-anchor="start">M1 4개 · M3 28개 · M6 8개</text><text class="lbl" x="410" y="146" text-anchor="start">담당자: 항상 1명</text><g class="box "><rect x="40" y="210" width="100" height="40"/><text class="f" x="90.0" y="234.0" text-anchor="middle">main</text></g><g class="box "><rect x="180" y="210" width="150" height="40"/><text class="f" x="255.0" y="234.0" text-anchor="middle">feat/chunking</text></g><g class="box platform"><rect x="370" y="200" width="200" height="60"/><text class="f" x="470.0" y="227.0" text-anchor="middle">PR #N</text><text class="s" x="470.0" y="242.0" text-anchor="middle">본문에 Closes #13 · 리드 리뷰 → 머지</text></g><polyline class="ar " points="140,230 180,230" marker-end="url(#a)"/><text class="lbl" x="160" y="220" text-anchor="middle">분기</text><polyline class="ar " points="330,230 370,230" marker-end="url(#a)"/><text class="lbl" x="350" y="220" text-anchor="middle">push</text><polyline class="ar " points="470,260 470,285 90,285 90,250" marker-end="url(#a)"/><text class="lbl" x="280" y="279" text-anchor="middle">Squash and merge (리드만)</text><polyline class="ar dash" points="470,200 470,178 140,178 140,122" marker-end="url(#am)"/><text class="lbl" x="305" y="192" text-anchor="middle">머지되면 Issue 자동 닫힘</text><g class="col"><rect x="636" y="58" width="228" height="48"/></g><text class="t" x="648" y="78" text-anchor="start">Todo</text><text class="s" x="648" y="95" text-anchor="start">Issue 만들면 자동</text><polyline class="ar " points="750,106 750,118" marker-end="url(#a)"/><g class="col"><rect x="636" y="118" width="228" height="48"/></g><text class="t" x="648" y="138" text-anchor="start">In Progress</text><text class="s" x="648" y="155" text-anchor="start">PR 연결되면 자동</text><polyline class="ar " points="750,166 750,178" marker-end="url(#a)"/><g class="col"><rect x="636" y="178" width="228" height="48"/></g><text class="t" x="648" y="198" text-anchor="start">Review</text><text class="s" x="648" y="215" text-anchor="start">PR 올린 사람이 수동으로</text><polyline class="ar " points="750,226 750,238" marker-end="url(#a)"/><g class="col"><rect x="636" y="238" width="228" height="48"/></g><text class="t" x="648" y="258" text-anchor="start">Done</text><text class="s" x="648" y="275" text-anchor="start">머지·닫힘 시 자동</text><polyline class="ar dash" points="140,62 140,30 600,30 600,82 636,82" marker-end="url(#am)"/><text class="lbl" x="370" y="26" text-anchor="middle">카드로 자동 등장</text></svg></div><figcaption>그림. 왼쪽이 저장소 안의 것들, 오른쪽이 보드. Issue 하나에 라벨·마일스톤·담당자가 붙고, PR이 머지되면 Issue가 닫히면서 카드가 Done으로 간다.</figcaption></figure>
+
+<h2>2. 용어 9개</h2>
+<div class="tbl"><table>
+<tr><th>말</th><th>뜻</th><th>이 팀에서는</th></tr>
+<tr><td><b>Issue</b></td><td>할 일 하나를 적은 글. 번호(#13)가 붙는다</td><td>반나절~하루 크기. 본문에 할 일·완료 조건·기준 문서. 지금 40개(#8~#47)가 열려 있다</td></tr>
+<tr><td><b>라벨</b></td><td>Issue에 붙이는 색 태그</td><td>영역 이름 하나(<span class="chip search">search</span> <span class="chip answer">answer</span> <span class="chip metrics">metrics</span> <span class="chip judge">judge</span> <span class="chip platform">platform</span> <span class="chip skeleton">skeleton</span> <span class="chip docs">docs</span>). <span class="chip iface">interface</span>는 공용 파일을 바꿀 때 추가</td></tr>
+<tr><td><b>마일스톤</b></td><td>기한이 있는 Issue 묶음. 진행률이 보인다</td><td>3개뿐: M1 뼈대(11/6) · M3 동결·전체 실행(11/10) · M6 제출(11/13). 11/9까지 끝낼 것은 전부 M3. 일정표의 M0·M2·M4·M5는 GitHub에 없다. GitHub에 등록된 기한 날짜는 전날(11/5·11/9·11/12)로 돼 있으니 제목의 날짜를 기준으로 본다</td></tr>
+<tr><td><b>담당자</b>(Assignee)</td><td>그 Issue를 하는 사람</td><td>항상 1명. "담당별" 보드 뷰가 이걸로 묶는다</td></tr>
+<tr><td><b>Project 보드</b></td><td>Issue를 칸(Status)별로 보여주는 칸반 화면</td><td>Todo → In Progress → Review → Done. Review로 옮기는 것만 내가 직접</td></tr>
+<tr><td><b>브랜치</b></td><td>main을 복사해 따로 작업하는 줄기</td><td>이름 <code>&lt;type&gt;/&lt;짧은-설명&gt;</code>, 예 <code>feat/chunking</code>. main에는 직접 못 올린다(GitHub가 막음)</td></tr>
+<tr><td><b>PR</b>(Pull Request)</td><td>"내 브랜치를 main에 넣어 주세요"라는 요청. 바뀐 내용과 설명이 같이 보인다</td><td>제목 <code>&lt;type&gt;: 설명</code>, 본문은 템플릿, <code>Closes #13</code>. 실행 증거 필수</td></tr>
+<tr><td><b>리뷰 · 승인</b></td><td>다른 사람이 PR을 보고 Approve 또는 수정 요청</td><td>리드만 한다. 새로 push하면 승인이 사라져서 다시 봐야 한다</td></tr>
+<tr><td><b>머지</b>(Squash and merge)</td><td>PR을 main에 합치기. Squash는 커밋 여러 개를 하나로</td><td>리드만 누른다. 머지되면 원격 브랜치 자동 삭제, Issue 자동 닫힘</td></tr>
+</table></div>
+
+<h2>3. 어디서 보나</h2>
+<p>보드는 저장소의 Projects 탭이 아니라 리드 계정의 프로젝트라 링크로 간다. 상단 탭이 두 개: <b>보드</b>(Todo/In Progress/Review/Done 칸)와 <b>담당별</b>(사람별 묶음). 카드를 칸 사이로 옮길 때는 "보드" 탭이어야 한다.</p>
+<div class="tbl"><table>
+<tr><th>보고 싶은 것</th><th>여는 곳</th><th>필터 칸에 넣을 것</th></tr>
+<tr><td>내 할 일</td><td><a href="https://github.com/users/C-Designer/projects/1">Project 보드</a> → 상단 탭 "담당별"</td><td>—</td></tr>
+<tr><td>내 Issue만 목록으로</td><td><a href="https://github.com/C-Designer/kant_project_3/issues">Issues</a></td><td><code>is:open assignee:@me</code></td></tr>
+<tr><td>내 영역 전체</td><td>Issues</td><td><code>is:open label:search</code> (영역 이름으로)</td></tr>
+<tr><td>이번 마일스톤에 남은 것</td><td><a href="https://github.com/C-Designer/kant_project_3/milestones">Milestones</a> (Issues 탭 안의 "Milestones" 버튼) → M3 클릭</td><td>—</td></tr>
+<tr><td>리뷰 기다리는 PR</td><td><a href="https://github.com/C-Designer/kant_project_3/pulls">Pull requests</a></td><td><code>is:open review:required</code></td></tr>
+<tr><td>공용 파일 바꾸는 PR</td><td>Pull requests</td><td><code>label:interface</code></td></tr>
+</table></div>
+
+<h2>4. 처음 한 번만</h2>
+<p>레포를 받고, 커밋에 이름을 붙이고, (쓰려면) GitHub 명령줄 도구 <code>gh</code>에 로그인한다. PR은 웹에서 만들어도 되므로 <code>gh</code>는 선택이다.</p>
+<pre class="cmd">git clone https://github.com/C-Designer/kant_project_3.git
+cd kant_project_3
+git config user.name "내 이름"
+git config user.email "GitHub 계정 이메일"
+brew install gh && gh auth login      <i># 선택. 브라우저가 열리면 GitHub 로그인</i>
+cp .env.example .env                  <i># 키는 여기만. 커밋되지 않는다</i></pre>
+
+<h2>5. 내 하루 (Issue 하나 기준)</h2>
+<div class="steps2">
+<div class="step"><div><b>아침에 보드를 본다</b><p>"담당별" 탭에서 내 카드 중 Todo 하나를 고른다. 카드를 열면 Issue 본문이 보인다. 할 일·완료 조건·기준 문서를 읽는다. 카드는 Todo에 그대로 둬도 된다(PR을 올리고 본문에 <code>Closes #번호</code>가 있으면 In Progress로 옮겨진다. 안 움직이면 "보드" 탭에서 직접 끌어다 놓는다).</p></div></div>
+<div class="step"><div><b>최신 main에서 브랜치를 만든다</b><p>main이 어제보다 바뀌었을 수 있으니 항상 pull부터.</p><pre class="cmd">git switch main
+git pull
+git switch -c feat/chunking      <i># type/짧은-설명. 영문 소문자, 하이픈</i></pre></div></div>
+<div class="step"><div><b>작업하고 커밋한다</b><p>에이전트(Claude Code, Codex)로 해도 된다. 단, 내가 설명할 수 있는 코드만. 커밋 메시지는 PR 제목과 같은 형식.</p><pre class="cmd">git add src/search/chunking.py docs/specs/search.md
+git commit -m "feat: 청킹 v1, 표·단위·적용일 보존"
+git push -u origin feat/chunking</pre></div></div>
+<div class="step"><div><b>PR을 올린다 (웹이 쉽다)</b><p>push 직후 저장소 첫 화면에 노란 띠 "Compare &amp; pull request"가 뜬다. 안 보이면 Pull requests 탭 → New pull request → compare를 내 브랜치로. 본문 칸에 템플릿이 자동으로 들어오니 채우고, 맨 아래 <code>Closes #13</code>. <b>캡처는 본문 입력창에 이미지를 드래그하거나 붙여넣으면 링크가 자동으로 생긴다.</b></p><p>명령줄로 하려면 (본문은 6절 예시를 레포 밖 파일, 예: <code>~/pr.md</code>에 써 둔다. 이미지는 PR 페이지에서 본문 오른쪽 ··· → Edit로 붙인다):</p><pre class="cmd">gh pr create --title "feat: 청킹 v1, 표·단위·적용일 보존" --body-file ~/pr.md</pre><p><code>gh pr create --fill</code>은 쓰지 않는다(템플릿이 사라진다).</p></div></div>
+<div class="step"><div><b>카드를 Review로 옮긴다</b><p>보드 상단 탭을 "보드"로 바꾸고 내 카드를 Review 칸으로 드래그한다(또는 카드 클릭 → 오른쪽 패널 Status → Review). 이것만 자동이 아니다. 이 칸에 있으면 "리드가 봐 주세요"라는 뜻.</p></div></div>
+<div class="step"><div><b>리드가 보고 머지한다</b><p>리드가 보는 4가지: ① 돌아가나(본문의 명령·캡처) ② spec·contracts와 맞나, spec도 고쳤나 ③ 키·개인정보·data/ 없나 ④ 내가 설명할 수 있나. 스타일·네이밍은 메모만 남기고 막지 않는다.</p></div></div>
+<div class="step"><div><b>머지되면 정리한다</b><p>원격 브랜치와 Issue는 알아서 정리된다. 로컬만 지운다. Squash 머지라 <code>-d</code>가 아니라 <code>-D</code>.</p><pre class="cmd">git switch main
+git pull
+git branch -D feat/chunking</pre></div></div>
+</div>
+
+<h2>6. PR 본문 예시 (Issue #13 청킹)</h2>
+<p>파일 이름과 쪽수는 예시다. 실제 PDF 이름으로 바꾼다.</p>
+<pre class="cmd">## 변경 내용
+표의 행·열 제목과 단위, 적용일이 한 청크에 남도록 청킹 규칙을 정했다 (크기 N, overlap M).
+spec의 "청킹: 크기·overlap 미정"을 값으로 바꿨다.
+
+## 확인 방법
+python -m src.search.index --dataset data/shipping
+→ data/shipping/ingest-report.json: 문서 15, 페이지 360, 청크 NNN, 실패 0
+&lt;파일A&gt;.pdf 요율표 쪽 청크 캡처: (입력창에 이미지 붙여넣기)
+&lt;파일B&gt;.pdf 정정 공지 쪽 청크 캡처: (입력창에 이미지 붙여넣기)
+
+## 체크
+- [x] 동작·구조가 바뀌었으면 관련 docs/specs/ 를 이 PR에서 갱신했다
+- [ ] contracts.py나 config.py를 바꿨으면 제목에 [interface], 의존 영역 담당자 확인
+- [x] 키·개인정보·data/가 들어가지 않았다
+- [x] 에이전트가 쓴 부분을 내가 설명할 수 있다
+
+Closes #13</pre>
+<p style="font-size:13.5px">해당 없는 체크 칸(위의 [interface])은 비워 둔다. 프롬프트 파일을 바꾼 PR이면 "확인 방법"에 정상·되묻기·보류 질문 1개씩의 실행 결과를 붙인다.</p>
+
+<h2>7. 리뷰에서 수정 요청이 오면</h2>
+<p>같은 브랜치에서 고치고 push하면 PR에 자동으로 올라간다. 새 PR을 만들지 않는다. push하면 이전 승인이 사라지므로, PR 페이지 오른쪽 Reviewers의 C-Designer 옆 ↻(Re-request review)를 누르고 Slack <code>proj_3rd</code>에 한 줄 남긴다. 카드가 Review 칸 밖으로 나가 있으면 다시 Review로.</p>
+<pre class="cmd">git add &lt;고친 파일&gt;
+git commit -m "fix: 리뷰 반영, 각주가 끊기던 청크 수정"
+git push</pre>
+
+<h2>8. main이 먼저 바뀌어서 충돌이 나면</h2>
+<p>PR 화면에 "This branch has conflicts"가 뜨면 올린 사람이 자기 브랜치에서 푼다. 남의 브랜치에는 push하지 않는다.</p>
+<pre class="cmd">git switch feat/chunking       <i># 내 브랜치에서</i>
+git fetch origin
+git merge origin/main          <i># 충돌 난 파일을 열어 &lt;&lt;&lt;&lt; ==== &gt;&gt;&gt;&gt; 를 정리. VS Code면 Accept Current/Incoming 버튼</i>
+git add &lt;정리한 파일&gt;
+git commit --no-edit           <i># 편집기 안 열고 기본 메시지로 커밋</i>
+git push</pre>
+
+<h2>9. 자주 하는 실수</h2>
+<div class="tbl"><table>
+<tr><th>실수</th><th>무슨 일이 생기나</th><th>대신</th></tr>
+<tr><td>main에서 바로 커밋·push</td><td>push가 거부된다(룰셋)</td><td>브랜치를 만들고 거기서. 이미 main에 커밋했다면 <code>git switch -c feat/x</code>로 옮긴 뒤 <code>git switch main && git reset --hard origin/main</code>으로 로컬 main을 원래대로</td></tr>
+<tr><td><code>data/</code>나 <code>.env</code>를 add</td><td>PDF·키가 저장소에 남는다. 리드가 PR을 막는다</td><td><code>.gitignore</code>가 막아 주지만 <code>git add .</code> 대신 파일을 지정해서 add</td></tr>
+<tr><td>PR 하나에 이틀치</td><td>리뷰가 느려지고 충돌이 커진다</td><td>반나절 단위로 쪼개서 올린다</td></tr>
+<tr><td>실행 증거 없이 PR</td><td>리드가 돌려보낸다(CI가 없어서 증거가 CI 역할)</td><td>명령과 결과 캡처를 본문에</td></tr>
+<tr><td>spec은 안 고치고 코드만</td><td>체크 항목 미충족으로 돌려보낸다</td><td>같은 PR에서 spec의 해당 줄을 고친다</td></tr>
+<tr><td><code>contracts.py</code>를 조용히 바꿈</td><td>짝의 코드가 깨진다</td><td>제목에 <code>[interface]</code>, 라벨 interface, 짝에게 먼저 말하기</td></tr>
+<tr><td>승인 떴다고 내가 머지 버튼</td><td>팀 규칙 위반(GitHub는 못 막음)</td><td>머지는 리드만</td></tr>
+<tr><td><code>gh pr create --fill</code></td><td>본문이 커밋 메시지로 채워져 템플릿이 사라진다</td><td><code>--body-file ~/pr.md</code> 또는 웹에서 템플릿 채우기</td></tr>
+<tr><td>PR 본문에 <code>Closes #N</code>을 안 씀</td><td>머지돼도 Issue가 안 닫히고 카드가 안 움직인다</td><td>본문 맨 아래 한 줄</td></tr>
+<tr><td>머지 뒤 <code>git branch -d</code></td><td>"not fully merged" 오류(Squash라 그렇다)</td><td><code>-D</code></td></tr>
+</table></div>
+
+<h2>10. 에이전트(Claude Code · Codex)로 작업할 때</h2>
+<ul>
+<li>레포의 <code>CLAUDE.md</code>·<code>AGENTS.md</code>가 규칙을 알려주므로 에이전트도 같은 순서로 문서를 읽는다. 다른 영역 폴더는 고치지 말라고 돼 있다.</li>
+<li>에이전트가 PR을 만들 때는 템플릿을 채운 본문을 <code>--title</code>, <code>--body</code>로 넘기게 한다.</li>
+<li>머지 전에 내가 그 코드를 발표에서 설명할 수 있어야 한다. 설명 못 하면 머지하지 않는다(체크 ④).</li>
+</ul>
+
+<h2>11. 지금 내 이름으로 열린 Issue</h2>
+<div class="tbl"><table>
+<tr><th>라벨</th><th>마일스톤</th><th>담당</th><th>Issue</th><th style="text-align:right">수</th></tr>
+<tr><td><span class="chip skeleton">skeleton</span></td><td>M1 뼈대 (11/6)</td><td>김창동<br><span class="mono" style="color:var(--muted)">@C-Designer</span></td><td>#8 contracts.py · #9 config.py · #10 naive 1문항 E2E · #11 규칙 고정 테스트</td><td class="num">4</td></tr><tr><td><span class="chip search">search</span></td><td>M3 동결·전체 실행 (11/10)</td><td>윤승환<br><span class="mono" style="color:var(--muted)">@yshzjq</span></td><td>#12 데이터셋 검수·ingest-report · #13 청킹 · #14 E5·Qdrant 스키마 · #15 hybrid · #16 hybrid_rerank · #17 spec 갱신</td><td class="num">6</td></tr><tr><td><span class="chip answer">answer</span></td><td>M3 동결·전체 실행 (11/10)</td><td>천희재<br><span class="mono" style="color:var(--muted)">@rjqnrll7-cmyk</span></td><td>#18 문맥 조립 · #19 프롬프트 v1 · #20 출력 검증·재생성 · #21 빈 결과·조건 누락 · #22 방어 프롬프트 · #23 spec 갱신</td><td class="num">6</td></tr><tr><td><span class="chip metrics">metrics</span></td><td>M3 동결·전체 실행 (11/10)</td><td>오주헌<br><span class="mono" style="color:var(--muted)">@ohjuhun1119</span></td><td>#24 로더 · #25 질문 선택 · #26 러너→RunRecord · #27 Hit@k·Recall@k · #30 spec 갱신</td><td class="num">5</td></tr><tr><td><span class="chip metrics">metrics</span></td><td>M6 제출 (11/13)</td><td>오주헌<br><span class="mono" style="color:var(--muted)">@ohjuhun1119</span></td><td>#28 운영 지표 집계 · #29 비교표</td><td class="num">2</td></tr><tr><td><span class="chip judge">judge</span></td><td>M3 동결·전체 실행 (11/10)</td><td>김경민<br><span class="mono" style="color:var(--muted)">@kokoball-eval</span></td><td>#31 Judge 프롬프트 v1·파싱 · #32 null 규칙 테스트 · #33 RAGAS · #34 llm.call(eval)·record_score · #35 평가 모델 확정 · #37 spec 갱신</td><td class="num">6</td></tr><tr><td><span class="chip judge">judge</span></td><td>M6 제출 (11/13)</td><td>김경민<br><span class="mono" style="color:var(--muted)">@kokoball-eval</span></td><td>#36 대표 사례 원문 대조 (results/review.md)</td><td class="num">1</td></tr><tr><td><span class="chip platform">platform</span></td><td>M3 동결·전체 실행 (11/10)</td><td>김창동<br><span class="mono" style="color:var(--muted)">@C-Designer</span></td><td>#38 /query 오류 응답 · #39 llm.call 측정·eval 분리 · #40 Langfuse 스팬·record_score · #41 config.py 동결 · #45 spec 갱신</td><td class="num">5</td></tr><tr><td><span class="chip platform">platform</span></td><td>M6 제출 (11/13)</td><td>김창동<br><span class="mono" style="color:var(--muted)">@C-Designer</span></td><td>#42 보안 비교 4개 · #43 README·교차 재실행 · #44 시연 녹화 백업</td><td class="num">3</td></tr><tr><td><span class="chip docs">docs</span></td><td>M6 제출 (11/13)</td><td>김창동<br><span class="mono" style="color:var(--muted)">@C-Designer</span></td><td>#46 발표자료 뼈대 7장 · #47 팀 Notion 제출</td><td class="num">2</td></tr>
+<tr><td colspan="4"><b>합계</b> (전부 Open, 2026-11-05)</td><td class="num"><b>40</b></td></tr>
+</table></div>
+<p style="font-size:13.5px">Issue보다 작은 수정(버그 하나)은 Issue 없이 PR만 올려도 된다. 리드가 매일 보드를 보고 In Progress에 이틀 넘게 있는 카드를 묻는다.</p>
+<h3>새 Issue를 만들 때</h3>
+<div class="steps2">
+<div class="step"><div><b>Issues 탭 → New issue</b><p>제목은 기존 것처럼 <code>[search] 청킹 overlap 재조정</code> 식으로 영역을 앞에.</p></div></div>
+<div class="step"><div><b>본문 세 칸</b><p><code>## 할 일</code> / <code>## 완료 조건</code>(체크박스) / <code>## 기준 문서</code>(내 spec 경로).</p></div></div>
+<div class="step"><div><b>오른쪽 사이드바</b><p>Assignees = 나, Labels = 내 영역 하나, Milestone = M3 또는 M6. 그러면 보드 Todo에 자동으로 들어간다.</p></div></div>
+</div>
+<footer>출처: <code>README.md</code>, <code>docs/work-plan.md</code>, <code>docs/specs/*.md</code>, <code>docs/adr/*.md</code>, <code>AGENTS.md</code>, GitHub Issue #8–#47 · 기준일 2026-11-05(main 7f4bd7f). 문서가 바뀌면 이 페이지가 아니라 레포 문서가 기준이다.</footer>
+</div>
+</body>
+</html>

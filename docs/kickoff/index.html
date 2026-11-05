@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html,body{margin:0}body{font-size:14px}</style>
+<title>proj_3rd 킥오프 지도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --bg:#f5f7f9; --paper:#ffffff; --fg:#1b2731; --muted:#5b6b78; --line:#d6dde3; --soft:#eaeff3;
+  --accent:#0f6e8c; --warn:#b4452c;
+  --search:#1e7f8f; --answer:#a86b0a; --metrics:#6a58b5; --judge:#b5436e; --platform:#4b6578; --skeleton:#7a7f85; --docs:#8a7f5a;
+  --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1000px;margin:0 auto}
+header.top{padding-block:28px 8px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:.3em 0 .35em;text-wrap:balance;font-weight:700}
+h2{font-size:20px;margin:40px 0 10px;text-wrap:balance}
+h3{font-size:15.5px;margin:22px 0 6px}
+p,li{max-width:70ch}
+.lede{color:var(--muted);font-size:15px;margin:0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+figure{margin:16px 0 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+.fig svg{display:block;min-width:720px;max-width:100%;height:auto;margin:0 auto;font-family:var(--sans)}
+figcaption{font-size:13px;color:var(--muted);margin:8px 4px 0;max-width:none}
+svg text{fill:currentColor;font-size:12px}
+svg .t{font-weight:600;font-size:12.5px}
+svg .f{font-family:var(--mono);font-size:12px;font-weight:500}
+svg .s{font-size:10.5px;fill:var(--muted)}
+svg .lbl{font-size:10.5px;fill:var(--muted)}
+svg .box rect{fill:var(--paper);stroke:currentColor;stroke-width:1.1;rx:5}
+svg .box.search rect{fill:var(--search);stroke:none} svg .box.answer rect{fill:var(--answer);stroke:none}
+svg .box.metrics rect{fill:var(--metrics);stroke:none} svg .box.judge rect{fill:var(--judge);stroke:none}
+svg .box.platform rect{fill:var(--platform);stroke:none} svg .box.skeleton rect{fill:var(--skeleton);stroke:none}
+svg .box.docs rect{fill:var(--docs);stroke:none}
+svg .box.search text,svg .box.answer text,svg .box.metrics text,svg .box.judge text,svg .box.platform text,svg .box.skeleton text,svg .box.docs text{fill:#fff}
+svg .box.search .s,svg .box.answer .s,svg .box.metrics .s,svg .box.judge .s,svg .box.platform .s,svg .box.skeleton .s,svg .box.docs .s{fill:rgba(255,255,255,.85)}
+svg .ar{fill:none;stroke:currentColor;stroke-width:1.2}
+svg .ar.dash{stroke-dasharray:4 3;stroke:var(--muted)}
+svg .ar.ban{stroke:var(--warn);stroke-dasharray:5 3;stroke-width:1.4}
+svg .band rect{fill:var(--soft);stroke:var(--line);rx:6}
+svg .col rect{fill:var(--paper);stroke:var(--line);rx:8}
+svg .milestone rect{fill:var(--accent);rx:3}
+svg .milestone text{fill:#fff;font-weight:600;font-size:10.5px}
+svg .freeze{stroke:var(--warn);stroke-width:1.4;stroke-dasharray:5 3}
+svg .grid{stroke:var(--line);stroke-width:1}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.tbl{overflow-x:auto}
+.chip{display:inline-block;font-family:var(--mono);font-size:11.5px;color:#fff;padding:1px 7px;border-radius:4px;line-height:1.5}
+.chip.search{background:var(--search)}.chip.answer{background:var(--answer)}.chip.metrics{background:var(--metrics)}
+.chip.judge{background:var(--judge)}.chip.platform{background:var(--platform)}.chip.skeleton{background:var(--skeleton)}.chip.docs{background:var(--docs)}
+.chip.iface{background:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12.5px;color:var(--muted);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.card{display:block;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;color:inherit;text-decoration:none;min-width:0}
+.card:hover,.card:focus-visible{border-color:var(--accent);outline:none}
+.card b{display:block;font-size:15.5px;margin-bottom:4px}
+.card span{font-size:13px;color:var(--muted)}
+.note{border-left:3px solid var(--accent);padding:6px 12px;background:var(--paper);font-size:14px;margin:14px 0}
+.note.warn{border-color:var(--warn)}
+pre.tree{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:12px 0 0}
+pre.tree i{font-style:normal;color:var(--muted)}
+ol.steps{padding-left:1.3em}
+ol.steps li{margin:4px 0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.two>div{min-width:0}
+nav.back{font-size:13px;margin-top:10px}
+a{color:var(--accent)}
+footer{margin-top:48px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.agenda{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:0 0 8px;padding:8px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.agenda a{flex:0 0 auto;font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;background:var(--paper);white-space:nowrap}
+nav.agenda a:hover,nav.agenda a:focus-visible{border-color:var(--accent);outline:none}
+section.item{padding:28px 0 8px;border-top:1px solid var(--line);scroll-margin-top:64px}
+section.item:first-of-type{border-top:0}
+.q{font-size:clamp(20px,3vw,26px);margin:4px 0 6px;text-wrap:balance}
+.say{font-size:15.5px;max-width:72ch;margin:0 0 12px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.tile b{display:block;margin-bottom:3px}
+.tile span{font-size:13px;color:var(--muted)}
+.check{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.check li{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14.5px}
+.check li::before{content:"";flex:0 0 18px;height:18px;border:1.6px solid var(--muted);border-radius:4px;margin-top:3px}
+.steps2{counter-reset:s;display:grid;gap:10px;margin-top:10px}
+.step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.step>div{min-width:0}
+.step b{display:block;margin-bottom:2px}
+.step p{margin:2px 0;font-size:14px}
+pre.cmd{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;margin:6px 0 0}
+pre.cmd i{font-style:normal;color:var(--muted)}
+.appendix{font-size:13.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px;margin-top:8px}
+.kv b{color:var(--muted);font-weight:500}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="eyebrow">KANT 3차 프로젝트 · kant_project_3 · 2026-11-05 킥오프</div>
+<h1>proj_3rd 킥오프 지도</h1>
+<p class="lede">해운 분야 PDF 15개(360쪽)로 RAG 질의응답 서비스를 만들고, naive / hybrid / hybrid_rerank 세 검색 방식을 같은 조건으로 비교한다. 제출 <b>11/13(금) 13:00</b>, 당일 오후 발표. 오늘부터 8일.</p></header>
+
+<h2>킥오프에서 같이 보는 것</h2>
+<div class="cards">
+<a class="card" href="meeting.html"><b>proj_3rd 킥오프</b><span>안건 8개를 위에서 아래로. 안건마다 질문 하나, 그림 하나, 말할 것 세 줄. 40분 분량</span></a>
+<a class="card" href="guide.html"><b>GitHub가 처음이라면</b><span>Issue·라벨·마일스톤·보드·브랜치·PR이 어떻게 이어지는지, 내 하루, 명령 복붙, PR 본문 예시, 자주 하는 실수</span></a>
+</div>
+
+<h2>부록: 더 깊이 볼 네 장</h2>
+<p>킥오프 자료의 각 안건 끝에서 링크로 이어진다. 나중에 자기 영역을 팔 때 다시 본다. 처음 보는 말은 맨 아래 풀이.</p>
+<div class="cards">
+<a class="card" href="flow.html"><b>1 · 질문이 답이 되는 과정</b><span>질문이 들어와 다섯 영역을 거쳐 답이 나가는 순서, 세 방식을 비교하는 실험이 돌아가는 순서, 영역끼리 주고받는 데이터와 짝</span></a>
+<a class="card" href="repo.html"><b>2 · 레포에 무엇이 어디 있나</b><span>파일 트리, 문서 세 종류가 각각 정하는 것, 작업 전에 읽는 순서, 내 폴더에서 지킬 것</span></a>
+<a class="card" href="github.html"><b>3 · 일을 받아서 main에 넣는 순서</b><span>보드 네 칸과 자동 이동, GitHub이 막는 것과 팀 약속, 내 이름의 Issue 목록, PR에 채울 칸</span></a>
+<a class="card" href="schedule.html"><b>4 · 8일 동안 누가 언제 무엇을</b><span>영역별로 가장 바쁜 날, 날짜별 완료 상태, 11/10 설정 잠금, 전원이 함께 하는 일, 밀리면 빼는 순서</span></a>
+</div>
+
+<h2>팀과 영역</h2>
+<p>영역은 레이어가 아니라 "무엇의 품질을 책임지나"로 나눴다. 영역 하나 = 담당 1명 = spec 1개 = <code>src/&lt;영역&gt;/</code>. 5명 전원이 에이전트로 개발하므로 코드 양이 아니라 판단과 통합이 병목이다.</p>
+<div class="tbl"><table>
+<tr><th>영역</th><th>담당 · GitHub</th><th>한 줄 책임</th><th>짝</th><th>피크</th></tr>
+<tr><td><span class="chip search">search</span></td><td>윤승환 <span class="mono" style="color:var(--muted)">@yshzjq</span></td><td>검색 품질: 청킹·E5·Qdrant·3방식</td><td>answer</td><td>11/6~8</td></tr>
+<tr><td><span class="chip answer">answer</span></td><td>천희재 <span class="mono" style="color:var(--muted)">@rjqnrll7-cmyk</span></td><td>답변 품질: 문맥·프롬프트·JSON 검증·출처</td><td>search</td><td>11/7~9</td></tr>
+<tr><td><span class="chip metrics">metrics</span></td><td>오주헌 <span class="mono" style="color:var(--muted)">@ohjuhun1119</span></td><td>실험 자동화: 로더·러너·Hit/Recall·운영 지표·비교표</td><td>judge, platform</td><td>11/8~10</td></tr>
+<tr><td><span class="chip judge">judge</span></td><td>김경민 <span class="mono" style="color:var(--muted)">@kokoball-eval</span></td><td>LLM 평가: RAGAS·Judge 4항목·null 규칙·원문 대조</td><td>metrics</td><td>11/10~11</td></tr>
+<tr><td><span class="chip platform">platform</span></td><td>김창동(리드) <span class="mono" style="color:var(--muted)">@C-Designer</span></td><td>재현·관측·운영: 뼈대·FastAPI·config·llm.call·Langfuse·README·보안·시연 + 모든 PR 리뷰·머지</td><td>metrics</td><td>11/6~9, 11/12</td></tr>
+</table></div>
+
+<h2>오늘 상태</h2>
+<ul>
+<li><code>main</code>은 커밋 9개, 전부 문서. 코드는 영역별 README 1줄씩. 뼈대(<code>contracts.py</code>, <code>config.py</code>, naive E2E)는 리드가 11/6 오전까지 머지.</li>
+<li>Issue 40개(#8~#47) 전부 Open. 마일스톤 M1 4 · M3 28 · M6 8. PR 8개 머지됨(모두 리드의 docs PR).</li>
+<li>오늘 정할 것: <code>k</code> 기본값, 평가 LLM, Langfuse Cloud/셀프호스트, Python 버전·패키지 도구, 데이터 검수 당번, 발표 목차 7장 합의.</li>
+</ul>
+
+<h2>어디서 찾나</h2>
+<div class="tbl"><table>
+<tr><th>궁금한 것</th><th>보는 곳</th></tr>
+<tr><td>무엇을 만들어야 하나, 발제 규칙</td><td><code>docs/requirements.md</code></td></tr>
+<tr><td>어떻게 채점되나</td><td><code>docs/evaluation.md</code></td></tr>
+<tr><td>내 영역이 지금 어떻게 동작해야 하나</td><td><code>docs/specs/&lt;영역&gt;.md</code> + <code>src/contracts.py</code></td></tr>
+<tr><td>왜 이렇게 나눴나, 왜 이 스택인가</td><td><code>docs/adr/0002</code>, <code>0003</code></td></tr>
+<tr><td>브랜치·PR·커밋 형식</td><td><code>docs/branch-strategy.md</code></td></tr>
+<tr><td>일정·역할·리뷰·Issue 운영</td><td><code>docs/work-plan.md</code></td></tr>
+<tr><td>진행 상황</td><td><a href="https://github.com/users/C-Designer/projects/1">Project 보드</a> · <a href="https://github.com/C-Designer/kant_project_3/issues">Issues</a></td></tr>
+</table></div>
+
+<h2>처음 보는 말 풀이</h2>
+<div class="tbl"><table>
+<tr><th>말</th><th>뜻</th></tr>
+<tr><td>영역</td><td>한 사람이 책임지는 품질의 묶음. search(검색) · answer(답변) · metrics(실험 자동화) · judge(채점) · platform(뼈대·기록·운영). 폴더 <code>src/&lt;영역&gt;/</code>과 1:1</td></tr>
+<tr><td>뼈대</td><td>리드가 11/6 오전까지 머지하는 최소 동작 코드. 질문 1개가 naive 검색으로 답까지 나오고 Langfuse에 기록되는 상태. 다들 이 위에서 자기 영역을 판다</td></tr>
+<tr><td>spec</td><td><code>docs/specs/&lt;영역&gt;.md</code>. 내 영역이 지금 어떻게 동작하는지 적은 문서. "미정"을 값으로 채우는 것이 첫 작업</td></tr>
+<tr><td>ADR</td><td><code>docs/adr/</code>. 되돌리기 어려운 결정을 왜 했는지 적은 문서. 한 번 쓰면 안 고치고, 바뀌면 새 번호로 쓴다</td></tr>
+<tr><td>contracts.py</td><td>영역끼리 주고받는 데이터의 모양을 코드로 정한 파일. 여기를 바꾸면 PR 제목에 <code>[interface]</code>를 붙이고 짝에게 먼저 알린다</td></tr>
+<tr><td>config.py · 동결</td><td>k, 토큰 한도, 모델, timeout 같은 공통 설정을 한 파일에. 11/10 아침에 잠그고(동결), 그 뒤로는 바꾸지 않는다. 바꾸면 실험 전부 재실행</td></tr>
+<tr><td>짝</td><td>데이터를 직접 주고받는 두 영역. search↔answer, metrics↔judge, platform↔metrics. 바꾸기 전에 서로 알려준다</td></tr>
+<tr><td>run_query()</td><td>질문 하나를 검색 → 답변 → 기록까지 처리하는 함수. API도 실험 러너도 이것을 부른다</td></tr>
+<tr><td>RunRecord · EvalRecord</td><td>질문 하나 × 검색 방식 하나의 실행 결과 한 줄, 그리고 그에 대한 채점 결과 한 줄. metrics가 앞을 만들고 judge가 뒤를 만든다</td></tr>
+<tr><td>Langfuse · request_id</td><td>질문마다 번호표(request_id)를 붙여 검색 결과·모델 입출력·시간·토큰을 한 화면에서 따라갈 수 있게 남기는 도구. 발제 필수</td></tr>
+<tr><td>Hit@k · Recall@k</td><td>검색이 정답 문서를 하나라도 찾았나(Hit), 몇 개나 찾았나(Recall). k = 답 만들 때 쓴 상위 조각 수</td></tr>
+<tr><td>RAGAS Faithfulness · Judge 4항목</td><td>답이 찾아온 자료에 근거했나(Faithfulness), 그리고 사실·조건·근거·판단이 각각 맞나(Judge, 0/1). 둘을 합산하지 않는다</td></tr>
+<tr><td>null (해당 없음 / 평가 불가)</td><td>점수를 매길 대상이 없거나 채점이 실패한 경우. 0으로 바꾸지 않고 평균에서 뺀다</td></tr>
+<tr><td>룰셋 · CODEOWNERS</td><td>GitHub 설정. main에 직접 push를 막고, 리드 승인이 없으면 머지 버튼이 안 열린다</td></tr>
+<tr><td>Squash and merge</td><td>PR의 커밋 여러 개를 하나로 합쳐 main에 넣는 방식. 리드만 한다. 머지 뒤 로컬 브랜치는 <code>git branch -D</code>로 지운다</td></tr>
+<tr><td>M0 ~ M6</td><td>날짜별 마일스톤. M1 뼈대(11/6) · M3 동결·전체 실행(11/10) · M6 제출(11/13)이 GitHub 마일스톤으로 등록돼 있다. 발표본까지 전부 M5(11/12)에 끝내고 금요일은 리허설과 제출만</td></tr>
+</table></div>
+<footer>출처: <code>README.md</code>, <code>docs/work-plan.md</code>, <code>docs/specs/*.md</code>, <code>docs/adr/*.md</code>, <code>AGENTS.md</code>, GitHub Issue #8–#47 · 기준일 2026-11-05(main 7f4bd7f). 문서가 바뀌면 이 페이지가 아니라 레포 문서가 기준이다.</footer>
+</div>
+</body>
+</html>

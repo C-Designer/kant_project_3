@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html,body{margin:0}body{font-size:14px}</style>
+<title>8일 동안 누가 언제 무엇을</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --bg:#f5f7f9; --paper:#ffffff; --fg:#1b2731; --muted:#5b6b78; --line:#d6dde3; --soft:#eaeff3;
+  --accent:#0f6e8c; --warn:#b4452c;
+  --search:#1e7f8f; --answer:#a86b0a; --metrics:#6a58b5; --judge:#b5436e; --platform:#4b6578; --skeleton:#7a7f85; --docs:#8a7f5a;
+  --sans:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#111920; --paper:#18222b; --fg:#e3e9ee; --muted:#9fb0bd; --line:#2d3a45; --soft:#1f2b35;
+  --accent:#5fb6d1; --warn:#e8846c;
+  --search:#2a97a8; --answer:#c48a2a; --metrics:#8a79d6; --judge:#d05f8b; --platform:#6c8699; --skeleton:#8d939a; --docs:#a89a6c;
+  color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1000px;margin:0 auto}
+header.top{padding-block:28px 8px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:.3em 0 .35em;text-wrap:balance;font-weight:700}
+h2{font-size:20px;margin:40px 0 10px;text-wrap:balance}
+h3{font-size:15.5px;margin:22px 0 6px}
+p,li{max-width:70ch}
+.lede{color:var(--muted);font-size:15px;margin:0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+figure{margin:16px 0 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 10px 6px;overflow-x:auto}
+.fig svg{display:block;min-width:720px;max-width:100%;height:auto;margin:0 auto;font-family:var(--sans)}
+figcaption{font-size:13px;color:var(--muted);margin:8px 4px 0;max-width:none}
+svg text{fill:currentColor;font-size:12px}
+svg .t{font-weight:600;font-size:12.5px}
+svg .f{font-family:var(--mono);font-size:12px;font-weight:500}
+svg .s{font-size:10.5px;fill:var(--muted)}
+svg .lbl{font-size:10.5px;fill:var(--muted)}
+svg .box rect{fill:var(--paper);stroke:currentColor;stroke-width:1.1;rx:5}
+svg .box.search rect{fill:var(--search);stroke:none} svg .box.answer rect{fill:var(--answer);stroke:none}
+svg .box.metrics rect{fill:var(--metrics);stroke:none} svg .box.judge rect{fill:var(--judge);stroke:none}
+svg .box.platform rect{fill:var(--platform);stroke:none} svg .box.skeleton rect{fill:var(--skeleton);stroke:none}
+svg .box.docs rect{fill:var(--docs);stroke:none}
+svg .box.search text,svg .box.answer text,svg .box.metrics text,svg .box.judge text,svg .box.platform text,svg .box.skeleton text,svg .box.docs text{fill:#fff}
+svg .box.search .s,svg .box.answer .s,svg .box.metrics .s,svg .box.judge .s,svg .box.platform .s,svg .box.skeleton .s,svg .box.docs .s{fill:rgba(255,255,255,.85)}
+svg .ar{fill:none;stroke:currentColor;stroke-width:1.2}
+svg .ar.dash{stroke-dasharray:4 3;stroke:var(--muted)}
+svg .ar.ban{stroke:var(--warn);stroke-dasharray:5 3;stroke-width:1.4}
+svg .band rect{fill:var(--soft);stroke:var(--line);rx:6}
+svg .col rect{fill:var(--paper);stroke:var(--line);rx:8}
+svg .milestone rect{fill:var(--accent);rx:3}
+svg .milestone text{fill:#fff;font-weight:600;font-size:10.5px}
+svg .freeze{stroke:var(--warn);stroke-width:1.4;stroke-dasharray:5 3}
+svg .grid{stroke:var(--line);stroke-width:1}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.tbl{overflow-x:auto}
+.chip{display:inline-block;font-family:var(--mono);font-size:11.5px;color:#fff;padding:1px 7px;border-radius:4px;line-height:1.5}
+.chip.search{background:var(--search)}.chip.answer{background:var(--answer)}.chip.metrics{background:var(--metrics)}
+.chip.judge{background:var(--judge)}.chip.platform{background:var(--platform)}.chip.skeleton{background:var(--skeleton)}.chip.docs{background:var(--docs)}
+.chip.iface{background:var(--warn)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12.5px;color:var(--muted);margin-top:8px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.card{display:block;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;color:inherit;text-decoration:none;min-width:0}
+.card:hover,.card:focus-visible{border-color:var(--accent);outline:none}
+.card b{display:block;font-size:15.5px;margin-bottom:4px}
+.card span{font-size:13px;color:var(--muted)}
+.note{border-left:3px solid var(--accent);padding:6px 12px;background:var(--paper);font-size:14px;margin:14px 0}
+.note.warn{border-color:var(--warn)}
+pre.tree{font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:12px 0 0}
+pre.tree i{font-style:normal;color:var(--muted)}
+ol.steps{padding-left:1.3em}
+ol.steps li{margin:4px 0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.two>div{min-width:0}
+nav.back{font-size:13px;margin-top:10px}
+a{color:var(--accent)}
+footer{margin-top:48px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.agenda{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:0 0 8px;padding:8px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.agenda a{flex:0 0 auto;font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--fg);text-decoration:none;background:var(--paper);white-space:nowrap}
+nav.agenda a:hover,nav.agenda a:focus-visible{border-color:var(--accent);outline:none}
+section.item{padding:28px 0 8px;border-top:1px solid var(--line);scroll-margin-top:64px}
+section.item:first-of-type{border-top:0}
+.q{font-size:clamp(20px,3vw,26px);margin:4px 0 6px;text-wrap:balance}
+.say{font-size:15.5px;max-width:72ch;margin:0 0 12px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.tile b{display:block;margin-bottom:3px}
+.tile span{font-size:13px;color:var(--muted)}
+.check{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:8px}
+.check li{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14.5px}
+.check li::before{content:"";flex:0 0 18px;height:18px;border:1.6px solid var(--muted);border-radius:4px;margin-top:3px}
+.steps2{counter-reset:s;display:grid;gap:10px;margin-top:10px}
+.step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.step::before{counter-increment:s;content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.step>div{min-width:0}
+.step b{display:block;margin-bottom:2px}
+.step p{margin:2px 0;font-size:14px}
+pre.cmd{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:10px 12px;overflow-x:auto;margin:6px 0 0}
+pre.cmd i{font-style:normal;color:var(--muted)}
+.appendix{font-size:13.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:14px;margin-top:8px}
+.kv b{color:var(--muted);font-weight:500}
+</style>
+
+
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="eyebrow">proj_3rd · kant_project_3 · 일정</div>
+<h1>8일 동안 누가 언제 무엇을</h1>
+<p class="lede">2026-11-05(목)부터 11-13(금) 13:00 제출까지. 날짜마다 "이 날 끝에는 이게 돼 있어야 한다"로 읽으면 된다. 발표본까지 전부 목요일(11/12)에 끝내고, 금요일은 리허설과 제출만 한다. 모임 시간은 따로 정하지 않고 시간 될 때 모인다.</p>
+<nav class="back">← <a href="index.html">킥오프 지도</a></nav></header>
+
+<h2>1. 누가 언제 가장 바쁜가</h2>
+<figure><div class="fig"><svg viewBox="0 0 1000 430" role="img" aria-label="11월 5일부터 13일까지 영역별 피크 기간과 마일스톤 M0~M6, 11/10 설정 동결선, 11/12 발표본 포함 최종 완료선, 11/13은 리허설과 13시 제출" xmlns="http://www.w3.org/2000/svg"><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker><marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--warn)"/></marker></defs><text class="t" x="197.0" y="30" text-anchor="middle">11/5 목</text><rect x="181.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="197.0" y="50" text-anchor="middle">M0</text><line class="grid" x1="150" y1="60" x2="150" y2="370"/><text class="t" x="291.0" y="30" text-anchor="middle">11/6 금</text><g class="milestone"><rect x="275.0" y="38" width="32" height="16"/><text x="291.0" y="50" text-anchor="middle">M1</text></g><line class="grid" x1="244" y1="60" x2="244" y2="370"/><text class="t" x="385.0" y="30" text-anchor="middle">11/7 토</text><line class="grid" x1="338" y1="60" x2="338" y2="370"/><text class="t" x="479.0" y="30" text-anchor="middle">11/8 일</text><line class="grid" x1="432" y1="60" x2="432" y2="370"/><text class="t" x="573.0" y="30" text-anchor="middle">11/9 월</text><rect x="557.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="573.0" y="50" text-anchor="middle">M2</text><line class="grid" x1="526" y1="60" x2="526" y2="370"/><text class="t" x="667.0" y="30" text-anchor="middle">11/10 화</text><g class="milestone"><rect x="651.0" y="38" width="32" height="16"/><text x="667.0" y="50" text-anchor="middle">M3</text></g><line class="grid" x1="620" y1="60" x2="620" y2="370"/><text class="t" x="761.0" y="30" text-anchor="middle">11/11 수</text><rect x="745.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="761.0" y="50" text-anchor="middle">M4</text><line class="grid" x1="714" y1="60" x2="714" y2="370"/><text class="t" x="855.0" y="30" text-anchor="middle">11/12 목</text><rect x="839.0" y="38" width="32" height="16" rx="3" fill="none" stroke="var(--muted)"/><text class="lbl" x="855.0" y="50" text-anchor="middle">M5</text><line class="grid" x1="808" y1="60" x2="808" y2="370"/><text class="t" x="949.0" y="30" text-anchor="middle">11/13 금</text><g class="milestone"><rect x="933.0" y="38" width="32" height="16"/><text x="949.0" y="50" text-anchor="middle">M6</text></g><line class="grid" x1="902" y1="60" x2="902" y2="370"/><line class="grid" x1="996" y1="60" x2="996" y2="370"/><text class="t" x="140" y="97.0" text-anchor="end">리드 (뼈대)</text><g class="box platform" opacity=".38"><rect x="293.0" y="84" width="701.0" height="18"/></g><text class="s" x="299.0" y="97.0" text-anchor="start">모든 PR 리뷰·머지, 보드 점검 (전 기간)</text><g class="box platform"><rect x="152" y="78" width="137.0" height="30"/><text class="s" x="158" y="97.0" style="fill:#fff">뼈대 → 11/6 오전 머지</text></g><text class="t" x="140" y="135.0" text-anchor="end">search</text><g class="box search" opacity=".38"><rect x="528" y="122" width="90" height="18"/></g><text class="s" x="534" y="135.0" text-anchor="start">rerank 11/9</text><g class="box search"><rect x="246" y="116" width="278" height="30"/><text class="s" x="252" y="135.0" style="fill:#fff">청킹 v1 → hybrid → hybrid_rerank</text></g><text class="t" x="140" y="173.0" text-anchor="end">answer</text><g class="box answer" opacity=".38"><rect x="246" y="160" width="90" height="18"/></g><text class="s" x="252" y="173.0" text-anchor="start">mock</text><g class="box answer"><rect x="340" y="154" width="278" height="30"/><text class="s" x="346" y="173.0" style="fill:#fff">프롬프트 v1 · 검증·재생성 · 방어</text></g><text class="t" x="140" y="211.0" text-anchor="end">metrics</text><g class="box metrics" opacity=".38"><rect x="246" y="198" width="184" height="18"/></g><text class="s" x="252" y="211.0" text-anchor="start">mock으로 로더·러너</text><g class="box metrics" opacity=".38"><rect x="716" y="198" width="90" height="18"/></g><text class="s" x="722" y="211.0" text-anchor="start">비교표 완성</text><g class="box metrics"><rect x="434" y="192" width="278" height="30"/><text class="s" x="440" y="211.0" style="fill:#fff">지표 · 표 초안 · 질문 확정 · 전체 실행</text></g><text class="t" x="140" y="249.0" text-anchor="end">judge</text><g class="box judge" opacity=".38"><rect x="340" y="236" width="278" height="18"/></g><text class="s" x="346" y="249.0" text-anchor="start">프롬프트·null 테스트·RAGAS</text><g class="box judge"><rect x="622" y="230" width="184" height="30"/><text class="s" x="628" y="249.0" style="fill:#fff">자동 채점 · 원문 대조</text></g><text class="t" x="140" y="287.0" text-anchor="end">platform</text><g class="box platform" opacity=".38"><rect x="622" y="274" width="90" height="18"/></g><text class="s" x="628" y="287.0" text-anchor="start">보안 4개</text><g class="box platform" opacity=".38"><rect x="904" y="274" width="46.75999999999992" height="18"/></g><text class="s" x="910" y="287.0" text-anchor="start">리허설</text><g class="box platform"><rect x="246" y="268" width="372" height="30"/><text class="s" x="252" y="287.0" style="fill:#fff">Langfuse · llm.call · 오류 응답 · 보안 스크립트</text></g><g class="box platform"><rect x="810" y="268" width="90" height="30"/><text class="s" x="816" y="287.0" style="fill:#fff">재실행·녹화</text></g><text class="t" x="140" y="325.0" text-anchor="end">전원 공통</text><g class="box skeleton" opacity=".38"><rect x="904" y="312" width="46.75999999999992" height="18"/></g><text class="s" x="910" y="325.0" text-anchor="start">리허설</text><g class="box skeleton"><rect x="622" y="306" width="184" height="30"/><text class="s" x="628" y="325.0" style="fill:#fff">전체 실행 · 원문 대조 · 슬라이드</text></g><g class="box skeleton"><rect x="810" y="306" width="90" height="30"/><text class="s" x="816" y="325.0" style="fill:#fff">발표본 최종</text></g><line class="freeze" x1="620" y1="60" x2="620" y2="390"/><text class="lbl" x="624" y="386" style="fill:var(--warn)">config.py 동결 (11/10 아침)</text><line class="freeze" x1="808" y1="60" x2="808" y2="390"/><text class="lbl" x="812" y="386" style="fill:var(--warn)">버그만 · 이날 발표본까지 끝</text><line class="freeze" x1="952.76" y1="60" x2="952.76" y2="390"/><text class="lbl" x="948.76" y="404" text-anchor="end" style="fill:var(--warn)">리허설 → 13:00 제출 → 발표</text><text class="lbl" x="150" y="422" text-anchor="start">진한 막대 = 그 영역의 피크(work-plan 기준). 연한 막대 = 그 밖의 계획된 작업. 색 채운 M1·M3·M6만 GitHub 마일스톤. 모임은 시간 될 때.</text></svg></div><figcaption>그림 1. search가 가장 먼저 끝나고 judge가 가장 늦다. 11/10 아침에 설정을 잠근(동결) 뒤에는 비교 실험만 돌린다. 그 뒤 설정을 하나라도 바꾸면 실험을 전부 다시 돌려야 한다. 11/12에 발표본까지 끝내고 11/13은 리허설·제출만.</figcaption></figure>
+<div class="legend"><span><span class="chip search">search</span> 윤승환</span><span><span class="chip answer">answer</span> 천희재</span><span><span class="chip metrics">metrics</span> 오주헌</span><span><span class="chip judge">judge</span> 김경민</span><span><span class="chip platform">platform</span> 김창동(리드)</span></div>
+
+<h2>2. 날짜별로 이 날 끝에 돼 있어야 하는 것</h2>
+<div class="tbl"><table>
+<tr><th>날</th><th>M</th><th>이 날 끝에 돼 있어야 하는 것</th></tr>
+<tr><td>11/5 목</td><td>M0</td><td>해운·Basic, 담당 확정(완료). 데이터 다운로드·PDF 15개 검수. 각자 로컬(Python, Qdrant). Langfuse 프로젝트. 발표 목차 합의. 리드가 뼈대 시작</td></tr>
+<tr><td>11/6 금</td><td>M1</td><td><b>뼈대 머지.</b> 전원 로컬에서 <code>naive</code> 1문항 실행 확인. 각자 영역 첫 PR</td></tr>
+<tr><td>11/7 토</td><td></td><td>search 청킹 v1·hybrid 초안 / answer 프롬프트 v1이 정상·되묻기·보류 각 1문항 통과 / metrics 로더·러너·Hit/Recall / judge 프롬프트 초안·null 테스트 / platform Langfuse 스팬·config</td></tr>
+<tr><td>11/8 일</td><td></td><td>search hybrid 완성 / answer 출력 검증·재생성 / metrics 운영 지표·표 초안 / judge RAGAS·Judge 1문항 통과 / platform LLM 래퍼·오류 응답. 리드: 슬라이드 뼈대</td></tr>
+<tr><td>11/9 월</td><td>M2</td><td>search hybrid_rerank / metrics 질문 목록 확정 / judge 평가 모델·프롬프트 확정 / platform 보안 비교 스크립트. <b>동결할 설정 합의</b></td></tr>
+<tr><td>11/10 화</td><td>M3</td><td>아침 <code>config.py</code> <b>동결</b> → metrics 전체 실행 → judge 자동 채점 → platform 보안 4개. 실행·오류 분석은 5명이 질문 묶음으로 분담</td></tr>
+<tr><td>11/11 수</td><td>M4</td><td>비교표 완성. 대표 사례 원문 대조(전원, 자기 영역 아닌 결과). 최종 구성 선택과 이유. 영역별 슬라이드</td></tr>
+<tr><td>11/12 목</td><td>M5</td><td><b>기능 추가 금지, 버그 수정만.</b> 구현 안 한 팀원이 README대로 설치·실행 성공. 슬라이드 통합해 <b>발표본(PPTX + PDF) 최종 완료</b>. 시연 녹화 백업. 이날 끝에 제출물이 전부 갖춰져 있어야 한다</td></tr>
+<tr><td>11/13 금</td><td>M6</td><td>오전 <b>리허설</b>(발표 연습, 시연 경로 점검). 팀 Notion에 저장소·발표자료 연결. <b>13:00 제출.</b> 오후 발표. 새 작업은 하지 않는다</td></tr>
+</table></div>
+
+<div class="two">
+<div><h2>3. 11/10부터는 내 영역과 상관없이 전원이</h2>
+<div class="tbl"><table>
+<tr><th>일</th><th>내용</th></tr>
+<tr><td>최종 실행</td><td>질문 묶음을 5명이 나눠 실행. 오류 나면 담당 영역에 Issue</td></tr>
+<tr><td>원문 대조</td><td><b>자기 영역이 아닌 결과</b>를 PDF 원문과 대조. 1인 2~3건 → <code>results/review.md</code></td></tr>
+<tr><td>README</td><td>각자 자기 영역 절: 실행 방법, 설정값, 한계, 기여</td></tr>
+<tr><td>발표</td><td>각자 자기 영역 슬라이드를 11/11까지, 11/12에 통합해 발표본 완료. 목차 7장: ①문제·데이터 ②아키텍처·스택 ③3방식 비교 ④품질·보안 ⑤운영 지표·최종 선택 ⑥한계·실패 ⑦기여. 시연은 ③~④ 사이. 11/13은 리허설만</td></tr>
+</table></div></div>
+<div><h2>4. 일정이 밀리면 이 순서로 뺀다</h2>
+<ol class="steps">
+<li>평가 질문 수 축소 (예: 20 → 10). 발제는 수를 정하지 않는다</li>
+<li>리랭커를 가장 작은 모델로, 또는 후보 수 축소</li>
+<li>대표 사례 원문 대조를 영역당 1건으로</li>
+<li><b>README 재실행 검증은 자르지 않는다.</b> 완료 기준 "다시 실행할 수 있는가"가 여기서 검증된다</li>
+</ol>
+<h3>리스크</h3>
+<div class="tbl"><table>
+<tr><th>리스크</th><th>대응</th></tr>
+<tr><td>리랭커·E5 로컬 실행이 느리거나 안 됨</td><td>11/7까지 확인. 더 작은 모델로 교체, 조건 기록</td></tr>
+<tr><td>프롬프트가 되묻기·보류를 못 가림</td><td>11/9 M2에서 각 1문항 이상 통과를 조건으로</td></tr>
+<tr><td>동결 후 설정 변경 유혹</td><td>바꾸면 전체 재실행. 리드가 막는다</td></tr>
+<tr><td>평가 LLM 비용·한도</td><td>질문 수를 비용 안에서. 채점 토큰은 별도 집계</td></tr>
+<tr><td>재실행 실패</td><td>11/12 구현 안 한 사람이 README대로 설치</td></tr>
+</table></div></div>
+</div>
+
+<div class="note">11/5 미팅에서 정할 spec 미정 항목: <code>k</code> 기본값, 평가 LLM, Langfuse Cloud/셀프호스트, Python 버전·패키지 관리 도구, 데이터 다운로드·PDF 검수 당번.</div>
+<footer>출처: <code>README.md</code>, <code>docs/work-plan.md</code>, <code>docs/specs/*.md</code>, <code>docs/adr/*.md</code>, <code>AGENTS.md</code>, GitHub Issue #8–#47 · 기준일 2026-11-05(main 7f4bd7f). 문서가 바뀌면 이 페이지가 아니라 레포 문서가 기준이다.</footer>
+</div>
+</body>
+</html>
