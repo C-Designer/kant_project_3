@@ -19,7 +19,12 @@
 6. 점수는 `platform.tracing.record_score(request_id, ...)`로 Langfuse 트레이스에 붙인다.
 7. **사람 확인**: 대표 사례(좋아진·나빠진 것, 영역당 2~3건)를 PDF 원문과 대조해 `results/review.md`에. 자동 채점 오류를 발견하면 원래 점수와 수정 이유를 함께 남긴다. 사람 확인이 자동 평가를 대신하지 않는다.
 
-미정: 평가 LLM(생성 모델과 같아도 됨, `config.py`), RAGAS 버전, Judge 프롬프트 파일(`src/judge/prompts/`), 재시도 정책.
+미정: 평가 LLM(생성 모델과 같아도 됨, `config.py`), Judge 프롬프트 파일(`src/judge/prompts/`), 재시도 정책.
+
+## 실행 환경 제약
+
+- **Python 3.14는 쓸 수 없다. 3.12 또는 3.13.** RAGAS가 의존하는 `scikit-network`가 Python 3.14용 배포 파일이 없어 설치 중 빌드에 실패한다(Windows, 2026-11-05 확인). 팀 공통 Python 버전(`specs/platform.md` 미정 항목)을 정할 때 이 제약을 반영한다.
+- **RAGAS 버전은 `ragas==0.4.3`, 함께 `langchain-community<0.3.28`.** 최신 `langchain-community`(0.4.x)에서는 `ragas` import가 `langchain_community.chat_models.vertexai` 모듈을 찾지 못해 실패한다.
 
 코드 위치: `src/judge/` (`ragas_eval.py`, `judge.py`, `prompts/`, `review.md` 템플릿)
 
