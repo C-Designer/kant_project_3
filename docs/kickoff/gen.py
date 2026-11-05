@@ -306,7 +306,7 @@ b.append(text(700,32,"",cls="lbl"))
 svgB = svg(W,H,"".join(b),"발제 원문이 requirements와 evaluation으로 요약되고, ADR이 결정을, spec이 현재 동작을, contracts.py가 계약을 담는다. 코드와 spec은 같은 PR에서 함께 바뀐다")
 
 tree = """<pre class="tree">kant_project_3/
-├── CLAUDE.md                 <i>에이전트가 처음 읽는 파일. branch-strategy, documentation을 끌어옴</i>
+├── CLAUDE.md                 <i>@AGENTS.md 한 줄. Claude Code가 AGENTS.md를 읽게 하는 연결 파일</i>
 ├── AGENTS.md                 <i>사람·에이전트 공통 규칙: 읽는 순서, 금지 사항</i>
 ├── README.md                 <i>프로젝트 입구. 팀·영역·흐름·스택. 설치·실행·기여는 미정(제출 전 작성)</i>
 ├── .env.example              <i>키 이름만. 실제 .env는 커밋 금지</i>
@@ -358,8 +358,9 @@ pageB = head("레포에 무엇이 어디 있나") + f"""
 <li><code>docs/requirements.md</code> — 무엇을 만드나, 발제의 고정 규칙</li>
 <li>자기 영역 <code>docs/specs/&lt;영역&gt;.md</code> + <code>src/contracts.py</code></li>
 <li>채점 관련 작업이면 <code>docs/evaluation.md</code></li>
+<li>spec·ADR을 만들거나 고치면 <code>docs/documentation.md</code></li>
 </ol>
-<p>에이전트(Claude Code, Codex)도 같은 순서다. <code>CLAUDE.md</code>가 1번과 문서 규약을 자동으로 끌어온다.</p></div>
+<p>에이전트(Claude Code, Codex)도 같은 순서다. 규칙은 <code>AGENTS.md</code> 한 곳에 있고 <code>CLAUDE.md</code>는 그 파일을 끌어오기만 한다.</p></div>
 <div><h3>문서별로 언제 고치나</h3>
 <div class="tbl"><table>
 <tr><th>문서</th><th>고치는 때</th></tr>
