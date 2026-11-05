@@ -1,0 +1,27 @@
+[project]
+name = "kant-project-3"
+version = "0.1.0"
+description = "KANT 3차 프로젝트: 해운 PDF 기반 RAG 질의응답 서비스와 세 검색 방식 비교"
+# 팀 전원 Python 3.12로 고정한다. 3.14는 RAGAS 의존성(scikit-network) 빌드가 실패한다 (docs/specs/judge.md).
+requires-python = "==3.12.*"
+dependencies = [
+    "pydantic>=2.13,<3",
+    # RAGAS: 0.4.3 고정. 최신 langchain-community(0.4.x)와는 import가 깨져 0.3.27 이하로 묶는다.
+    # 그 결과 LangChain 전체가 0.3 계열(langchain-core <1.0)로 맞춰진다. langchain-openai도 0.3 계열.
+    "ragas==0.4.3",
+    "langchain-community>=0.3.27,<0.3.28",
+    # LangChain 0.3 계열 고정 (팀 전체). 1.x로 올리면 RAGAS가 깨진다.
+    # 다른 패키지를 추가하다 1.x가 필요해지면 uv가 설치를 거부한다 → judge와 먼저 상의.
+    "langchain>=0.3.30,<0.4",
+    "langchain-core>=0.3.86,<1.0",
+    "langchain-openai>=0.3.35,<0.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.uv]
+# 배포용 패키지가 아니라 실행용 프로젝트다.
+package = false

@@ -43,7 +43,55 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 ## 설치·실행
 
-미정. 스택 확정 후 작성한다. 데이터셋은 `data/`에 두고 커밋하지 않는다. 키는 `.env`에만 둔다(`.env.example` 참고).
+데이터셋은 `data/`에 두고 커밋하지 않는다. 키는 `.env`에만 둔다(`.env.example` 참고).
+
+### Python 환경 (전원 동일, 강제)
+
+Python 버전과 패키지 버전은 레포 파일로 고정돼 있다. **[uv](https://docs.astral.sh/uv/)로만 설치한다.**
+
+| 파일 | 고정하는 것 |
+|---|---|
+| `.python-version` | Python **3.12**. PC 기본 Python이 3.14여도 uv가 3.12를 받아서 쓴다 |
+| `pyproject.toml` | `requires-python = "==3.12.*"`. 다른 버전으로 설치하려 하면 에러로 거부된다 |
+| `uv.lock` | 모든 패키지의 정확한 버전. 전원 같은 버전이 깔린다 |
+
+**처음 한 번: uv 설치** (이미 있으면 건너뛴다. `uv --version`으로 확인)
+
+```powershell
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+```bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**설치와 확인** (레포 폴더에서)
+
+```bash
+uv sync                                   # .venv 생성, Python 3.12와 고정된 패키지 설치
+uv run pytest tests/test_environment.py   # 환경 확인: 4 passed가 나와야 한다
+uv run pytest -q                          # 이후 실행은 모두 uv run으로
+```
+
+**이미 다른 Python(3.13·3.14 등)으로 가상환경을 만들어 둔 경우**: 레포 안의 `.venv` 폴더를 지우고 `uv sync`를 다시 실행한다. 다른 곳에 만든 venv·conda 환경은 이 프로젝트에 쓰지 않는다. VS Code 등 에디터의 Python 인터프리터도 레포의 `.venv`로 바꾼다.
+
+**에디터나 AI 도구에서 import 오류가 나면** 먼저 `uv run pytest tests/test_environment.py`를 돌린다. 실패하면 환경이 어긋난 것이고, 메시지가 원인을 알려 준다.
+
+- **LangChain은 0.3 계열로 고정한다** (`langchain` 0.3.x, `langchain-core` 1.0 미만). RAGAS 0.4.3이 LangChain 1.x와 맞지 않기 때문이다. 1.x가 필요한 패키지를 `uv add`하면 uv가 설치를 거부한다. 그때는 judge 담당과 먼저 상의한다. 코드는 LangChain 0.3 문서 기준으로 쓰고, 확인된 import 경로는 [AGENTS.md](AGENTS.md)에 있다.
+- **이 고정 위에서 설치·동작을 확인한 패키지** (2026-11-05, `uv add`로 추가하면 0.3과 맞는 버전이 자동 선택된다):
+
+  | 영역 | 패키지 (자동 선택된 버전) |
+  |---|---|
+  | search | `pypdf`, `qdrant-client` 1.20, `langchain-qdrant` 0.2.1, `langchain-huggingface` 0.3.1, `langchain-text-splitters` 0.3.11, `sentence-transformers` 6.2, `rank-bm25`, `fastembed` 0.9 |
+  | platform | `fastapi` 0.162, `uvicorn[standard]`, `langfuse` 5.1, `python-dotenv` |
+  | metrics | `pandas` 3.1, `tabulate` |
+
+  실제 실행으로 확인한 기능: 프롬프트→모델→파서 연결(LCEL), 청킹과 출처 메타데이터 유지, BM25 검색, Qdrant 저장·검색, hybrid 결합(EnsembleRetriever), FastAPI `/health`, Langfuse LangChain 콜백 import. E5 모델 실제 추론은 다운로드 용량 때문에 확인하지 않았다(설치만 확인).
+- **3.14는 쓸 수 없다.** RAGAS 의존성(`scikit-network`)이 3.14에서 빌드에 실패한다. 근거는 [docs/specs/judge.md](docs/specs/judge.md) "실행 환경 제약".
+- 패키지를 추가할 때는 `pip install` 대신 `uv add <패키지>`를 쓰고, 바뀐 `pyproject.toml`과 `uv.lock`을 같은 PR에 넣는다. 의존성 변경은 다른 영역에도 영향을 주므로 PR 제목에 `[interface]`를 붙인다.
+- `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/12)에서 실패한다.
 
 ### 데이터셋 받기
 
