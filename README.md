@@ -37,7 +37,7 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 짝(서로 변경을 먼저 알려주는 사이): `search`↔`answer`, `metrics`↔`judge`, `platform`↔`metrics`. 리뷰·머지는 리드가 한다.
 
-뼈대(`naive` 1문항 end-to-end + contracts + config)는 리드가 11/6 오전까지 머지한다. 그 뒤 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
+뼈대(`naive` 1문항 end-to-end + contracts + config)는 리드가 11/5에 머지한다. 그 뒤 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
 
 스택: Python, pypdf, LangChain, 로컬 E5, Qdrant, FastAPI, Langfuse, RAGAS. 결정은 [ADR 0003](docs/adr/0003-stack.md).
 
