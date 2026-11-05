@@ -161,7 +161,7 @@ pre.cmd i{font-style:normal;color:var(--muted)}
 <ul>
 <li><code>main</code>은 커밋 9개, 전부 문서. 코드는 영역별 README 1줄씩. 뼈대(<code>contracts.py</code>, <code>config.py</code>, naive E2E)는 리드가 11/6 오전까지 머지.</li>
 <li>Issue 40개(#8~#47) 전부 Open. 마일스톤 M1 4 · M3 28 · M6 8. PR 8개 머지됨(모두 리드의 docs PR).</li>
-<li>오늘 확정: <code>k</code> = 5, Langfuse Cloud, Python 3.12 + uv + LangChain 0.3. 검수 당번 없음. 남은 것: 평가 LLM, Qdrant 실행 방식, 발표 목차 7장 합의.</li>
+<li>오늘 확정: <code>k</code> = 5, 평가 LLM gpt-6-luna, Langfuse·Qdrant는 팀 VM 셀프호스트, Python 3.12 + uv + LangChain 0.3. 검수 당번 없음. 남은 것: VM 제공자, 발표 목차 7장 합의.</li>
 </ul>
 
 <h2>어디서 찾나</h2>
@@ -214,7 +214,7 @@ pre.cmd i{font-style:normal;color:var(--muted)}
 <div class="grid4">
 <div class="tile"><b>제출</b><span>11/13(금) 13:00. 당일 오후 발표. 오늘부터 8일</span></div>
 <div class="tile"><b>완료 기준</b><span>맞히는 수가 아니라 "다시 실행할 수 있는가"와 "모두가 자기 작업을 설명할 수 있는가"</span></div>
-<div class="tile"><b>안 하는 것</b><span>대화 메모리, 화면 UI, 파인튜닝, 배포, OCR. 필수 4개 끝내기 전엔 선택 과제도 안 한다</span></div>
+<div class="tile"><b>안 하는 것</b><span>대화 메모리, 화면 UI, 파인튜닝, OCR. 필수 4개 끝내기 전엔 선택 과제도 안 한다. 팀 VM 배포는 선택이라 늦어도 제출엔 영향 없음</span></div>
 <div class="tile"><b>금지</b><span>정답 파일을 검색·프롬프트에 넣기, 키·데이터 커밋, 좋은 결과만 골라 싣기</span></div>
 </div>
 <p class="appendix">부록: <code>docs/requirements.md</code>(발제 요약), <code>docs/evaluation.md</code>(채점 규칙)</p>
@@ -321,20 +321,19 @@ pre.cmd i{font-style:normal;color:var(--muted)}
 <div><h3>미팅에서 정한다</h3>
 <ul class="check">
 <li><b>k 기본값 = 5</b>&nbsp;— 확정. 답 만들 때 쓰는 조각 수, 세 방식 공통. config.py에 동결</li>
-<li><b>Langfuse = Cloud</b>&nbsp;— 확정. 리드가 팀 프로젝트를 만들고 초대, 키는 각자 .env</li>
+<li><b>Langfuse·Qdrant = 팀 VM에 셀프호스트</b>&nbsp;— 확정. 리드가 무료 VM에 docker compose로 띄우고 주소·키를 Slack으로 공유, 각자 .env에. 제공자는 미정</li>
 <li><b>Python 3.12 + uv + LangChain 0.3</b>&nbsp;— 확정(#53 머지). 설치는 <code>uv sync</code>, 실행은 <code>uv run</code></li>
-<li><b>평가 LLM</b>&nbsp;— 아직 미정. 생성 모델과 같아도 됨. 비용이 질문 수를 정한다 (judge)</li>
-<li><b>Qdrant 실행 방식(docker/embedded)</b>&nbsp;— 아직 미정 (platform). 11/12 재설치 검증 대상</li>
+<li><b>평가 LLM = gpt-6-luna</b>&nbsp;— 확정. 생성 모델과 같고 kind=eval로 따로 센다. 비용이 질문 수를 정한다 (judge)</li>
 <li><b>발표 목차 7장 합의 · 발표 시간 공지 확인</b>&nbsp;— ①문제·데이터 ②아키텍처 ③비교 결과 ④품질·보안 ⑤운영·선택 ⑥한계 ⑦기여. 시간 미공지면 누가 확인하나</li>
 </ul></div>
 <div><h3>미팅 끝나고 오늘 각자</h3>
 <ul class="check">
 <li>GitHub 알림 켜기, Project 보드 열어 내 카드 확인 (<a href="https://github.com/users/C-Designer/projects/1">보드</a>). GitHub가 처음이면 <a href="#guide">안내</a>부터</li>
 <li><code>gh auth login</code> 해 두기. 에이전트가 세션 시작 때 내 담당 영역을 자동으로 알아보는 데 필요</li>
-<li>레포 clone (<code>git clone https://github.com/C-Designer/kant_project_3.git</code>), <code>uv sync</code>로 환경 만들기, Qdrant 준비, <code>.env.example</code>을 복사해 <code>.env</code></li>
+<li>레포 clone (<code>git clone https://github.com/C-Designer/kant_project_3.git</code>), <code>uv sync</code>로 환경 만들기, <code>.env.example</code>을 복사해 <code>.env</code> (VM 주소는 리드가 공유할 때까지 로컬 <code>docker run qdrant/qdrant</code>)</li>
 <li>내 영역 spec과 <code>docs/requirements.md</code> 읽기 (순서는 <code>AGENTS.md</code>)</li>
 <li>노션 발제 페이지(링크는 <code>docs/requirements.md</code> 첫 줄)에서 ZIP을 받아 빈 폴더 <code>data/shipping/</code>에 풀기 → 안에 <code>documents/</code>(PDF 15개)와 <code>evaluation/</code>이 있어야 함. 커밋 금지</li>
-<li>Langfuse Cloud: 리드가 팀 프로젝트를 만들고 초대 → 각자 키를 <code>.env</code>에 (호스트는 .env.example에 있음)</li>
+<li>리드: 무료 VM에 Langfuse·Qdrant 셀프호스트 → 주소·키를 Slack <code>proj_3rd</code>에 → 각자 <code>.env</code>에</li>
 <li>리드: 오늘 저녁 뼈대 시작, 11/6 오전 머지</li>
 </ul></div>
 </div>
@@ -662,7 +661,7 @@ git push</pre>
 <h2>2. 날짜별로 이 날 끝에 돼 있어야 하는 것</h2>
 <div class="tbl"><table>
 <tr><th>날</th><th>M</th><th>이 날 끝에 돼 있어야 하는 것</th></tr>
-<tr><td>11/5 목</td><td>M0</td><td>해운·Basic, 담당 확정(완료). 각자 데이터 다운로드. 각자 로컬(uv sync, Qdrant). Langfuse Cloud 프로젝트 초대. 발표 목차 합의. 리드가 뼈대 시작</td></tr>
+<tr><td>11/5 목</td><td>M0</td><td>해운·Basic, 담당 확정(완료). 각자 데이터 다운로드. 각자 로컬(uv sync). 리드가 팀 VM에 Langfuse·Qdrant 셀프호스트 시작. 발표 목차 합의. 리드가 뼈대 시작</td></tr>
 <tr><td>11/6 금</td><td>M1</td><td><b>뼈대 머지.</b> 전원 로컬에서 <code>naive</code> 1문항 실행 확인. 각자 영역 첫 PR</td></tr>
 <tr><td>11/7 토</td><td></td><td>search 청킹 v1·hybrid 초안 / answer 프롬프트 v1이 정상·되묻기·보류 각 1문항 통과 / metrics 로더·러너·Hit/Recall / judge 프롬프트 초안·null 테스트 / platform Langfuse 스팬·config</td></tr>
 <tr><td>11/8 일</td><td></td><td>search hybrid 완성 / answer 출력 검증·재생성 / metrics 운영 지표·표 초안 / judge RAGAS·Judge 1문항 통과 / platform LLM 래퍼·오류 응답. 리드: 슬라이드 뼈대</td></tr>
@@ -700,7 +699,7 @@ git push</pre>
 </table></div></div>
 </div>
 
-<div class="note">11/5 킥오프에서 확정: <code>k</code> = 5, Langfuse Cloud, Python 3.12 + uv + LangChain 0.3(#53). 검수 당번은 두지 않는다. 남은 미정: 평가 LLM, Qdrant 실행 방식, HTTP 상태 정책.</div>
+<div class="note">11/5 킥오프에서 확정: <code>k</code> = 5, 평가 LLM = gpt-6-luna, Langfuse·Qdrant는 팀 VM에 셀프호스트(리드), Python 3.12 + uv + LangChain 0.3(#53). 검수 당번은 두지 않는다. 남은 미정: VM 제공자, HTTP 상태 정책.</div>
 <footer>출처: <code>README.md</code>, <code>docs/work-plan.md</code>, <code>docs/specs/*.md</code>, <code>docs/adr/*.md</code>, <code>AGENTS.md</code>, GitHub Issue #8–#47 · 기준일 2026-11-05(main 7f4bd7f). 문서가 바뀌면 이 페이지가 아니라 레포 문서가 기준이다.</footer>
 </div></div>
 <script>
