@@ -12,25 +12,27 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 |---|---|
 | [docs/requirements.md](docs/requirements.md) | 발제 요약: 필수 4과제, 데이터 규칙, API 형식, 상태값, 산출물, 완료 기준 |
 | [docs/evaluation.md](docs/evaluation.md) | 채점 규칙: Hit@k·Recall@k, RAGAS, Judge 4항목, 해당 없음 처리, 운영 지표, 보안 비교 |
-| [docs/work-plan.md](docs/work-plan.md) | 역할 분담안, 일정(M0~M6), Issue 골격, 미팅 안건 |
+| [docs/work-plan.md](docs/work-plan.md) | 역할 분담, 일정(M0~M6), 코드 리뷰·상호 공유·발표 준비, Issue 골격, 미팅 안건 |
 | [docs/branch-strategy.md](docs/branch-strategy.md) | 브랜치·PR 규칙 |
 | [docs/documentation.md](docs/documentation.md) | ADR과 spec 규약 |
-| [docs/adr/](docs/adr/) | 설계 결정 (0002 영역 재편, 0003 스택) |
+| [AGENTS.md](AGENTS.md) | 사람·에이전트 공통 작업 규칙 |
+| [docs/adr/](docs/adr/) | 설계 결정 (0002 관심사 분할·뼈대, 0003 스택) |
 | [docs/specs/](docs/specs/) | 영역별 현재 동작과 인터페이스 |
 
 ## 코드 구조
 
-영역 하나당 `src/<영역>/`과 `docs/specs/<영역>.md`가 1:1. 영역을 맡으면 spec의 미정 항목부터 채운다.
+영역은 레이어가 아니라 관심사로 나눈다 ([ADR 0002](docs/adr/0002-areas-by-concern.md)). 영역 하나당 담당 1명, spec 1개. 영역 간 계약은 `src/contracts.py`, 동결 설정은 `src/config.py`.
 
-| 영역 | 역할 | 담당 |
-|---|---|---|
-| `ingestion` | PDF 추출 → 청킹 → E5 임베딩 → Qdrant 색인. 출처(`book_id`, `page`) 보존 | 미정 |
-| `retrieval` | `naive` / `hybrid` / `hybrid_rerank` 검색. 공통 `k` | 미정 |
-| `service` | FastAPI `/health` `/query`, 프롬프트, gpt-6-luna 호출, 출력 JSON 검증, 자료 ID → 출처 매핑, 오류 처리 | 미정 |
-| `evaluation` | 질문 선택, 3방식 일괄 실행, 검색·답변 지표, 운영 지표, 보안 4개, 비교표 | 미정 |
-| `observability` | Langfuse 트레이스(요청 ID로 전 구간 연결), JSONL 보조 기록 | `service` 담당 겸임 |
+| 영역 | 책임 | 코드 | 담당 |
+|---|---|---|---|
+| `search` | 검색 품질: 청킹·E5 임베딩·Qdrant 색인, `naive` / `hybrid` / `hybrid_rerank` | `src/search/` | 미정 |
+| `answer` | 답변 품질: 문맥 조립, 프롬프트·판단, gpt-6-luna 호출, 출력 JSON 검증, 출처 매핑 | `src/answer/` | 미정 |
+| `evaluation` | 비교표: 질문 선택, 3방식 일괄 실행, Hit/Recall·RAGAS·Judge, 운영 지표 집계 | `src/evaluation/` | 미정 |
+| `platform` | 재현·관측·운영: FastAPI, `config.py`, LLM 래퍼(timeout·측정), Langfuse, README·재실행, 보안 4개, 시연 | `src/platform/`, `src/api/`, `src/evaluation/security.py` | 미정 |
 
-요청 흐름: 사용자 → `service` → `retrieval` → `service`(문맥 조립·생성·검증) → 응답. `observability`가 전 구간을 요청 ID로 기록하고, `evaluation`이 `service`를 일괄 호출해 채점한다.
+요청 흐름: `/query` → `platform.run_query()` → `search.retrieve()` → `answer.build_context()` → `answer.generate()`(→ `platform.llm.call()`) → 응답. `evaluation`은 같은 `run_query()`를 일괄 호출해 채점한다. 전 구간이 `request_id` 하나로 Langfuse에 남는다.
+
+뼈대(`naive` 1문항 end-to-end + contracts + config)는 리드가 11/6 오전까지 머지한다. 그 뒤 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
 
 스택: Python, pypdf, LangChain, 로컬 E5, Qdrant, FastAPI, Langfuse, RAGAS. 결정은 [ADR 0003](docs/adr/0003-stack.md).
 

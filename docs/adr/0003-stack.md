@@ -14,13 +14,13 @@
 | 언어 | Python (강의 환경) | 가상환경·의존성 관리 방식은 `README`에 |
 | PDF 추출 | `pypdf` | 출처는 LangChain `Document.metadata`에 |
 | 문서·프롬프트·체인 | LangChain (`Document`, `ChatPromptTemplate`, LCEL/Runnable) | |
-| 임베딩 | 로컬 E5 계열 | 정확한 모델명은 `specs/ingestion.md`에서 고정. 세 방식 동일 |
-| 벡터스토어 | Qdrant | 로컬 실행. 컬렉션 스키마는 `specs/ingestion.md` |
-| 키워드 검색 | 미정 (BM25 계열 또는 Qdrant sparse) | `retrieval` 담당이 `specs/retrieval.md`에서 고정 |
-| 리랭커 | 미정 (로컬 cross-encoder 계열) | `retrieval` 담당이 고정 |
+| 임베딩 | 로컬 E5 계열 | 정확한 모델명은 `specs/search.md`에서 고정. 세 방식 동일 |
+| 벡터스토어 | Qdrant | 로컬 실행. 컬렉션 스키마는 `specs/search.md` |
+| 키워드 검색 | 미정 (BM25 계열 또는 Qdrant sparse) | `search` 담당이 `specs/search.md`에서 고정 |
+| 리랭커 | 미정 (로컬 cross-encoder 계열) | `search` 담당이 고정 |
 | API | FastAPI + Pydantic | `/health`, `/query` |
 | 생성 모델 | `gpt-6-luna` | 발제 지정 |
-| 트레이싱 | Langfuse | Cloud / 셀프호스트는 `specs/observability.md`에서 고정 |
+| 트레이싱 | Langfuse | Cloud / 셀프호스트는 `specs/platform.md`에서 고정 |
 | 평가 | RAGAS (Faithfulness) + 자체 Judge 스크립트 | 평가 LLM은 `specs/evaluation.md`에서 고정 |
 
 설정값(API 키, Langfuse 키, 호스트)은 환경 변수로만 넣는다. `.env`는 커밋하지 않고 `.env.example`만 둔다.
