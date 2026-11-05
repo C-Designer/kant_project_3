@@ -101,7 +101,7 @@ curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
   실제 실행으로 확인한 기능: 프롬프트→모델→파서 연결(LCEL), 청킹과 출처 메타데이터 유지, BM25 검색, Qdrant 저장·검색, hybrid 결합(EnsembleRetriever), FastAPI `/health`, Langfuse LangChain 콜백 import. E5 모델 실제 추론은 다운로드 용량 때문에 확인하지 않았다(설치만 확인).
 - **3.14는 쓸 수 없다.** RAGAS 의존성(`scikit-network`)이 3.14에서 빌드에 실패한다. 근거는 [docs/specs/judge.md](docs/specs/judge.md) "실행 환경 제약".
 - 패키지를 추가할 때는 `pip install` 대신 `uv add <패키지>`를 쓰고, 바뀐 `pyproject.toml`과 `uv.lock`을 같은 PR에 넣는다. 의존성 변경은 다른 영역에도 영향을 주므로 PR 제목에 `[interface]`를 붙인다.
-- `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/12)에서 실패한다.
+- `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/11)에서 실패한다.
 
 ### 데이터셋 받기
 
