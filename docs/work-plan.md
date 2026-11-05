@@ -1,6 +1,6 @@
 # 작업 계획과 역할 분담
 
-제출 2026-11-13 (금) 13:00. 오늘(11/5)부터 8일. 요구사항은 [requirements.md](requirements.md), 채점은 [evaluation.md](evaluation.md), 영역 정의는 [ADR 0002](adr/0002-areas-aligned-to-brief.md).
+제출 2026-11-13 (금) 13:00. 오늘(11/5)부터 8일. 요구사항은 [requirements.md](requirements.md), 채점은 [evaluation.md](evaluation.md), 영역 정의는 [ADR 0002](adr/0002-areas-by-concern.md).
 
 담당자 칸은 11/5 미팅에서 채운다. 채우면 이 문서와 README를 같은 PR로 갱신한다.
 
