@@ -1,0 +1,18 @@
+# 데이터셋과 환경 설정은 올리지 않는다
+data/
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# 에디터·OS
+.vscode/
+.idea/
+.DS_Store
