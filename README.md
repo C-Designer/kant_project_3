@@ -13,7 +13,7 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 | [docs/requirements.md](docs/requirements.md) | 발제 요약: 필수 4과제, 데이터 규칙, API 형식, 상태값, 산출물, 완료 기준 |
 | [docs/evaluation.md](docs/evaluation.md) | 채점 규칙: Hit@k·Recall@k, RAGAS, Judge 4항목, 해당 없음 처리, 운영 지표, 보안 비교 |
 | [docs/work-plan.md](docs/work-plan.md) | 역할 분담, 일정, 코드 리뷰·머지, 상호 공유, 발표 준비, Issue·보드 운영 |
-| [docs/kickoff/](docs/kickoff/) | 킥오프 자료(HTML). clone 후 `docs/kickoff/index.html`을 브라우저로 연다. 안건 순서 자료, GitHub 초보용 안내, 구조·레포·운영·일정 그림 |
+| [docs/kickoff/](docs/kickoff/) | 킥오프 자료. clone 후 `docs/kickoff/index.html` 한 파일을 브라우저로 연다(상단 탭으로 7장 이동). 안건 순서 자료, GitHub 초보용 안내, 구조·레포·운영·일정 그림 |
 | [Project 보드](https://github.com/users/C-Designer/projects/1) | 진행 상황. Issue는 [여기](https://github.com/C-Designer/kant_project_3/issues) |
 | [docs/branch-strategy.md](docs/branch-strategy.md) | 브랜치·PR 규칙 |
 | [docs/documentation.md](docs/documentation.md) | ADR과 spec 규약 |
