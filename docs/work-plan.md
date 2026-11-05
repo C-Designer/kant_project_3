@@ -8,7 +8,7 @@
 
 | 이름 | 역할 |
 |---|---|
-| 김창동 | 리드 + `platform`. 뼈대와 platform 실무를 직접 맡는다. 모든 PR 리뷰·머지, Issue·Project 추적, 인터페이스 변경 조정, 일정, README·발표자료 통합, 팀 Notion 제출. 모임에 참석한다 |
+| 김창동 | 리드 + `platform`. 뼈대와 platform 실무를 직접 맡는다. 모든 PR 리뷰·머지, Issue·마일스톤 추적, 인터페이스 변경 조정, 일정, README·발표자료 통합, 팀 Notion 제출. 모임에 참석한다 |
 | 윤승환 | `search` |
 | 천희재 | `answer` |
 | 오주헌 | `metrics` |
@@ -23,7 +23,7 @@
 3. **계약은 코드.** 영역 간 인터페이스는 `src/contracts.py`. 바꾸려면 `[interface]` PR과 의존 영역 담당자 확인.
 4. **공통 설정 동결일 11/9(월) 아침.** `config.py`를 동결하고 그 뒤로는 비교 실행만. 동결 후 변경은 전체 재실행.
 5. **모든 팀원이 실행과 오류 분석에 참여한다.** 발제 평가 항목. 11/9~10 전체 실행과 대표 사례 대조를 영역과 무관하게 나눈다.
-6. **리드는 `platform` 담당이자 매니저다.** 뼈대와 platform 실무를 하면서 모든 PR을 리뷰·머지하고, Project 보드를 보고 막힌 Issue를 푼다. platform이 밀리면 리뷰가 우선이다.
+6. **리드는 `platform` 담당이자 매니저다.** 뼈대와 platform 실무를 하면서 모든 PR을 리뷰·머지하고, 마일스톤별 Issue를 보고 막힌 Issue를 푼다. platform이 밀리면 리뷰가 우선이다.
 7. **짝은 협업 상대다.** `search`↔`answer`(조각), `metrics`↔`judge`(실행 결과·채점), `platform`↔`metrics`(`run_query()`). 인터페이스를 주고받는 사이라 서로의 변경을 먼저 알아야 한다. 조율 방식은 짝이 알아서 정한다. 리뷰 의무는 아니다.
 
 ## 분담
@@ -89,7 +89,7 @@
 
 | 자리 | 무엇 |
 |---|---|
-| 모임 | 시간 될 때 모여 진행. 리드 참석. Project 보드를 같이 보며 Issue 상태 갱신 |
+| 모임 | 시간 될 때 모여 진행. 리드 참석. 마일스톤별 Issue를 같이 보며 진행 상황 확인 |
 | 전체 실행·오류 분석 (11/9~10) | 질문 묶음을 5명이 나눠 실행하고 오류·대표 사례를 **자기 영역이 아닌 결과**로 분석. 상호 이해의 실제 근거 |
 | README 재실행 (11/11) | 구현 안 한 사람이 README대로 설치·실행. 안 되면 README를 고친다 |
 | spec | 담당자가 미정 항목을 채우는 것이 공유 문서다 |
@@ -102,15 +102,14 @@
 - **시연 백업**: 11/11에 API 호출과 Langfuse 화면을 녹화해 둔다.
 - **형식**: PPTX + 열람용 PDF. 팀 Notion에 저장소·발표자료 연결. 발표 시간은 공지 후 맞춘다.
 
-## GitHub Issue · Project 운영
+## GitHub Issue · 마일스톤 운영
 
-- **Project 보드:** https://github.com/users/C-Designer/projects/1 (팀원 4명 Write). 뷰 2개: `보드`(Status 열), `담당별`(Assignee 그룹 + 라벨·마일스톤).
-- **열:** Todo → In Progress → Review(PR 올라감, 리드 리뷰 대기) → Done. 자동화: Issue 생성 → Todo, PR 연결 → In Progress, PR 머지/Issue 닫힘 → Done. **Review로 옮기는 것만 수동** (PR 올린 사람이).
+- 진행 상황은 Issue와 마일스톤으로만 본다. 별도 Project 보드는 쓰지 않는다.
 - **Issue = 작업 단위.** 반나절~하루. 본문에 할 일·완료 조건·기준 문서. 라벨 = 영역(`search` `answer` `metrics` `judge` `platform` `skeleton` `docs`), `interface`는 contracts/config 변경 PR에 추가. 담당자 1명. PR 본문에 `Closes #N`.
 - **마일스톤 5개** (일정표의 M1~M5와 같다. 평일 11/5~11/11에 하나씩): [M1 뼈대 (11/5)](https://github.com/C-Designer/kant_project_3/milestone/1) · [M2 영역별 목업 통합 (11/6)](https://github.com/C-Designer/kant_project_3/milestone/5) · [M3 동결·전체 실행 (11/9)](https://github.com/C-Designer/kant_project_3/milestone/6) · [M4 비교표·대표 사례·최종 선택 (11/10)](https://github.com/C-Designer/kant_project_3/milestone/7) · [M5 구현·검증 완료 (11/11)](https://github.com/C-Designer/kant_project_3/milestone/3). Issue는 그 일이 끝나야 하는 날의 마일스톤에 둔다. 11/12~13의 발표본·제출(#47)은 마일스톤 없이 일정표로 관리한다.
 - **초기 Issue 40개** (#8~#47)는 2026-11-05에 생성됨: https://github.com/C-Designer/kant_project_3/issues. 영역별 목록은 라벨로 필터.
-- Issue보다 작은 수정(버그 하나)은 Issue 없이 PR만 올려도 된다. 새 작업이 생기면 담당자가 Issue를 만들고 라벨·마일스톤을 붙인다(자동으로 보드에 들어감).
-- 리드가 매일 보드를 보고 In Progress에 이틀 넘게 있는 카드를 묻는다.
+- Issue보다 작은 수정(버그 하나)은 Issue 없이 PR만 올려도 된다. 새 작업이 생기면 담당자가 Issue를 만들고 라벨·마일스톤을 붙인다.
+- 리드가 매일 마일스톤별 열린 Issue를 보고 마감이 지난 Issue를 묻는다.
 
 ## 11/5 미팅 안건
 
