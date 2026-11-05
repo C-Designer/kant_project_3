@@ -532,7 +532,9 @@ name = "kant-project-3"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "langchain" },
     { name = "langchain-community" },
+    { name = "langchain-core" },
     { name = "langchain-openai" },
     { name = "pydantic" },
     { name = "ragas" },
@@ -545,7 +547,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "langchain", specifier = ">=0.3.30,<0.4" },
     { name = "langchain-community", specifier = ">=0.3.27,<0.3.28" },
+    { name = "langchain-core", specifier = ">=0.3.86,<1.0" },
     { name = "langchain-openai", specifier = ">=0.3.35,<0.4" },
     { name = "pydantic", specifier = ">=2.13,<3" },
     { name = "ragas", specifier = "==0.4.3" },

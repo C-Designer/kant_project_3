@@ -60,6 +60,7 @@ uv sync            # .venv 생성, Python 3.12와 고정된 패키지 설치
 uv run pytest -q   # 실행은 uv run으로
 ```
 
+- **LangChain은 0.3 계열로 고정한다** (`langchain` 0.3.x, `langchain-core` 1.0 미만). RAGAS 0.4.3이 LangChain 1.x와 맞지 않기 때문이다. 1.x가 필요한 패키지를 `uv add`하면 uv가 설치를 거부한다. 그때는 judge 담당과 먼저 상의한다.
 - **3.14는 쓸 수 없다.** RAGAS 의존성(`scikit-network`)이 3.14에서 빌드에 실패한다. 근거는 [docs/specs/judge.md](docs/specs/judge.md) "실행 환경 제약".
 - 패키지를 추가할 때는 `pip install` 대신 `uv add <패키지>`를 쓰고, 바뀐 `pyproject.toml`과 `uv.lock`을 같은 PR에 넣는다. 의존성 변경은 다른 영역에도 영향을 주므로 PR 제목에 `[interface]`를 붙인다.
 - `pip install`이나 다른 가상환경으로 따로 설치하지 않는다. 버전이 어긋나 재실행 검증(11/12)에서 실패한다.
