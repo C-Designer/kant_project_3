@@ -1,6 +1,6 @@
 # 작업 계획과 역할 분담
 
-제출 2026-11-13 (금) 13:00. 오늘(11/5)부터 8일. 요구사항은 [requirements.md](requirements.md), 채점은 [evaluation.md](evaluation.md), 영역 정의는 [ADR 0002](adr/0002-areas-aligned-to-brief.md).
+제출 2026-11-13 (금) 13:00. 오늘(11/5)부터 8일. 요구사항은 [requirements.md](requirements.md), 채점은 [evaluation.md](evaluation.md), 영역 정의는 [ADR 0002](adr/0002-areas-by-concern.md).
 
 담당자 칸은 11/5 미팅에서 채운다. 채우면 이 문서와 README를 같은 PR로 갱신한다.
 
@@ -8,38 +8,41 @@
 
 | 이름 | 역할 |
 |---|---|
-| 김창동 | 리드. 매니징에 집중한다. 뼈대 한 번 외에는 실무 코딩을 하지 않는다. 모든 PR 리뷰·머지, Issue·Project 추적, 인터페이스 변경 조정, 일정, README·발표자료 통합, 팀 Notion 제출. 모임에 참석한다 |
-| 천희재 | 실무 (영역 미정) |
-| 윤승환 | 실무 (영역 미정) |
-| 오주헌 | 실무 (영역 미정) |
-| 김경민 | 실무 (영역 미정) |
+| 김창동 | 리드 + `platform`. 뼈대와 platform 실무를 직접 맡는다. 모든 PR 리뷰·머지, Issue·Project 추적, 인터페이스 변경 조정, 일정, README·발표자료 통합, 팀 Notion 제출. 모임에 참석한다 |
+| 윤승환 | `search` |
+| 천희재 | `answer` |
+| 오주헌 | `metrics` |
+| 김경민 | `judge` |
+
+담당은 2026-11-05 Slack `proj_3rd` 이모지 투표로 정했다.
 
 ## 분담 원칙
 
-1. **뼈대 먼저, 그 위에서 깊이.** 리드가 11/5 저녁~11/6 오전에 Claude Code로 뼈대를 만들어 머지한다: `src/contracts.py`(공용 타입), `src/config.py`, `naive` 1문항 end-to-end(PDF 1개 색인 → 검색 → 생성 → 출처 → Langfuse), 최소 테스트. 리드의 구현은 이 한 번뿐이다. 11/6 오전까지 머지가 안 되면 각자 contracts만 보고 시작한다.
-2. **영역 = 관심사 = 사람.** 레이어가 아니라 "무엇의 품질을 책임지나"로 나눈다([ADR 0002](adr/0002-areas-by-concern.md)). 4명 전원이 에이전트로 개발하므로 코드 양이 아니라 판단과 통합이 병목이다.
+1. **뼈대 먼저, 그 위에서 깊이.** 리드가 11/5 저녁~11/6 오전에 Claude Code로 뼈대를 만들어 머지한다: `src/contracts.py`(공용 타입), `src/config.py`, `naive` 1문항 end-to-end(PDF 1개 색인 → 검색 → 생성 → 출처 → Langfuse), 최소 테스트. 11/6 오전까지 머지가 안 되면 각자 contracts만 보고 시작한다.
+2. **영역 = 관심사 = 사람.** 레이어가 아니라 "무엇의 품질을 책임지나"로 나눈다([ADR 0002](adr/0002-areas-by-concern.md)). 5명 전원이 에이전트로 개발하므로 코드 양이 아니라 판단과 통합이 병목이다.
 3. **계약은 코드.** 영역 간 인터페이스는 `src/contracts.py`. 바꾸려면 `[interface]` PR과 의존 영역 담당자 확인.
 4. **공통 설정 동결일 11/10(화) 아침.** `config.py`를 동결하고 그 뒤로는 비교 실행만. 동결 후 변경은 전체 재실행.
 5. **모든 팀원이 실행과 오류 분석에 참여한다.** 발제 평가 항목. 11/10~11 전체 실행과 대표 사례 대조를 영역과 무관하게 나눈다.
-6. **리드는 매니징에 집중한다.** 뼈대 이후 실무 코딩은 하지 않는다. 모든 PR을 리뷰하고 머지하며, Project 보드를 보고 막힌 Issue를 푼다.
-7. **짝은 협업 상대다.** `search`↔`answer`, `evaluation`↔`platform`. 인터페이스를 주고받는 사이라 서로의 변경을 먼저 알아야 한다. 조율 방식은 짝이 알아서 정한다. 리뷰 의무는 아니다.
+6. **리드는 `platform` 담당이자 매니저다.** 뼈대와 platform 실무를 하면서 모든 PR을 리뷰·머지하고, Project 보드를 보고 막힌 Issue를 푼다. platform이 밀리면 리뷰가 우선이다.
+7. **짝은 협업 상대다.** `search`↔`answer`(조각), `metrics`↔`judge`(실행 결과·채점), `platform`↔`metrics`(`run_query()`). 인터페이스를 주고받는 사이라 서로의 변경을 먼저 알아야 한다. 조율 방식은 짝이 알아서 정한다. 리뷰 의무는 아니다.
 
 ## 분담
 
-| 영역 | 담당 | 책임 (한 줄) | 주 작업 | 작업량 | 맞는 사람 |
+| 영역 | 담당 | 책임 (한 줄) | 주 작업 | 양 / 난이도 | 피크 |
 |---|---|---|---|---|---|
-| `search` | | 검색 품질 | 청킹(표·단위·적용일 보존), E5 임베딩, Qdrant 색인, `naive` → `hybrid` → `hybrid_rerank`, 누락·실패 리포트 | 중상 | 임베딩·검색 개념, HF 모델 로컬 실행 경험, 꼼꼼함 |
-| `answer` | | 답변 품질 | 문맥 조립(S-ID, 토큰 한도), 프롬프트와 판단 순서, 출력 JSON 검증, 출처 매핑, 되묻기·보류 튜닝, 방어 프롬프트 | 중상 | 프롬프트를 끈기 있게 다듬는 사람. LangChain 체인 |
-| `evaluation` | | 비교표 | 질문 선택, 일괄 실행 러너, Hit/Recall, RAGAS, Judge, 운영 지표 집계, 비교표, 사람 확인 기록 | 상 | pandas·집계, 지표 정의에 깐깐함, `None`을 0으로 안 바꾸는 사람 |
-| `platform` | | 재현·관측·운영 | FastAPI·오류 응답, `config.py`, LLM 래퍼(timeout·재시도·측정), Langfuse, README·`.env`, 교차 재실행, 보안 4개, 시연 녹화 | 중상 | 인프라·운영 감각, README를 남이 따라 할 수 있게 쓰는 사람 |
+| `search` | 윤승환 | 검색 품질 | 청킹(표·단위·적용일 보존), E5 임베딩, Qdrant 색인, `naive` → `hybrid` → `hybrid_rerank`, 누락·실패 리포트 | 중 / 중. 어려운 건 청킹 하나 | 11/6~8, 제일 먼저 끝남 |
+| `answer` | 천희재 | 답변 품질 | 문맥 조립(S-ID, 토큰 한도), 프롬프트와 판단 순서, 출력 JSON 검증, 출처 매핑, 되묻기·보류 튜닝, 방어 프롬프트 | 소~중 / 중상. 코드는 적고 튜닝이 끝이 없음 | 11/7~9 |
+| `metrics` | 오주헌 | 실험 자동화 | 평가 JSON 로더, 질문 선택, 질문×3방식 러너, Hit/Recall, 응답시간·토큰·오류율 집계, 비교표 | 중 / 중. 11/6부터 mock으로 시작 가능 | 11/8~10 |
+| `judge` | 김경민 | LLM 평가 | RAGAS Faithfulness, Judge 4항목 프롬프트·파싱, 해당없음/평가불가 `null` 규칙, 원문 대조·사람 확인 기록 | 중 / 중상. 규칙 함정 많음 | 11/10~11, 제일 늦음 |
+| `platform` | 김창동 | 재현·관측·운영 | 뼈대, FastAPI·오류 응답, `config.py`, LLM 래퍼(timeout·재시도·측정), Langfuse, README·`.env`, 교차 재실행, 보안 4개, 시연 녹화 | 중상 / 중 | 11/6~9, 11/12 |
 
-의존 방향: `search` → `answer` → `platform.run_query()` ← `evaluation`. 뼈대가 네 영역을 모두 가로지르므로 11/6 오후부터 동시에 시작한다.
+흐름: 질문 → `platform` → `search`가 조각을 꺼냄 → `answer`가 답을 씀 → `platform`이 기록. `metrics`가 이걸 수십 번 돌려 `RunRecord`를 만들고 → `judge`가 채점해 `EvalRecord` → `metrics`가 표로 합침. 레코드 형식은 `contracts.py`.
 
 ### 영역과 무관하게 전원이 나눠 맡는 것 (11/10~)
 
 | 일 | 내용 |
 |---|---|
-| 최종 실행 | 질문 묶음을 4명이 나눠 실행. 오류 나면 담당 영역에 Issue |
+| 최종 실행 | 질문 묶음을 5명이 나눠 실행. 오류 나면 담당 영역에 Issue |
 | 대표 사례 원문 대조 | **자기 영역이 아닌 결과**를 본다. 1인 2~3건 |
 | README 각자 절 | 자기 영역 실행 방법, 설정값, 한계, 기여 |
 | 발표 | 각자 자기 영역 슬라이드 |
@@ -52,11 +55,11 @@
 |---|---|---|
 | 11/5 (목) | **M0** | 분야·난이도·담당 확정. 데이터 다운로드·PDF 수 검수. 각자 로컬 환경(Python, Qdrant). Langfuse 프로젝트. 발표 목차 합의. 리드가 뼈대 시작 |
 | 11/6 (금) | **M1** | 뼈대 머지. 전원 로컬에서 `naive` 1문항 실행 확인. 각자 영역 첫 PR |
-| 11/7 (토) | | search: 청킹 v1·hybrid 초안 / answer: 프롬프트 v1이 정상·되묻기·보류 각 1문항 통과 / evaluation: 러너·Hit/Recall / platform: Langfuse 스팬·config |
-| 11/8 (일) | | search: hybrid 완성 / answer: 출력 검증·재생성 / evaluation: RAGAS·Judge 1문항 / platform: LLM 래퍼 측정·오류 응답. 리드: 슬라이드 뼈대 |
-| 11/9 (월) | **M2** | search: hybrid_rerank / evaluation: 질문 목록 확정·집계 / platform: 보안 비교 스크립트. **동결할 설정 합의** |
-| 11/10 (화) | **M3** | 아침 `config.py` 동결 → 전체 실행 → 자동 채점 → 보안 4개. 실행·오류 분석은 4명이 질문 묶음으로 분담 |
-| 11/11 (수) | **M4** | 비교표 완성. 대표 사례 원문 대조(자기 영역 아닌 결과). 최종 구성 선택과 이유. 영역별 슬라이드 |
+| 11/7 (토) | | search: 청킹 v1·hybrid 초안 / answer: 프롬프트 v1이 정상·되묻기·보류 각 1문항 통과 / metrics: 로더·러너·Hit/Recall / judge: Judge 프롬프트 초안·`null` 규칙 테스트 / platform: Langfuse 스팬·config |
+| 11/8 (일) | | search: hybrid 완성 / answer: 출력 검증·재생성 / metrics: 운영 지표 집계·표 초안 / judge: RAGAS·Judge 1문항 통과 / platform: LLM 래퍼 측정·오류 응답. 리드: 슬라이드 뼈대 |
+| 11/9 (월) | **M2** | search: hybrid_rerank / metrics: 질문 목록 확정 / judge: 평가 모델·프롬프트 확정 / platform: 보안 비교 스크립트. **동결할 설정 합의** |
+| 11/10 (화) | **M3** | 아침 `config.py` 동결 → metrics 전체 실행 → judge 자동 채점 → platform 보안 4개. 실행·오류 분석은 5명이 질문 묶음으로 분담 |
+| 11/11 (수) | **M4** | metrics 비교표 완성. judge 대표 사례 원문 대조(전원 참여, 자기 영역 아닌 결과). 최종 구성 선택과 이유. 영역별 슬라이드 |
 | 11/12 (목) | **M5** | 기능 추가 금지, 버그 수정만. **구현 안 한 팀원이 README대로 설치·실행 성공**. 슬라이드 통합. 시연 경로 녹화 백업 |
 | 11/13 (금) | **M6** | 팀 Notion에 저장소·발표자료 연결. **13:00 제출**. 오후 발표 |
 
@@ -78,7 +81,7 @@
 | 안 보는 것 | 스타일, 네이밍, 리팩터 제안. 메모만 남기고 막지 않는다 |
 | PR 크기 | 반나절 단위. 하루 넘게 쌓이면 쪼갠다. 11/12 이후는 버그 수정 PR만 |
 | 인터페이스 변경 | `contracts.py`·`config.py` 변경은 제목에 `[interface]`, 의존 영역 담당자(짝)에게 먼저 알린다. 리드는 짝이 알고 있는지 확인하고 머지 |
-| 짝 조율 | `search`↔`answer`, `evaluation`↔`platform`. 서로의 변경을 알고 있으면 된다. 방식은 짝이 정한다 |
+| 짝 조율 | `search`↔`answer`, `metrics`↔`judge`, `platform`↔`metrics`. 서로의 변경을 알고 있으면 된다. 방식은 짝이 정한다 |
 
 ## 상호 공유
 
@@ -87,34 +90,34 @@
 | 자리 | 무엇 |
 |---|---|
 | 모임 | 시간 될 때 모여 진행. 리드 참석. Project 보드를 같이 보며 Issue 상태 갱신 |
-| 전체 실행·오류 분석 (11/10~11) | 질문 묶음을 4명이 나눠 실행하고 오류·대표 사례를 **자기 영역이 아닌 결과**로 분석. 상호 이해의 실제 근거 |
+| 전체 실행·오류 분석 (11/10~11) | 질문 묶음을 5명이 나눠 실행하고 오류·대표 사례를 **자기 영역이 아닌 결과**로 분석. 상호 이해의 실제 근거 |
 | README 재실행 (11/12) | 구현 안 한 사람이 README대로 설치·실행. 안 되면 README를 고친다 |
 | spec | 담당자가 미정 항목을 채우는 것이 공유 문서다 |
 
 ## 발표 준비
 
 - **목차 7장**: ① 문제 정의·데이터·사용자 ② 아키텍처와 스택 ③ 세 방식 비교 결과(비교표) ④ 품질 평가·보안 비교 ⑤ 운영 지표와 최종 선택 이유 ⑥ 한계와 실패 사례 ⑦ 팀원별 기여. 시연은 ③~④ 사이에 FastAPI docs + Langfuse 대표 요청 1개.
-- **담당**: 리드가 뼈대와 ①②⑦, `evaluation`이 ③④⑤ 데이터, `platform`이 시연과 보안 비교, `search`·`answer`가 ⑥의 자기 영역 실패 사례.
+- **담당**: 리드가 뼈대와 ①②⑦, `metrics`가 ③⑤ 비교표·운영 지표, `judge`가 ④ 품질 평가, `platform`이 시연과 보안 비교, `search`·`answer`가 ⑥의 자기 영역 실패 사례.
 - **시연 백업**: 11/12에 API 호출과 Langfuse 화면을 녹화해 둔다.
 - **형식**: PPTX + 열람용 PDF. 팀 Notion에 저장소·발표자료 연결. 발표 시간은 공지 후 맞춘다.
 
 ## GitHub Issue · Project 운영
 
-- **Issue = 작업 단위.** 영역 라벨(`search`, `answer`, `evaluation`, `platform`, `skeleton`, `docs`) + 마일스톤(M0~M6). 담당자 1명. PR 본문에 `Closes #N`.
+- **Issue = 작업 단위.** 영역 라벨(`search`, `answer`, `metrics`, `judge`, `platform`, `skeleton`, `docs`) + 마일스톤(M0~M6). 담당자 1명. PR 본문에 `Closes #N`.
 - **Project 보드** 열: Backlog / This milestone / In progress / Review / Done. 리드가 매일 확인하고 막힌 것은 당일 처리.
 - **PR**은 [branch-strategy.md](branch-strategy.md)대로. 동작이나 인터페이스를 바꾸면 같은 PR에서 spec 갱신([documentation.md](documentation.md)).
 - 인터페이스 변경은 Issue 제목 앞에 `[interface]`를 붙이고 의존 영역 담당자를 멘션한다.
 
 ### 초기 Issue 골격 (M0 직후 리드가 생성)
 
-`skeleton` (리드, 11/5 저녁~11/6 오전)
+`skeleton` (김창동, 11/5 저녁~11/6 오전)
 - [ ] `src/contracts.py`: ChunkMeta, RetrievedChunk, ContextChunk, LLMOutput, Citation, QueryRequest/Response, RunRecord, EvalRecord
 - [ ] `src/config.py`: 동결 대상 설정 자리
 - [ ] PDF 1개 색인 → `naive` 검색 → 프롬프트 v0 → 출력 검증 → 출처 → `/query` 응답 → Langfuse 트레이스
 - [ ] `None` 집계·`source_ids` 검증·`book_id` 파생 단위 테스트
 - [ ] README 설치·실행 초안, `.env.example`
 
-`search`
+`search` (윤승환)
 - [ ] 데이터셋 검수, `ingest-report.json`
 - [ ] 청킹 전략 (크기, overlap, 표 보존) 결정·구현
 - [ ] E5 모델명·컬렉션 스키마 확정 (sparse 여부는 hybrid 방식과 함께)
@@ -122,7 +125,7 @@
 - [ ] `hybrid_rerank`: 리랭커 선택·로컬 실행·후보 수
 - [ ] spec 미정 항목 갱신
 
-`answer`
+`answer` (천희재)
 - [ ] 문맥 조립: 자료 ID, 대응표, 토큰 한도, 잘린 청크 기록
 - [ ] 프롬프트 v1 (판단 순서, JSON 출력) + 정상·되묻기·보류 케이스 통과
 - [ ] 출력 검증·재생성·`ValidationFailed`
@@ -130,18 +133,25 @@
 - [ ] 방어 프롬프트 변형 (`defense=True`)
 - [ ] spec 미정 항목 갱신
 
-`evaluation`
-- [ ] 평가 JSON 로더 (`evidence_groups`, `expected_action`)
-- [ ] 질문 선택 기준·목록
-- [ ] 일괄 실행 러너 → RunRecord JSONL
-- [ ] Hit@k, Recall@k (해당 없음)
-- [ ] RAGAS Faithfulness (해당 없음)
-- [ ] Judge 프롬프트·4항목·null
+`metrics` (오주헌)
+- [ ] 평가 JSON 로더: 질문과 정답(`GroundTruth`) 분리
+- [ ] 질문 선택 기준·목록 (`results/questions.json`)
+- [ ] 일괄 실행 러너 → `RunRecord` JSONL
+- [ ] Hit@k, Recall@k (해당 없음 `None`)
 - [ ] 운영 지표 집계 (정상 평균·건수, 오류율, 토큰 합계·확인 수, 평가 호출 분리)
-- [ ] 비교표·사람 확인 기록
+- [ ] 비교표 생성 (`EvalRecord` 조인, 평균 옆 건수)
 - [ ] spec 미정 항목 갱신
 
-`platform`
+`judge` (김경민)
+- [ ] Judge 프롬프트 v1 (4항목, `null` 구분) + 파싱
+- [ ] `null` 규칙 단위 테스트 (0으로 안 바뀜, 누락은 0)
+- [ ] RAGAS Faithfulness 연동 (해당 없음 처리)
+- [ ] `platform.llm.call(kind="eval")`·`record_score` 연결
+- [ ] 평가 모델·설정 확정 (`config.py`)
+- [ ] 대표 사례 원문 대조 템플릿 (`results/review.md`)
+- [ ] spec 미정 항목 갱신
+
+`platform` (김창동)
 - [ ] `/query` 오류 응답 정책 (HTTP 상태, reason 코드)
 - [ ] `llm.call`: timeout·재시도·토큰·시간 측정, `kind=eval` 분리
 - [ ] Langfuse 스팬 4개 + `record_score`, 운영 방식 결정
@@ -157,11 +167,11 @@
 
 ## 11/5 미팅 안건
 
-1. 분야·난이도 (Basic 권장: 8일 일정, 15 PDF면 색인·재실행 부담이 작고 최고 평가 가능)
-2. 담당 확정 (관심사 4영역)
+1. 분야·난이도 (11/4 투표는 해운 4표. Basic 권장: 8일 일정, 15 PDF면 색인·재실행 부담이 작고 최고 평가 가능)
+2. 담당 확인 (Slack 투표 결과: search 윤승환 / answer 천희재 / metrics 오주헌 / judge 김경민 / platform 김창동)
 3. spec 미정 항목 중 오늘 정할 것: k 기본값, 평가 LLM, Langfuse Cloud/셀프호스트, Python 버전·패키지 관리
 4. 데이터 다운로드와 PDF 수 검수 당번
-5. 협업 짝 확인 (search↔answer, evaluation↔platform)
+5. 협업 짝 확인 (search↔answer, metrics↔judge, platform↔metrics)
 6. 발표 목차 7장 합의, 발표 시간 공지 확인
 
 ## 리스크
