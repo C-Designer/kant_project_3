@@ -19,7 +19,7 @@
 - 청킹: 크기·overlap 미정. 표는 행·열 제목, 단위, 각주를 같은 청크에. 대상·적용일·단위·출처가 끊기지 않게.
 - 임베딩: 로컬 E5 계열, 모델명·차원 미정. 질의 임베딩도 같은 모델.
 - Qdrant 컬렉션: 이름, 거리 함수, sparse 벡터 포함 여부 미정.
-- 명령 `python -m src.search.index --dataset data/shipping` (예시). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
+- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버, 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
 
 검색
 
@@ -33,7 +33,9 @@
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
 - 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다(방식, k, chunk_id 목록, 소요 시간).
 
-코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `retrieve.py`)
+뼈대(11/6) 상태: `naive`만 동작. `hybrid`·`hybrid_rerank`는 `NotImplementedError`(#15·#16), 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준.
+
+코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `store.py`, `retrieve.py`)
 
 ## 인터페이스
 
