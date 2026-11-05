@@ -12,19 +12,12 @@ Basic 해운 PDF 15개(360쪽)는 모든 쪽이 같은 구조다.
 Intermediate·Advanced는 구조가 달라 아직 이 규칙을 쓰지 않는다.
 """
 
-from dataclasses import dataclass
 from pathlib import Path
 
 from pypdf import PdfReader
 
+from src.contracts import ChunkMeta, book_id_from_file_name
 
-@dataclass
-class Chunk:
-    text: str
-    book_id: str  # 파일명에서 .pdf를 뺀 값
-    file_name: str
-    page: int  # 첫 쪽 = 1
-    chunk_id: str  # "<book_id>-p<page>-c<n>"
 
 # 역할 : pdf 에서 가져온 텍스트(\n 포함) -> 텍스트(\n 없음)
 def _join_lines(text: str) -> str:
@@ -81,33 +74,50 @@ def _clean_page(
     return f"{subtitle}\n{body}".strip()
 
 
-def chunk_pdf(pdf_path: Path, include_doc_context: bool = True) -> list[Chunk]:
+def extract_pages(
+    pdf_path: Path | str, include_doc_context: bool = True
+) -> list[tuple[int, str]]:
+    """PDF 한 권을 읽어 쪽마다 정리한 글을 [(쪽 번호, 글)]로 돌려준다. 첫 쪽 = 1.
 
+    index.py가 부르는 뼈대의 형태다. 쪽 정리(_clean_page)가 여기서 일어난다.
+    """
     # 매개변수 : include_doc_context (bool)
     # True: 청크 첫 줄에 "문서 제목 (담당: 부서)"를 붙인다 (문서 주제를 검색에 반영)
     # False: 소제목과 본문만 남긴다 (Hit@k·Recall@k 비교용)
-    """PDF 한 권을 쪽 단위 청크 목록으로 만든다.
-
-    include_doc_context: True면 청크 첫 줄에 "문서 제목 (담당: 부서)"를 붙인다(기본).
-    """
+    pdf_path = Path(pdf_path)
     # 파일 이름에서 확장자를 뺀 부분 (SB01.pdf -> SB01 : book_id)
-    book_id = pdf_path.stem
+    book_id = book_id_from_file_name(pdf_path.name)
     reader = PdfReader(pdf_path)
     total = len(reader.pages)
-    chunks: list[Chunk] = []
+    pages: list[tuple[int, str]] = []
     for page_no, page in enumerate(reader.pages, start=1):
         text = _clean_page(
             page.extract_text() or "", book_id, page_no, total, include_doc_context
         )
-        if not text:  # 빈 쪽은 만들지 않는다
-            continue
-        chunks.append(
-            Chunk(
-                text=text,
+        if text:  # 빈 쪽은 만들지 않는다
+            pages.append((page_no, text))
+    return pages
+
+
+def chunk_pages(
+    file_name: str, pages: list[tuple[int, str]], *, size: int, overlap: int
+) -> list[tuple[str, ChunkMeta]]:
+    """쪽마다 청크 하나를 만든다 (한 쪽 = 청크 하나).
+
+    size와 overlap은 index.py가 넘기는 뼈대의 인자라 받기만 하고 쓰지 않는다.
+    쪽 단위 청킹에는 크기 상한과 겹침이 없다. config의 CHUNK_SIZE·CHUNK_OVERLAP 정리는
+    #14에서 config.py를 고칠 때 함께 한다.
+    """
+    book_id = book_id_from_file_name(file_name)
+    return [
+        (
+            text,
+            ChunkMeta(
                 book_id=book_id,
-                file_name=pdf_path.name,
-                page=page_no,
-                chunk_id=f"{book_id}-p{page_no}-c1",
-            )
+                file_name=file_name,
+                page=page,
+                chunk_id=f"{book_id}-p{page}-c1",
+            ),
         )
-    return chunks
+        for page, text in pages
+    ]
