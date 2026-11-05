@@ -4,6 +4,7 @@
 
 ## 작업 전에 읽는 순서
 
+0. 세션 시작 시 표시된 담당 영역을 따른다. 표시가 없으면 `bash scripts/whoami.sh`를 실행해 확인하고, 그래도 미확인이면 사용자에게 묻는다. 추측하지 않는다. (Claude Code는 `.claude/settings.json`의 SessionStart 훅이 자동으로 표시한다. `gh auth login`이 돼 있어야 한다)
 1. [docs/branch-strategy.md](docs/branch-strategy.md): 브랜치·PR 규칙
 2. [docs/requirements.md](docs/requirements.md): 무엇을 만들어야 하는지. 발제의 고정 규칙
 3. 자기 영역 spec `docs/specs/<영역>.md`와 공용 타입 `src/contracts.py`

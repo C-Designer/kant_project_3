@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/whoami.sh\"",
+            "timeout": 10,
+            "statusMessage": "담당 영역 확인 중"
+          }
+        ]
+      }
+    ]
+  }
+}
