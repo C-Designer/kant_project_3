@@ -1,6 +1,6 @@
 # AGENTS.md
 
-사람과 에이전트(Claude Code, Codex 등) 모두에게 적용되는 규칙이다.
+사람과 에이전트(Claude Code, Codex 등) 모두에게 적용되는 규칙이다. `CLAUDE.md`는 이 파일을 끌어오기만 한다(`@AGENTS.md`). 규칙은 여기 한 곳에서 고친다.
 
 ## 작업 전에 읽는 순서
 
@@ -8,6 +8,7 @@
 2. [docs/requirements.md](docs/requirements.md): 무엇을 만들어야 하는지. 발제의 고정 규칙
 3. 자기 영역 spec `docs/specs/<영역>.md`와 공용 타입 `src/contracts.py`
 4. 채점 관련 작업이면 [docs/evaluation.md](docs/evaluation.md)
+5. 문서(spec·ADR)를 새로 만들거나 고치면 [docs/documentation.md](docs/documentation.md): 템플릿, 번호, 같은 PR 규칙
 
 ## 지켜야 할 것
 
