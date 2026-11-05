@@ -2,10 +2,12 @@
 
 <!-- 이 문서는 "지금 어떻게 동작하나"의 기준이다. 코드가 바뀌면 같은 PR에서 함께 고친다. -->
 
+담당: 김창동(리드). 짝: `metrics`(`run_query()` 호출). 뼈대(contracts, config, naive E2E)도 여기서 만든다.
+
 ## 범위
 
 - 책임: 재현·관측·운영. FastAPI 라우터와 요청·오류 응답, 요청 ID, `config.py`(동결 대상 설정의 단일 출처), LLM 호출 래퍼(timeout·재시도·토큰·시간 측정), Langfuse 트레이스, JSONL 보조 기록, `.env.example`, README 설치·실행 절, 교차 재실행 검증, 보안 비교 4개 실행, 발표 시연(FastAPI docs + Langfuse) 준비와 녹화 백업.
-- 책임 아님: 검색(`search`), 프롬프트와 판단(`answer`), 지표 계산(`evaluation`).
+- 책임 아님: 검색(`search`), 프롬프트와 판단(`answer`), 실행·집계(`metrics`), 채점(`judge`).
 
 ## 동작
 
@@ -26,7 +28,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
 - 비밀값·API 키는 트레이스에 넣지 않는다.
 
-보안 비교(`src/evaluation/security.py`, platform 소유)
+보안 비교(`src/platform/security.py`)
 - 최종 구성 하나, 보안 질문 2개. 한 번 검색한 `final_context`를 저장 → `answer.generate(defense=False)` → 같은 문맥으로 `generate(defense=True)`. 결과 4개를 `results/security.md`에 공격 노출·추종·업무 정확성·과잉 거절로 나눠 기록.
 
 재현
@@ -35,7 +37,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 
 미정: Langfuse 방식, HTTP 상태 정책, Python 버전·패키지 관리 도구, Qdrant 실행 방법(docker / embedded).
 
-코드 위치: `src/platform/` (`llm.py`, `tracing.py`, `jsonl.py`), `src/api/` (`main.py`, `schemas.py`), `src/config.py`, `src/evaluation/security.py`
+코드 위치: `src/platform/` (`llm.py`, `tracing.py`, `jsonl.py`, `security.py`), `src/api/` (`main.py`, `schemas.py`), `src/config.py`, `src/contracts.py`
 
 ## 인터페이스
 
@@ -54,7 +56,7 @@ class QueryResponse(BaseModel):
 def run_query(question: str, mode: RetrievalMode, *, request_id: str | None = None) -> RunRecord
 ```
 
-- `run_query`는 API와 `evaluation` 러너가 공유하는 단일 경로다. 검색 → 문맥 → 생성 → 검증 → 측정 → 트레이스를 여기서 묶는다.
+- `run_query`는 API와 `metrics` 러너가 공유하는 단일 경로다. 검색 → 문맥 → 생성 → 검증 → 측정 → 트레이스를 여기서 묶는다.
 - `llm.call`, `tracing.span`, `record_score`는 다른 영역이 쓰는 유일한 측정·기록 진입점이다.
 
 ## 관련 ADR
