@@ -22,7 +22,7 @@
 
 미정: 문맥 토큰 한도(`config.py`에서 동결. `k`는 5로 확정), 생성 설정, 재생성 횟수, 프롬프트 v1 본문, 방어 문장.
 
-뼈대(11/6) 상태: 프롬프트 `v0`, `defense=True`는 `NotImplementedError`(#22), 토큰 수는 `len//2+1` 근사(tiktoken은 어휘를 내려받아 쓰지 않음).
+뼈대(11/5) 상태: 프롬프트 `v0`, `defense=True`는 `NotImplementedError`(#22), 토큰 수는 `len//2+1` 근사(tiktoken은 어휘를 내려받아 쓰지 않음).
 
 코드 위치: `src/answer/` (`context.py`, `chain.py`, `validate.py`, `prompts/`)
 

@@ -11,7 +11,7 @@
 
 ## 동작
 
-뼈대(11/6)에 `naive` + 단순 청킹이 들어 있다. 담당자가 아래 미정을 채우며 깊이 판다.
+뼈대(11/5)에 `naive` + 단순 청킹이 들어 있다. 담당자가 아래 미정을 채우며 깊이 판다.
 
 색인
 - 데이터 위치 `data/shipping/documents/*.pdf` (git 제외).
@@ -33,7 +33,7 @@
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
 - 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다(방식, k, chunk_id 목록, 소요 시간).
 
-뼈대(11/6) 상태: `naive`만 동작. `hybrid`·`hybrid_rerank`는 `NotImplementedError`(#15·#16), 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준.
+뼈대(11/5) 상태: `naive`만 동작. `hybrid`·`hybrid_rerank`는 `NotImplementedError`(#15·#16), 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준.
 
 코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `store.py`, `retrieve.py`)
 
