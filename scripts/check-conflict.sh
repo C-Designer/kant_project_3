@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse(Bash) 훅: `gh pr create` 전에 현재 브랜치가 origin/main과 충돌하는지 본다.
+# Claude Code·Codex 공용 PreToolUse(Bash) 훅: `gh pr create` 전에 현재 브랜치가 origin/main과 충돌하는지 본다.
 # 충돌이면 exit 2로 막고 충돌 파일을 알려준다. 그 외(다른 명령, fetch 실패)는 통과(exit 0).
 cmd=$(jq -r '.tool_input.command // ""')
 [[ "$cmd" == *"gh pr create"* ]] || exit 0
