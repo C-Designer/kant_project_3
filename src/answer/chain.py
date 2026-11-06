@@ -6,13 +6,18 @@ from src.answer.validate import ValidationFailed, parse_output
 from src.contracts import Citation, ContextChunk, LLMOutput
 from src.platform import llm, tracing
 
-_PROMPT_PATH = Path(__file__).parent / "prompts" / "v0.md"
+PROMPT_VERSION = "v1"
+_PROMPT_DIR = Path(__file__).parent / "prompts"
+
+
+def system_prompt() -> str:
+    return (_PROMPT_DIR / f"{PROMPT_VERSION}.md").read_text(encoding="utf-8")
 
 
 def _messages(question: str, context: list[ContextChunk]) -> list[dict[str, str]]:
     material = "\n\n".join(f"[{c.source_id}]\n{c.text}" for c in context)
     user = f"[질문]\n{question}\n\n[검색 자료]\n{material}"
-    return [{"role": "system", "content": _PROMPT_PATH.read_text(encoding="utf-8")}, {"role": "user", "content": user}]
+    return [{"role": "system", "content": system_prompt()}, {"role": "user", "content": user}]
 
 
 def generate(question: str, context: list[ContextChunk], *, defense: bool = False) -> tuple[LLMOutput, list[Citation]]:
