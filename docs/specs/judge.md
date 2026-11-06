@@ -28,7 +28,7 @@
 9. **재시도·timeout**: timeout과 호출 재시도는 `platform.llm.call`이 맡는다. Judge는 출력 형식 실패에 한해 1회 재시도한다. RAGAS 자체 재시도(기본 10회)는 `RunConfig(max_retries=1)`로 끈다.
 10. 평가 호출은 `platform.llm.call(kind="eval")`로만. RAGAS의 내부 호출도 `platform.llm.call`을 감싼 어댑터(`BaseRagasLLM` 하위 클래스)를 거친다. 호출 토큰은 RAGAS와 Judge를 합쳐 `eval_tokens`에. 한 호출이라도 사용량을 모르면 합계는 `None`(0으로 메우지 않음).
 11. 점수는 `platform.tracing.record_score(request_id, ...)`로 Langfuse 트레이스에 붙인다. 이름: `faithfulness`, `judge_facts`, `judge_conditions`, `judge_evidence`, `judge_decision`. comment = 이유. **값이 `null`(해당 없음·평가 불가)인 칸은 보내지 않는다**(Langfuse가 값 없는 점수를 거절하고, 빈 값을 0이나 1로 바꾸면 안 되므로). 서비스 오류 답안은 판단 0만 붙는다. 해당 없음·평가 불가와 그 이유의 기준은 `eval.jsonl`이고, Langfuse 화면에서 점수가 없는 칸은 "해당 없음·평가 불가·아직 채점 안 됨" 중 하나다. 이 처리는 `platform_adapter.record_score`(judge 쪽)가 하며 platform 코드는 바꾸지 않는다.
-12. **사람 확인**: 대표 사례(좋아진·나빠진 것, 영역당 2~3건)를 PDF 원문과 대조해 `results/review.md`에. 자동 채점 오류를 발견하면 원래 점수와 수정 이유를 함께 남긴다. 사람 확인이 자동 평가를 대신하지 않는다.
+12. **사람 확인**: 대표 사례(좋아진·나빠진 것, 영역당 2~3건)를 PDF 원문과 대조해 `results/review.md`에. 자동 채점 오류를 발견하면 원래 점수와 수정 이유를 함께 남긴다. 사람 확인이 자동 평가를 대신하지 않는다. 대조할 사례는 `review_sheet.py`(`python -m src.judge.review_sheet --run <run_id>`)가 고르고 인용한 쪽의 PDF 원문·정답지 근거 쪽을 한 장에 모아 `data/judge_review/`에 만든다(고르는 기준: 기대 동작과 판단 점수의 어긋남, Faithfulness와 4칸의 어긋남, 방식 간 결과 갈림, 해당 없음·평가 불가). 판정은 사람이 한다.
 
 ## 검증 (채점관 자체의 품질)
 
