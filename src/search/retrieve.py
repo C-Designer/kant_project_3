@@ -3,7 +3,7 @@ import time
 from src import config
 from src.contracts import ChunkMeta, RetrievalMode, RetrievedChunk
 from src.platform import tracing
-from src.search import embed, keyword, store
+from src.search import embed, keyword, rerank, store
 
 RRF_K = 60  # RRF 상수. 순위가 1등이든 2등이든 점수 차이가 너무 벌어지지 않게 하는 값 (잠정, #15)
 POOL = 20  # hybrid에서 E5·BM25 각각 상위 몇 개까지 후보로 보는지 (잠정, #15)
@@ -55,17 +55,20 @@ def _rrf(rankings: list[list[RetrievedChunk]], k: int) -> list[RetrievedChunk]:
 
 
 def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]:
-    if mode == "hybrid_rerank":
-        raise NotImplementedError("search 담당 구현 예정 (#16)")
-    if mode not in ("naive", "hybrid"):
+    if mode not in ("naive", "hybrid", "hybrid_rerank"):
         raise ValueError(f"지원하지 않는 retrieval_mode: {mode}")
 
     with tracing.span("retrieve", input=query) as sp:
         t0 = time.perf_counter()
         if mode == "naive":
             chunks = _dense(query, k)
-        else:
+        elif mode == "hybrid":
             chunks = _rrf([_dense(query, POOL), _keyword(query, POOL)], k)
+        else:  # hybrid_rerank: hybrid로 후보를 넉넉히 뽑고 리랭커가 다시 정렬해 k개만 남긴다
+            candidates = _rrf(
+                [_dense(query, POOL), _keyword(query, POOL)], rerank.RERANK_CANDIDATES
+            )
+            chunks = rerank.rerank(query, candidates, k)
         sp.update(
             metadata={
                 "mode": mode,
