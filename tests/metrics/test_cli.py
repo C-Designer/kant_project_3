@@ -1,8 +1,8 @@
 """questions -> run(--mock) -> report 를 명령줄 진입점으로 끝까지 이어 본다."""
 
+import csv
 import json
 
-import pandas as pd
 import pytest
 
 from src.metrics import questions as questions_cli
@@ -42,11 +42,11 @@ def test_full_pipeline_with_mock(tmp_path, eval_dir):
     assert {p.name for p in run_dir.glob("*.jsonl")} == {"naive.jsonl", "hybrid.jsonl", "hybrid_rerank.jsonl"}
 
     report_cli.main(["--run", run_dir.name, "--eval-dir", str(eval_dir), "--k", "3", "--results-dir", str(results)])
-    detail = pd.read_csv(run_dir / "comparison_detail.csv")
+    detail = list(csv.DictReader((run_dir / "comparison_detail.csv").read_text(encoding="utf-8").splitlines()))
     assert len(detail) == 12  # 4문항 x 3방식
     assert (run_dir / "comparison_summary.csv").exists() and (run_dir / "comparison.md").exists()
     # judge 결과(eval.jsonl)가 아직 없어도 비교표는 만들어지고 평가 열은 빈 칸이다
-    assert detail["faithfulness"].isna().all()
+    assert all(r["faithfulness"] == "" for r in detail)
 
 
 def test_report_reads_eval_jsonl_when_present(tmp_path, eval_dir):
@@ -63,8 +63,8 @@ def test_report_reads_eval_jsonl_when_present(tmp_path, eval_dir):
     (run_dir / "eval.jsonl").write_text(json.dumps(ev, ensure_ascii=False) + "\n", encoding="utf-8")
 
     report_cli.main(["--run", run_dir.name, "--eval-dir", str(eval_dir), "--k", "3", "--results-dir", str(results)])
-    detail = pd.read_csv(run_dir / "comparison_detail.csv")
-    assert detail["faithfulness"].notna().sum() == 1
+    detail = list(csv.DictReader((run_dir / "comparison_detail.csv").read_text(encoding="utf-8").splitlines()))
+    assert sum(1 for r in detail if r["faithfulness"] != "") == 1
 
 
 def test_report_fails_clearly_for_missing_run(tmp_path, eval_dir):

@@ -1,10 +1,24 @@
-import pandas as pd
+import csv
+
 import pytest
 
 from src.contracts import EvalRecord, GroundTruth, JudgeItem, RunRecord, TokenUsage
 from src.metrics.report import build_detail, build_summary, render_markdown, write_report
 
 K = 2
+
+
+def pick(rows, qid, mode):
+    return next(r for r in rows if r["question_id"] == qid and r["retrieval_mode"] == mode)
+
+
+def by_mode(summary):
+    return {r["retrieval_mode"]: r for r in summary}
+
+
+def read_csv(path):
+    with open(path, encoding="utf-8", newline="") as f:
+        return list(csv.DictReader(f))  # 빈 칸은 ""
 
 
 def run(qid, mode, retrieved, status="answered", latency=100, inp=10, out=5, error=None):
@@ -70,65 +84,65 @@ def test_detail_has_one_row_per_run_and_joins_eval(data):
     runs, truths, evals = data
     d = build_detail(runs, truths, evals, K)
     assert len(d) == 6
-    row = d[(d.question_id == "Q1") & (d.retrieval_mode == "naive")].iloc[0]
-    assert (row.hit_at_k, row.recall_at_k) == (0, 0.0)
-    assert row.faithfulness == 0.5 and row.judge_facts == 0 and row.judge_evidence == 1
+    row = pick(d, "Q1", "naive")
+    assert (row["hit_at_k"], row["recall_at_k"]) == (0, 0.0)
+    assert row["faithfulness"] == 0.5 and row["judge_facts"] == 0 and row["judge_evidence"] == 1
 
 
 def test_run_without_eval_keeps_eval_columns_na_not_zero(data):
     runs, truths, evals = data
     d = build_detail(runs, truths, evals, K)
-    row = d[(d.question_id == "Q2") & (d.retrieval_mode == "hybrid")].iloc[0]
-    assert pd.isna(row.faithfulness) and pd.isna(row.judge_facts)
+    row = pick(d, "Q2", "hybrid")
+    assert row["faithfulness"] is None and row["judge_facts"] is None
 
 
 def test_empty_evidence_is_na_with_reason(data):
     runs, truths, evals = data
     d = build_detail(runs, truths, evals, K)
-    row = d[(d.question_id == "Q3") & (d.retrieval_mode == "hybrid")].iloc[0]
-    assert pd.isna(row.hit_at_k) and pd.isna(row.recall_at_k)
-    assert row.retrieval_not_applicable
+    row = pick(d, "Q3", "hybrid")
+    assert row["hit_at_k"] is None and row["recall_at_k"] is None
+    assert row["retrieval_not_applicable"]
 
 
 def test_summary_means_skip_na_but_keep_zero(data):
     runs, truths, evals = data
-    s = build_summary(build_detail(runs, truths, evals, K), runs).set_index("retrieval_mode")
+    s = by_mode(build_summary(build_detail(runs, truths, evals, K), runs))
     # naive: Q1 hit 0, Q2 hit 1, Q3(error, evidence 없음) N/A -> 평균 0.5, 대상 2
-    assert s.loc["naive", "hit_at_k_mean"] == 0.5 and s.loc["naive", "hit_at_k_n"] == 2
+    assert s["naive"]["hit_at_k_mean"] == 0.5 and s["naive"]["hit_at_k_n"] == 2
     # hybrid: Q1 hit 1, Q2 hit 1, Q3 N/A
-    assert s.loc["hybrid", "hit_at_k_mean"] == 1.0
-    assert s.loc["hybrid", "recall_at_k_mean"] == pytest.approx(0.75)
+    assert s["hybrid"]["hit_at_k_mean"] == 1.0
+    assert s["hybrid"]["recall_at_k_mean"] == pytest.approx(0.75)
     # faithfulness naive: 0.5 (Q1) 하나만 대상 (Q2 None, Q3 채점 없음)
-    assert s.loc["naive", "faithfulness_mean"] == 0.5 and s.loc["naive", "faithfulness_n"] == 1
+    assert s["naive"]["faithfulness_mean"] == 0.5 and s["naive"]["faithfulness_n"] == 1
     # judge facts naive: 0 (Q1), 1 (Q2) -> 0.5
-    assert s.loc["naive", "judge_facts_mean"] == 0.5 and s.loc["naive", "judge_facts_n"] == 2
+    assert s["naive"]["judge_facts_mean"] == 0.5 and s["naive"]["judge_facts_n"] == 2
 
 
 def test_summary_counts_not_applicable_unscorable_and_errors(data):
     runs, truths, evals = data
-    s = build_summary(build_detail(runs, truths, evals, K), runs).set_index("retrieval_mode")
-    assert s.loc["naive", "error_count"] == 1
-    assert s.loc["naive", "not_applicable_records"] == 1
-    assert s.loc["hybrid", "not_applicable_records"] == 1
-    assert s.loc["naive", "unscorable_records"] == 0
+    s = by_mode(build_summary(build_detail(runs, truths, evals, K), runs))
+    assert s["naive"]["error_count"] == 1
+    assert s["naive"]["not_applicable_records"] == 1
+    assert s["hybrid"]["not_applicable_records"] == 1
+    assert s["naive"]["unscorable_records"] == 0
 
 
 def test_summary_includes_ops_and_keeps_eval_tokens_separate(data):
     runs, truths, evals = data
-    s = build_summary(build_detail(runs, truths, evals, K), runs).set_index("retrieval_mode")
-    assert s.loc["naive", "ok_count"] == 2 and s.loc["naive", "ok_latency_mean_ms"] == 100
-    assert s.loc["naive", "input_tokens_sum"] == 30 and s.loc["naive", "input_tokens_known"] == 3
-    assert s.loc["naive", "eval_input_tokens_sum"] == 100  # 서비스 토큰과 별도 열
-    assert s.loc["naive", "error_rate_pct"] == pytest.approx(100 / 3)
+    s = by_mode(build_summary(build_detail(runs, truths, evals, K), runs))
+    assert s["naive"]["ok_count"] == 2 and s["naive"]["ok_latency_mean_ms"] == 100
+    assert s["naive"]["input_tokens_sum"] == 30 and s["naive"]["input_tokens_known"] == 3
+    assert s["naive"]["eval_input_tokens_sum"] == 100  # 서비스 토큰과 별도 열
+    assert s["naive"]["error_rate_pct"] == pytest.approx(100 / 3)
 
 
 def test_write_report_creates_files_and_csv_keeps_na_empty(data, tmp_path):
     runs, truths, evals = data
     paths = write_report(runs, truths, evals, K, tmp_path)
     assert {p.name for p in paths.values()} == {"comparison_detail.csv", "comparison_summary.csv", "comparison.md"}
-    detail = pd.read_csv(paths["detail"])
-    row = detail[(detail.question_id == "Q3") & (detail.retrieval_mode == "hybrid")].iloc[0]
-    assert pd.isna(row.hit_at_k)  # 0이 아니라 빈 칸
+    detail = read_csv(paths["detail"])
+    row = pick(detail, "Q3", "hybrid")
+    assert row["hit_at_k"] == ""  # 0이 아니라 빈 칸
     md = paths["md"].read_text(encoding="utf-8")
     assert "naive" in md and "hybrid" in md and "Hit@2" in md
 
@@ -152,8 +166,8 @@ def test_runs_outside_general_ids_are_excluded_from_all_aggregates(data):
 
     kept, excluded = filter_general(runs + extra, {"Q1", "Q2", "Q3"})
     assert len(kept) == len(runs) and excluded == 2
-    s = build_summary(build_detail(kept, truths, evals, K), kept).set_index("retrieval_mode")
-    assert s.loc["naive", "total"] == 3 and s.loc["naive", "error_count"] == 1  # 보안·모의 오류가 안 섞임
+    s = by_mode(build_summary(build_detail(kept, truths, evals, K), kept))
+    assert s["naive"]["total"] == 3 and s["naive"]["error_count"] == 1  # 보안·모의 오류가 안 섞임
 
 
 def test_write_report_notes_excluded_count_and_scope(data, tmp_path):
@@ -163,7 +177,7 @@ def test_write_report_notes_excluded_count_and_scope(data, tmp_path):
     paths = write_report(runs + extra, truths, evals, K, tmp_path, general_ids={"Q1", "Q2", "Q3"})
     md = paths["md"].read_text(encoding="utf-8")
     assert "집계 제외" in md and "1건" in md
-    assert "SPAIR01" not in pd.read_csv(paths["detail"]).question_id.tolist()
+    assert "SPAIR01" not in [r["question_id"] for r in read_csv(paths["detail"])]
 
 
 # --- 표 상단 실행 조건·설정 기록 (이슈 #29) ----------------------------------------------------
@@ -238,15 +252,15 @@ def test_detail_lists_which_items_are_blank():
             unscorable=["evidence: 호출 실패", "이유만 있음"],
         )
     ]
-    d = build_detail(runs, {"Q1": truth("Q1", ["A"])}, evals, K).iloc[0]
-    assert d.not_applicable_items == "faithfulness"  # 같은 항목은 한 번만
-    assert d.unscorable_items == "evidence,unclassified"  # 정해진 순서, 형식 어긋난 건 미분류
-    assert d.not_applicable == "faithfulness: 되묻기라 사실 주장 없음; faithfulness: 중복 사유"  # 원문 이유는 그대로
+    d = build_detail(runs, {"Q1": truth("Q1", ["A"])}, evals, K)[0]
+    assert d["not_applicable_items"] == "faithfulness"  # 같은 항목은 한 번만
+    assert d["unscorable_items"] == "evidence,unclassified"  # 정해진 순서, 형식 어긋난 건 미분류
+    assert d["not_applicable"] == "faithfulness: 되묻기라 사실 주장 없음; faithfulness: 중복 사유"  # 원문 이유는 그대로
 
 
 def test_detail_items_are_blank_when_no_eval_result():
-    d = build_detail([run("Q1", "naive", ["A"])], {"Q1": truth("Q1", ["A"])}, [], K).iloc[0]
-    assert pd.isna(d.not_applicable_items) and pd.isna(d.unscorable_items)  # 채점 없음은 0이 아니라 빈 칸
+    d = build_detail([run("Q1", "naive", ["A"])], {"Q1": truth("Q1", ["A"])}, [], K)[0]
+    assert d["not_applicable_items"] is None and d["unscorable_items"] is None  # 채점 없음은 0이 아니라 빈 칸
 
 
 def test_summary_counts_records_per_item():
@@ -258,11 +272,11 @@ def test_summary_counts_records_per_item():
         ev("Q3", "naive", unscorable=["evidence: 실패", "decision: 실패"]),
         ev("Q4", "naive"),
     ]
-    s = build_summary(build_detail(runs, truths, evals, K), runs).iloc[0]
-    assert s.not_applicable_faithfulness == 2  # 레코드 수(한 레코드에 같은 항목이 두 번이어도 1)
-    assert s.unscorable_evidence == 2 and s.unscorable_decision == 1
-    assert s.unscorable_facts == 0 and s.not_applicable_decision == 0
-    assert s.not_applicable_records == 2 and s.unscorable_records == 2  # 기존 레코드 단위 집계는 유지
+    s = build_summary(build_detail(runs, truths, evals, K), runs)[0]
+    assert s["not_applicable_faithfulness"] == 2  # 레코드 수(한 레코드에 같은 항목이 두 번이어도 1)
+    assert s["unscorable_evidence"] == 2 and s["unscorable_decision"] == 1
+    assert s["unscorable_facts"] == 0 and s["not_applicable_decision"] == 0
+    assert s["not_applicable_records"] == 2 and s["unscorable_records"] == 2  # 기존 레코드 단위 집계는 유지
 
 
 def test_markdown_shows_blank_reasons_by_item(data):
@@ -270,3 +284,18 @@ def test_markdown_shows_blank_reasons_by_item(data):
     d = build_detail(runs, truths, evals, K)
     md = render_markdown(d, build_summary(d, runs), K)
     assert "빈칸 이유" in md and "충실도" in md and "미분류" in md
+
+
+# --- 집계할 기록이 없으면 빈 표를 만들지 않고 멈춘다 ---------------------------------------------
+
+def test_write_report_refuses_empty_input(tmp_path):
+    with pytest.raises(ValueError, match="집계할 실행 기록이 없다"):
+        write_report([], {}, [], K, tmp_path)
+    assert list(tmp_path.iterdir()) == []  # 빈 CSV·md를 남기지 않는다
+
+
+def test_write_report_refuses_when_scope_excludes_every_run(data, tmp_path):
+    runs, truths, evals = data
+    with pytest.raises(ValueError, match="집계 제외 6건"):
+        write_report(runs, truths, evals, K, tmp_path, general_ids={"NOT-A-REAL-ID"})
+    assert list(tmp_path.iterdir()) == []
