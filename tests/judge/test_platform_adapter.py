@@ -30,6 +30,26 @@ def test_점수_기록은_팀_tracing으로_그대로_넘어간다(monkeypatch):
     assert seen == [("req-1", "judge_facts", 1, "이유")]
 
 
+def test_None_점수는_Langfuse로_보내지_않고_0은_보낸다(monkeypatch):
+    seen = []
+    monkeypatch.setattr(tracing, "record_score", lambda *a: seen.append(a))
+    platform_adapter.record_score("req-1", "judge_facts", None, "해당 없음: 사실 주장 없음")
+    assert seen == []  # 빈 값은 보내지 않는다 (0이나 1로 바꾸지도 않는다)
+    platform_adapter.record_score("req-1", "judge_facts", 0, "수치가 틀림")
+    assert seen == [("req-1", "judge_facts", 0, "수치가 틀림")]  # 0은 '틀렸다'는 진짜 점수라 보낸다
+
+
+def test_서비스_오류_답안은_판단_0만_점수로_붙는다(monkeypatch):
+    from src.judge.score import _record_scores
+    from src.judge.rules import precheck
+
+    seen = []
+    monkeypatch.setattr(tracing, "record_score", lambda *a: seen.append(a))
+    run = make_run(status="error", error="timeout")
+    _record_scores(run, precheck(run))
+    assert [(name, value) for _, name, value, _ in seen] == [("judge_decision", 0)]
+
+
 def test_platform이_LLMError를_내면_평가불가로_남고_0이나_1로_바뀌지_않는다(monkeypatch):
     def failing(messages, *, kind="service"):
         raise platform_llm.LLMError("실패", "model_error")
