@@ -1,0 +1,49 @@
+"""judge가 platform을 쓰는 창구가 팀 platform을 그대로 부르는지 확인한다 (실제 AI는 부르지 않음)."""
+
+import pytest
+
+from src.judge import platform_adapter
+from src.judge.score import score_one
+from src.platform import llm as platform_llm
+from src.platform import tracing
+from tests.judge.helpers import make_run, make_truth
+
+
+def test_기본은_팀_platform의_llm_call을_eval로_부른다(monkeypatch):
+    seen = {}
+
+    def fake_call(messages, *, kind="service"):
+        seen["kind"], seen["messages"] = kind, messages
+        return platform_llm.LLMResult("ok", 11, 22, 33)
+
+    monkeypatch.setattr(platform_llm, "call", fake_call)
+    monkeypatch.delenv("JUDGE_LLM", raising=False)
+    res = platform_adapter.llm_call([{"role": "user", "content": "hi"}])
+    assert (res.text, res.input_tokens, res.output_tokens, res.latency_ms) == ("ok", 11, 22, 33)
+    assert seen["kind"] == "eval"  # 서비스 사용량과 섞이지 않는 평가 호출
+
+
+def test_점수_기록은_팀_tracing으로_그대로_넘어간다(monkeypatch):
+    seen = []
+    monkeypatch.setattr(tracing, "record_score", lambda *a: seen.append(a))
+    platform_adapter.record_score("req-1", "judge_facts", 1, "이유")
+    assert seen == [("req-1", "judge_facts", 1, "이유")]
+
+
+def test_platform이_LLMError를_내면_평가불가로_남고_0이나_1로_바뀌지_않는다(monkeypatch):
+    def failing(messages, *, kind="service"):
+        raise platform_llm.LLMError("실패", "model_error")
+
+    monkeypatch.setattr(platform_llm, "call", failing)
+    monkeypatch.delenv("JUDGE_LLM", raising=False)
+    rec = score_one(make_run(), make_truth(), platform_adapter.llm_call, use_ragas=False)
+    assert rec.judge is None
+    reasons = [u for u in rec.unscorable if not u.startswith("faithfulness")]
+    assert len(reasons) == 4 and all("채점 호출 실패" in u for u in reasons)
+
+
+def test_로컬_스위치가_켜지면_local_llm을_쓴다(monkeypatch):
+    local = pytest.importorskip("src.judge.local_llm")  # 각자 PC에만 있는 파일. 없으면 건너뜀
+    monkeypatch.setattr(local, "call", lambda messages: platform_llm.LLMResult("local", None, None, None))
+    monkeypatch.setenv("JUDGE_LLM", "local")
+    assert platform_adapter.llm_call([{"role": "user", "content": "hi"}]).text == "local"
