@@ -86,4 +86,5 @@ git merge origin/main
 
 Squash 머지라 이 merge 커밋은 `main` 히스토리에 남지 않는다.
 
-Claude Code에서는 프로젝트 훅(`.claude/settings.json` PreToolUse → `scripts/check-conflict.sh`)이 `gh pr create` 직전에 `origin/main`과의 충돌을 `git merge-tree`로 확인하고, 충돌이 있으면 PR 생성을 막고 충돌 파일을 알려준다.
+Claude Code(`.claude/settings.json`)와 Codex(`.codex/hooks.json`)에서는 PreToolUse 훅(`scripts/check-conflict.sh`)이 `gh pr create` 직전에 `origin/main`과의 충돌을 `git merge-tree`로 확인하고, 충돌이 있으면 PR 생성을 막고 충돌 파일을 알려준다.
+Codex는 프로젝트 훅을 처음 한 번 `/hooks`에서 검토·신뢰해야 실행된다(훅이 바뀌면 다시). GitHub 웹이나 일반 터미널에서 만드는 PR은 확인하지 않는다.
