@@ -11,18 +11,16 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
 from pathlib import Path
-from typing import Callable
 
 from src.contracts import GroundTruth, JudgeItem, RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMResult
-from src.judge.rules import JUDGE_ITEMS
+from src.judge.platform_adapter import LLMCall
+from src.judge.rules import JUDGE_ITEMS, add_optional
 
 PROMPT_VERSION = "judge_v1"
 PROMPT_PATH = Path(__file__).parent / "prompts" / f"{PROMPT_VERSION}.md"
 MAX_ATTEMPTS = 2  # 처음 1번 + 재시도 1번
-
-LLMCall = Callable[[list[dict]], LLMResult]
 
 
 class JudgeParseError(ValueError):
@@ -49,6 +47,12 @@ def _format_citations(run: RunRecord) -> str:
     return ", ".join(f"{c.source_id}={c.book_id} {c.page}쪽" for c in run.citations)
 
 
+@lru_cache(maxsize=1)
+def _load_prompt() -> str:
+    """채점 지시문은 프로그램이 도는 동안 한 번만 읽는다 (실행 도중 파일이 바뀌어 방식마다 다른 지시문이 쓰이는 것도 막는다)."""
+    return PROMPT_PATH.read_text(encoding="utf-8")
+
+
 def build_messages(run: RunRecord, truth: GroundTruth) -> list[dict]:
     rubric = truth.rubric
     user = f"""[평가 대상]
@@ -69,7 +73,7 @@ def build_messages(run: RunRecord, truth: GroundTruth) -> list[dict]:
 채점 설명: {rubric.get("grading_notes", "")}
 """
     return [
-        {"role": "system", "content": PROMPT_PATH.read_text(encoding="utf-8")},
+        {"role": "system", "content": _load_prompt()},
         {"role": "user", "content": user},
     ]
 
@@ -115,13 +119,6 @@ def parse_judge_output(text: str) -> dict[str, JudgeItem]:
 # ---------------------------------------------------------------------------
 
 
-def _add(a: int | None, b: int | None) -> int | None:
-    """토큰 합산. 한쪽이라도 모르면 합계도 모름(None). 0으로 메우지 않는다."""
-    if a is None or b is None:
-        return None
-    return a + b
-
-
 def judge_one(run: RunRecord, truth: GroundTruth, llm: LLMCall) -> tuple[dict[str, JudgeItem] | None, TokenUsage, str | None]:
     """반환: (네 칸 결과 또는 None, 사용 토큰, 실패 사유 또는 None)."""
     messages = build_messages(run, truth)
@@ -134,7 +131,7 @@ def judge_one(run: RunRecord, truth: GroundTruth, llm: LLMCall) -> tuple[dict[st
             last_error = f"채점 호출 실패: {type(e).__name__}"
             tokens = TokenUsage(input=None, output=None)  # 실패한 호출의 사용량은 알 수 없음
             continue
-        tokens = TokenUsage(input=_add(tokens.input, res.input_tokens), output=_add(tokens.output, res.output_tokens))
+        tokens = TokenUsage(input=add_optional(tokens.input, res.input_tokens), output=add_optional(tokens.output, res.output_tokens))
         try:
             return parse_judge_output(res.text), tokens, None
         except JudgeParseError as e:

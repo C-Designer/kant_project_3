@@ -8,9 +8,30 @@ None을 0이나 1로 바꾸는 코드는 이 파일 어디에도 없어야 한�
 
 from __future__ import annotations
 
-from src.contracts import EvalRecord, JudgeItem, RunRecord
+from src.contracts import EvalRecord, JudgeItem, RunRecord, TokenUsage
 
 JUDGE_ITEMS = ("facts", "conditions", "evidence", "decision")
+
+
+def add_optional(a: int | None, b: int | None) -> int | None:
+    """토큰 두 값을 더한다. 한쪽이라도 모르면(None) 합계도 모름(None). 0으로 메우지 않는다.
+
+    토큰 합산 규칙은 이 함수 하나에만 있다 (채점관·RAGAS·답안별 합계가 모두 이것을 쓴다).
+    """
+    if a is None or b is None:
+        return None
+    return a + b
+
+
+def sum_usage(*usages: TokenUsage | None) -> TokenUsage | None:
+    """여러 호출의 사용량을 합친다. 합칠 사용량이 하나도 없으면 None(0이 아님)."""
+    used = [u for u in usages if u is not None]
+    if not used:
+        return None
+    total = TokenUsage(input=0, output=0)
+    for u in used:
+        total = TokenUsage(input=add_optional(total.input, u.input), output=add_optional(total.output, u.output))
+    return total
 
 
 def tag(item: str, reason: str) -> str:

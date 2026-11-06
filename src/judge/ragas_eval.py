@@ -19,12 +19,10 @@ from __future__ import annotations
 import asyncio
 import math
 import re
-from typing import Callable
 
 from src.contracts import RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMResult
-
-LLMCall = Callable[[list[dict]], LLMResult]
+from src.judge.platform_adapter import LLMCall
+from src.judge.rules import add_optional
 
 
 def _make_recorded_llm(llm: LLMCall):
@@ -32,7 +30,8 @@ def _make_recorded_llm(llm: LLMCall):
 
     RAGAS를 설치하지 않은 환경에서도 이 파일을 불러올 수 있도록 안에서 import 한다.
     """
-    from langchain_core.outputs import Generation, LLMResult
+    from langchain_core.outputs import Generation
+    from langchain_core.outputs import LLMResult as LangChainResult  # 팀 LLMResult와 이름이 겹치지 않게 구분
     from ragas.llms.base import BaseRagasLLM
 
     class RecordedLLM(BaseRagasLLM):
@@ -40,14 +39,11 @@ def _make_recorded_llm(llm: LLMCall):
             super().__init__()
             self.usage = TokenUsage(input=0, output=0)
 
-        def _call(self, prompt) -> LLMResult:
+        def _call(self, prompt) -> LangChainResult:
             res = llm([{"role": "user", "content": prompt.to_string()}])
             u = self.usage
-            self.usage = TokenUsage(
-                input=None if u.input is None or res.input_tokens is None else u.input + res.input_tokens,
-                output=None if u.output is None or res.output_tokens is None else u.output + res.output_tokens,
-            )
-            return LLMResult(generations=[[Generation(text=res.text)]])
+            self.usage = TokenUsage(input=add_optional(u.input, res.input_tokens), output=add_optional(u.output, res.output_tokens))
+            return LangChainResult(generations=[[Generation(text=res.text)]])
 
         def generate_text(self, prompt, n=1, temperature=0.01, stop=None, callbacks=None):
             return self._call(prompt)
@@ -127,19 +123,21 @@ def faithfulness(run: RunRecord, llm: LLMCall) -> tuple[float | None, TokenUsage
 
     from ragas.run_config import RunConfig
 
-    recorded = _make_recorded_llm(llm)
-    # 재시도·timeout은 기록계(platform.llm.call)가 맡는다. RAGAS 자체 재시도(기본 10회)는 끈다.
-    recorded.set_run_config(RunConfig(max_retries=1, max_wait=1))
-    metric = _make_metric(recorded)
-    sample = SingleTurnSample(
-        user_input=run.question,
-        response=run.answer,
-        retrieved_contexts=contexts,
-    )
+    recorded = None
     try:
+        recorded = _make_recorded_llm(llm)
+        # 재시도·timeout은 기록계(platform.llm.call)가 맡는다. RAGAS 자체 재시도(기본 10회)는 끈다.
+        recorded.set_run_config(RunConfig(max_retries=1, max_wait=1))
+        metric = _make_metric(recorded)
+        sample = SingleTurnSample(
+            user_input=run.question,
+            response=run.answer,
+            retrieved_contexts=contexts,
+        )
         score = asyncio.run(metric.single_turn_ascore(sample))
     except Exception as e:
-        return None, recorded.usage, None, f"RAGAS 계산 실패: {type(e).__name__}: {e}"
+        # 준비 단계의 실패도 계산 실패와 같이 이 칸만 "평가 불가"로 남긴다 (Judge 4항목은 계속 채점)
+        return None, (recorded.usage if recorded is not None else None), None, f"RAGAS 계산 실패: {type(e).__name__}: {e}"
 
     if score is None or (isinstance(score, float) and math.isnan(score)):
         if metric.removed:

@@ -14,7 +14,7 @@
 | `judge.py` | 채점관 4항목: 메시지 만들기 → 호출 → JSON 검사 → 1회 재시도 |
 | `prompts/judge_v1.md` | 채점관 지시문 |
 | `ragas_eval.py` | RAGAS Faithfulness. 주장 없음 → 해당 없음, 호출 실패 → 평가 불가. 보류·되묻기 문장은 채점에서 제외 |
-| `score.py` | 위를 묶어 `EvalRecord` 생성. `python -m src.judge.score --run <run_id>` |
+| `score.py` | 위를 묶어 `EvalRecord` 생성. `python -m src.judge.score --run <run_id> [--workers 4] [--resume]` (동시 채점·이어하기) |
 | `platform_adapter.py` | platform(`llm.call(kind="eval")`, `record_score`)을 부르는 **유일한 창구** |
 | `mock_cases.py`, `calibrate.py`, `stability.py`, `ragas_trial.py`, `brief_demo.py` | 채점관 검증 도구(시험지 생성, 정확도·흔들림 측정, RAGAS 시험, 발제 예시) |
 
@@ -31,3 +31,4 @@ uv run python -m src.judge.calibrate --cases data/judge_mock/cases.jsonl --truth
 - 실제 AI 호출에는 `.env`의 `OPENAI_API_KEY`가 필요하다(`config.py`가 읽는다).
 - 시험지에는 정답 인용문이 들어가므로 `data/` 아래에만 저장한다(커밋 금지).
 - 평가 호출은 `platform.llm.call(kind="eval")`로만 나가고, 서비스 사용량과 섞이지 않는 별도 트레이스에 남는다.
+- Langfuse에는 숫자 점수(0·1, Faithfulness)만 붙는다. 해당 없음·평가 불가(`null`)는 보내지 않으며, 그 칸과 이유는 `eval.jsonl`이 기준이다.
