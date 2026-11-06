@@ -12,19 +12,14 @@ Basic 해운 PDF 15개(360쪽)는 모든 쪽이 같은 구조다.
 Intermediate·Advanced는 구조가 달라 아직 이 규칙을 쓰지 않는다.
 """
 
-from dataclasses import dataclass
+import re
+from itertools import accumulate
 from pathlib import Path
 
 from pypdf import PdfReader
 
+from src.contracts import ChunkMeta, book_id_from_file_name
 
-@dataclass
-class Chunk:
-    text: str
-    book_id: str  # 파일명에서 .pdf를 뺀 값
-    file_name: str
-    page: int  # 첫 쪽 = 1
-    chunk_id: str  # "<book_id>-p<page>-c<n>"
 
 # 역할 : pdf 에서 가져온 텍스트(\n 포함) -> 텍스트(\n 없음)
 def _join_lines(text: str) -> str:
@@ -81,33 +76,104 @@ def _clean_page(
     return f"{subtitle}\n{body}".strip()
 
 
-def chunk_pdf(pdf_path: Path, include_doc_context: bool = True) -> list[Chunk]:
+def extract_pages(
+    pdf_path: Path | str, include_doc_context: bool = True
+) -> list[tuple[int, str]]:
+    """PDF 한 권을 읽어 쪽마다 정리한 글을 [(쪽 번호, 글)]로 돌려준다. 첫 쪽 = 1.
 
+    index.py가 부르는 뼈대의 형태다. 쪽 정리(_clean_page)가 여기서 일어난다.
+    """
     # 매개변수 : include_doc_context (bool)
     # True: 청크 첫 줄에 "문서 제목 (담당: 부서)"를 붙인다 (문서 주제를 검색에 반영)
     # False: 소제목과 본문만 남긴다 (Hit@k·Recall@k 비교용)
-    """PDF 한 권을 쪽 단위 청크 목록으로 만든다.
-
-    include_doc_context: True면 청크 첫 줄에 "문서 제목 (담당: 부서)"를 붙인다(기본).
-    """
+    pdf_path = Path(pdf_path)
     # 파일 이름에서 확장자를 뺀 부분 (SB01.pdf -> SB01 : book_id)
-    book_id = pdf_path.stem
+    book_id = book_id_from_file_name(pdf_path.name)
     reader = PdfReader(pdf_path)
     total = len(reader.pages)
-    chunks: list[Chunk] = []
+    pages: list[tuple[int, str]] = []
     for page_no, page in enumerate(reader.pages, start=1):
         text = _clean_page(
             page.extract_text() or "", book_id, page_no, total, include_doc_context
         )
-        if not text:  # 빈 쪽은 만들지 않는다
-            continue
-        chunks.append(
-            Chunk(
-                text=text,
+        if text:  # 빈 쪽은 만들지 않는다
+            pages.append((page_no, text))
+    return pages
+
+
+# E5 계열은 한 번에 512토큰까지만 읽고 넘는 뒷부분은 임베딩에 반영되지 않는다.
+# Basic 청크는 글자 수 ÷ 토큰 수가 평균 1.93이라, 글자 수 상한을 두고 넘는 쪽만 나눈다.
+# 토크나이저로 재서 정한 값이고, 모델이나 청킹이 바뀌면 다시 잰다.
+MAX_CHUNK_CHARS = 900
+
+# 문장 끝: "다." 또는 "요."로 끝나는 곳. 마침표가 든 이메일 주소(a@b.example) 안에서는 끊지 않는다.
+_SENTENCE_END = re.compile(r"(?<=[다요]\.)")
+
+
+def _split_body(body: str, limit: int) -> list[str]:
+    """body를 문장 끝에서 끊어 limit자 이하의 비슷한 크기 조각들로 나눈다. 글은 하나도 버리지 않는다.
+
+    앞에서부터 꽉 채우면 마지막 조각이 아주 짧게 남는다. 그래서 조각 개수 n을 먼저 정하고,
+    k번째 끊는 자리를 "전체 길이 × k/n"에 가장 가까운 문장 끝으로 고른다.
+    """
+    sentences: list[str] = []
+    for sentence in _SENTENCE_END.split(body):
+        while len(sentence) > limit:  # 한 문장이 limit보다 길면 글자 수로 강제로 자른다
+            sentences.append(sentence[:limit])
+            sentence = sentence[limit:]
+        if sentence:
+            sentences.append(sentence)
+    text = "".join(sentences)  # body와 같은 글
+    ends = list(accumulate(len(s) for s in sentences))  # 각 문장이 끝나는 위치
+    total = len(text)
+
+    n = max(1, -(-total // limit))  # 조각 개수. 올림 나눗셈
+    while True:
+        cuts: list[int] = []
+        prev = 0
+        for k in range(1, n):
+            candidates = [e for e in ends if prev < e < total]  # 앞 끊는 자리 뒤의 문장 끝들
+            if not candidates:
+                break
+            ideal = total * k / n
+            prev = min(candidates, key=lambda e: abs(e - ideal))
+            cuts.append(prev)
+        bounds = [0, *cuts, total]
+        pieces = [text[a:b] for a, b in zip(bounds, bounds[1:])]
+        if all(len(p) <= limit for p in pieces):
+            return pieces
+        n += 1  # 한도를 넘는 조각이 있으면 개수를 하나 늘려 다시 나눈다
+
+
+def _split_page(text: str, limit: int) -> list[str]:
+    """한 쪽의 글이 limit자를 넘으면 나눈다. 머리 줄(제목·부서, 소제목)은 모든 조각 앞에 붙인다.
+
+    _clean_page의 결과는 "머리 줄들 + 본문 한 줄" 모양이라 마지막 줄이 본문이다.
+    """
+    if len(text) <= limit:
+        return [text]
+    *head_lines, body = text.split("\n")
+    head = "".join(line + "\n" for line in head_lines)
+    return [head + piece for piece in _split_body(body, limit - len(head))]
+
+
+def chunk_pages(
+    file_name: str, pages: list[tuple[int, str]], *, size: int, overlap: int
+) -> list[tuple[str, ChunkMeta]]:
+    """쪽마다 청크를 만든다. MAX_CHUNK_CHARS 이하면 한 쪽 = 청크 하나, 넘으면 문장 끝에서 나눈다.
+
+    size와 overlap은 index.py가 넘기는 뼈대의 인자라 받기만 하고 쓰지 않는다.
+    config의 CHUNK_SIZE·CHUNK_OVERLAP 정리는 #14에서 config.py를 고칠 때 함께 한다.
+    """
+    book_id = book_id_from_file_name(file_name)
+    out: list[tuple[str, ChunkMeta]] = []
+    for page, text in pages:
+        for n, piece in enumerate(_split_page(text, MAX_CHUNK_CHARS), start=1):
+            meta = ChunkMeta(
                 book_id=book_id,
-                file_name=pdf_path.name,
-                page=page_no,
-                chunk_id=f"{book_id}-p{page_no}-c1",
+                file_name=file_name,
+                page=page,
+                chunk_id=f"{book_id}-p{page}-c{n}",
             )
-        )
-    return chunks
+            out.append((piece, meta))
+    return out
