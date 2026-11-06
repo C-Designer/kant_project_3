@@ -16,6 +16,7 @@
 | `ragas_eval.py` | RAGAS Faithfulness. 주장 없음 → 해당 없음, 호출 실패 → 평가 불가. 보류·되묻기 문장은 채점에서 제외 |
 | `score.py` | 위를 묶어 `EvalRecord` 생성. `python -m src.judge.score --run <run_id>` |
 | `platform_adapter.py` | platform(`llm.call(kind="eval")`, `record_score`)을 부르는 **유일한 창구** |
+| `review_sheet.py` | 사람이 PDF 원문과 대조할 사례를 골라 원문·정답지 근거 쪽과 함께 한 장으로 만든다. `python -m src.judge.review_sheet --run <run_id>` |
 | `mock_cases.py`, `calibrate.py`, `stability.py`, `ragas_trial.py`, `brief_demo.py` | 채점관 검증 도구(시험지 생성, 정확도·흔들림 측정, RAGAS 시험, 발제 예시) |
 
 ## 실행
