@@ -13,10 +13,10 @@
 | `main` 브랜치 삭제 | - |
 | Squash 외의 머지 방식 | Squash and merge만 |
 
-- 필수 승인은 없다(kant_project_2와 같은 설정). PR만 거치면 머지 버튼이 바로 열린다. `.github/CODEOWNERS`는 모든 PR에 리드(`@C-Designer`)를 리뷰어로 자동 지정할 뿐 강제하지 않는다.
+- 필수 status check: `pytest` (`.github/workflows/ci.yml`). `uv sync --locked` 후 `uv run pytest`. 실패하면 머지 버튼이 막힌다.
+- 필수 승인은 없다. `.github/CODEOWNERS`는 모든 PR에 리드(`@C-Designer`)를 리뷰어로 자동 지정할 뿐 강제하지 않는다.
 - 우회자가 없어 직접 push는 리드도 막힌다.
-- GitHub이 못 막는 것: 누구든 머지 버튼을 누를 수 있다. **머지는 리드만 한다**는 팀 규칙이다. 팀원은 PR을 올리고 기다린다.
-- 필수 status check는 없다(CI 없음).
+- **머지는 자동이다.** PR이 열리면 `.github/workflows/auto-merge.yml`이 auto-merge를 켜고, `pytest`가 통과하는 순간 GitHub이 Squash 머지한다. Draft PR은 켜지 않으므로 아직 머지되면 안 되는 작업은 Draft로 올린다.
 
 ## 팀 규칙
 
@@ -25,8 +25,8 @@ GitHub이 강제하지 않는 약속이다.
 - **브랜치 이름:** `<type>/<짧은-설명>` (영문 소문자, 하이픈 구분). 예: `feat/login-form`
 - **PR 하나에 목적 하나:** 크기가 커지면 PR을 나눈다.
 - **PR 제목:** `<type>: <설명>`. 예: `feat: 로그인 폼 추가`
-- **머지는 리드만:** 팀원은 PR을 올리고 리드 리뷰를 기다린다. 리드가 Squash and merge로 머지한다.
-- **PR 본문에 실행 증거:** 명령과 결과(캡처). 리드가 그것으로 리뷰한다.
+- **PR은 머지돼도 되는 상태로 올린다:** CI가 통과하면 리뷰 없이 바로 머지된다. 리뷰를 받고 싶으면 Draft로 올리고, 받은 뒤 Ready for review로 바꾼다.
+- **PR 본문에 실행 증거:** 명령과 결과(캡처). 리드와 팀원이 머지 후 그것으로 확인한다.
 - **머지 후:** 원격 브랜치는 자동 삭제된다. 로컬 브랜치는 직접 지운다 (Squash 머지라 `-D`가 필요하다).
 - **남의 브랜치:** 담당자와 합의 없이 push하지 않는다.
 
@@ -67,7 +67,7 @@ git commit -m "feat: 로그인 폼 추가"
 git push -u origin feat/login-form
 gh pr create
 
-# 이후는 리드가 리뷰·머지. 머지되면 로컬 정리
+# 이후는 CI 통과 시 자동 머지. 머지되면 로컬 정리
 git switch main && git pull && git branch -D feat/login-form
 ```
 

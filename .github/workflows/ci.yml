@@ -1,0 +1,16 @@
+name: ci
+
+on:
+  pull_request:
+
+jobs:
+  # 룰셋 main-protection의 필수 status check 이름과 같아야 한다 (docs/branch-strategy.md)
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest -q
