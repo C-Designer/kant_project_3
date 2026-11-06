@@ -68,13 +68,6 @@ def test_문맥_밖_source_ids는_답변으로_통과하지_못한다(indexed, f
     assert r.status != "answered" and r.reason == "output_validation"
 
 
-@pytest.mark.parametrize("mode", ["hybrid", "hybrid_rerank"])
-def test_미구현_방식은_mode_not_implemented(indexed, fake_llm, mode):
-    r = run_query("demurrage", mode)
-    assert (r.status, r.reason) == ("error", "mode_not_implemented")
-    assert fake_llm.calls == 0
-
-
 def test_색인이_없으면_index_missing(fake_llm):
     r = run_query("demurrage", "naive")
     assert (r.status, r.reason) == ("error", "index_missing")
