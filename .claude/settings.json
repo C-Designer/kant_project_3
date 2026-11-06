@@ -11,6 +11,19 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/check-conflict.sh\"",
+            "timeout": 30,
+            "statusMessage": "main과 충돌 확인 중"
+          }
+        ]
+      }
     ]
   }
 }
