@@ -27,6 +27,8 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - 트레이스 `query`에 `request_id`. 스팬 `retrieve` → `build_context` → `generate` → `validate`. `retrieve` 출력에는 검색 청크의 본문·점수·메타데이터를, `build_context` 출력에는 최종 문맥을 남겨 "못 찾음"과 "찾았지만 잘림"을 구분한다.
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
 - 비밀값·API 키는 트레이스에 넣지 않는다.
+- `uv run python -m src.platform.check_connections`는 공용 Qdrant 컬렉션 존재 여부와 Langfuse 키 인증을 읽기 전용으로 점검한다. 둘 다 성공하면 종료 코드 0, 미설정·실패·컬렉션 없음은 1. `QDRANT_URL`이 없으면 로컬 저장소를 열지 않는다. 키·응답 본문은 출력하지 않는다. 팀원의 화면 권한·4개 스팬 확인·평가 점수 연결은 별도이며 README의 #40 확인표에 기록한다.
+- 2026-11-08 확인: 대표 트레이스의 4개 스팬과 검색 결과·최종 문맥 출력은 조회 가능. 대표 트레이스에 평가 점수는 아직 없고, 다른 PC의 공유 Qdrant 인증 연결은 search 담당 변경과 팀원 검증이 필요하다. VM 제공자 확정 여부와는 별도로 현재 접속 증빙을 관리한다.
 
 보안 비교(`src/platform/security.py`)
 - 최종 구성 하나, 보안 질문 2개. 한 번 검색한 `final_context`를 저장 → `answer.generate(defense=False)` → 같은 문맥으로 `generate(defense=True)`. 결과 4개를 `results/security.md`에 공격 노출·추종·업무 정확성·과잉 거절로 나눠 기록.
