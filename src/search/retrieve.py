@@ -70,6 +70,7 @@ def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]:
             )
             chunks = rerank.rerank(query, candidates, k)
         sp.update(
+            output=[c.model_dump() for c in chunks],
             metadata={
                 "mode": mode,
                 "k": k,

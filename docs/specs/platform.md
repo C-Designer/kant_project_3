@@ -24,7 +24,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 
 트레이스(`platform.tracing`)
 - Langfuse는 **셀프호스트**(2026-11-05 확정). 팀 VM 하나에 docker compose로 띄우고(제공자 미정, 무료 티어 예정), 같은 VM에 Qdrant 서버와 FastAPI도 올린다. 발제상 클라우드 배포는 필수가 아니므로 이 배포가 늦어져도 제출 기준에는 영향이 없다. 주소는 `LANGFUSE_HOST`·`QDRANT_URL`로 각자 `.env`에, 키도 각자 `.env`. 리드가 VM을 만들고 접속 정보를 Slack으로 공유한다.
-- 트레이스 `query`에 `request_id`. 스팬 `retrieve` → `build_context` → `generate` → `validate`. `retrieve` 결과와 `build_context` 결과를 둘 다 남겨 "못 찾음"과 "찾았지만 잘림"을 구분할 수 있게.
+- 트레이스 `query`에 `request_id`. 스팬 `retrieve` → `build_context` → `generate` → `validate`. `retrieve` 출력에는 검색 청크의 본문·점수·메타데이터를, `build_context` 출력에는 최종 문맥을 남겨 "못 찾음"과 "찾았지만 잘림"을 구분한다.
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
 - 비밀값·API 키는 트레이스에 넣지 않는다.
 

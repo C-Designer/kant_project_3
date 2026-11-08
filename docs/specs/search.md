@@ -45,7 +45,7 @@
 
 - 세 방식은 같은 컬렉션·같은 임베딩. `k`는 호출자가 넘기고 최종 비교에서는 동일.
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
-- 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다(방식, k, chunk_id 목록, 소요 시간).
+- 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다. 출력에 문맥 축소 전 검색 청크의 본문·점수·메타데이터를 남기고, 메타데이터에 방식·k·chunk_id 목록·소요 시간을 남긴다.
 
 뼈대(11/5) 상태: `naive`만 동작. `hybrid`·`hybrid_rerank`는 `NotImplementedError`(#15·#16), 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준.
 

@@ -133,9 +133,9 @@ ls documents | wc -l   # 15
 
 1. [팀 Langfuse](https://kant-langfuse.zerocode-studio.com)에 등록된 Google 계정으로 로그인하고 `shipping-rag` 프로젝트를 연다.
 2. 아래 대표 요청을 열어 `/query` 응답의 `request_id`와 트레이스의 `query` 메타데이터가 같은지 확인한다.
-3. `retrieve`, `build_context`, `generate`, `validate` 스팬과 모델 입출력·토큰을 확인한다. 현재 `retrieve`에는 청크 ID가 기록되지만 결과 본문은 별도 출력으로 남지 않는다. 최종 문맥은 `build_context`에서 확인한다.
+3. `retrieve`, `build_context`, `generate`, `validate` 스팬과 모델 입출력·토큰을 확인한다. `retrieve` 출력에서 문맥 축소 전 검색 청크의 본문·점수·출처를, `build_context`에서 최종 문맥을 확인한다. 변경 이전의 트레이스에는 검색 청크 본문이 소급 기록되지 않는다.
 
-대표 실행: [선하증권 초안 수신 확인 질문](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/c8ab9bffe606c759053903ede7a5c056) (`request_id`: `9bb383bd360443bcbe3d343de3c4e3f2`, `answered`, SB10 17쪽·SB05 20쪽). 수신 확인과 기재 사항 승인은 다르다는 답변을 두 페이지의 원문과 대조했다. Langfuse에 비용이 0으로 표시되더라도 실제 청구액이 0이라는 뜻은 아니다.
+대표 실행: [선하증권 초안 수신 확인 질문](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/531cd320c331b48e34166711d33663f3) (`request_id`: `e703290cd63e4328a6e2c3c316b01c0f`, `answered`, SB10 17쪽·SB05 20쪽). 수신 확인과 기재 사항 승인은 다르다는 답변을 두 페이지의 원문과 대조했다. Langfuse에 비용이 0으로 표시되더라도 실제 청구액이 0이라는 뜻은 아니다.
 
 ## 최종 선택과 한계
 
