@@ -4,7 +4,7 @@
 - 점수 기록: 팀 `platform.tracing.record_score`. 값이 None인 점수(해당 없음·평가 불가)는 보내지 않는다.
 
 개발용 스위치: 환경 변수 `JUDGE_LLM=local`이면 `src/judge/local_llm.py`(각자 PC에만 있는 파일, 커밋 안 됨)를 쓴다.
-platform 호출이 막혀 있을 때 실제 채점 시험을 하기 위한 우회이고, 이 파일에는 SDK 직접 호출이 없다.
+팀 호출과 별개로 내 PC에서 실제 채점을 시험할 때 쓰는 개발용 스위치이고, 이 파일에는 SDK 직접 호출이 없다.
 """
 
 from __future__ import annotations
