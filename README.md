@@ -75,15 +75,19 @@ uv run pytest tests/test_environment.py   # 환경 확인: 4 passed가 나와야
 uv run pytest -q                          # 이후 실행은 모두 uv run으로
 ```
 
-**스켈레톤 실행** (`.env`에 키를 채운 뒤)
+**스켈레톤 실행** (Basic 자료를 받은 뒤)
+
+처음에만 `.env.example`을 복사하고 `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST`를 채운다. 키는 별도로 전달받으며 저장소나 로그에 넣지 않는다. 로컬 Qdrant를 쓸 때는 `QDRANT_URL`을 비워 둔다. 질문을 보내면 OpenAI API 사용료가 발생할 수 있다.
 
 ```bash
-cp .env.example .env                          # 키는 .env에만 둔다
-uv run python -m src.search.index             # PDF 색인 (옵션: --only FB01.pdf)
+cp -n .env.example .env                       # 기존 .env를 덮어쓰지 않는다
+uv run python -m src.search.index             # 기본 실행은 기존 컬렉션을 재생성한다
 uv run uvicorn src.api.main:app               # API 서버
 curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
-  -d '{"question": "질문", "retrieval_mode": "naive"}'
+  -d '{"question": "선하증권 초안 메일의 수신 확인은 기재 사항에 대한 승인과 같은가요?", "retrieval_mode": "naive"}'
 ```
+
+색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 현재 공유 Qdrant는 API 키가 필수지만 저장소의 Qdrant 클라이언트는 키를 전달하지 않으므로 `QDRANT_URL`에 공유 주소만 입력해서는 연결되지 않는다. 서버 Mac은 인증이 필요한 로컬 프록시로 연결하며, 다른 PC의 공유 Qdrant 연결 방법은 아직 정리되지 않았다.
 
 **이미 다른 Python(3.13·3.14 등)으로 가상환경을 만들어 둔 경우**: 레포 안의 `.venv` 폴더를 지우고 `uv sync`를 다시 실행한다. 다른 곳에 만든 venv·conda 환경은 이 프로젝트에 쓰지 않는다. VS Code 등 에디터의 Python 인터프리터도 레포의 `.venv`로 바꾼다.
 
@@ -127,7 +131,11 @@ ls documents | wc -l   # 15
 
 ## Langfuse 확인 방법
 
-미정. 프로젝트·필터·대표 요청 ID를 여기 적는다.
+1. [팀 Langfuse](https://kant-langfuse.zerocode-studio.com)에 등록된 Google 계정으로 로그인하고 `shipping-rag` 프로젝트를 연다.
+2. 아래 대표 요청을 열어 `/query` 응답의 `request_id`와 트레이스의 `query` 메타데이터가 같은지 확인한다.
+3. `retrieve`, `build_context`, `generate`, `validate` 스팬과 모델 입출력·토큰을 확인한다. `retrieve` 출력에서 문맥 축소 전 검색 청크의 본문·점수·출처를, `build_context`에서 최종 문맥을 확인한다. 변경 이전의 트레이스에는 검색 청크 본문이 소급 기록되지 않는다.
+
+대표 실행: [선하증권 초안 수신 확인 질문](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/531cd320c331b48e34166711d33663f3) (`request_id`: `e703290cd63e4328a6e2c3c316b01c0f`, `answered`, SB10 17쪽·SB05 20쪽). 수신 확인과 기재 사항 승인은 다르다는 답변을 두 페이지의 원문과 대조했다. Langfuse에 비용이 0으로 표시되더라도 실제 청구액이 0이라는 뜻은 아니다.
 
 ## 최종 선택과 한계
 
