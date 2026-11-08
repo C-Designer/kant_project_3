@@ -3,8 +3,10 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
+from src import config
 from src.api.main import app
 from src.search import index
+from tests.conftest import timeout_error
 
 client = TestClient(app)
 
@@ -39,3 +41,11 @@ def test_error_상태도_HTTP_200(fake_llm):
     r = client.post("/query", json={"question": "q", "retrieval_mode": "naive"})
     assert r.status_code == 200
     assert (r.json()["status"], r.json()["reason"]) == ("error", "index_missing")
+
+
+def test_timeout도_HTTP_200(pdf_dir, fake_llm):
+    index.build_index(pdf_dir)
+    fake_llm.script = [timeout_error()] * (1 + config.LLM_MAX_RETRIES)
+    r = client.post("/query", json={"question": "demurrage", "retrieval_mode": "naive"})
+    assert r.status_code == 200
+    assert (r.json()["status"], r.json()["reason"], r.json()["citations"]) == ("error", "model_timeout", [])
