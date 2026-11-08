@@ -1,6 +1,7 @@
 """청킹 규칙을 고정한다. PDF 없이 문자열만으로 돌아간다."""
 
 from src.search.chunking import _clean_page, _join_lines
+from src.search import chunking
 
 RAW = (
     "SB01 | 예약지원팀\n"
@@ -39,3 +40,25 @@ def test_clean_page_without_doc_context_has_only_subtitle_and_body():
 def test_clean_page_falls_back_without_losing_text_when_structure_differs():
     raw = "다른 구조의 쪽\n본문 첫 줄\n본문 둘째 줄"
     assert _clean_page(raw, "SB01", 1, 24) == "다른 구조의 쪽본문 첫 줄본문 둘째 줄"
+
+
+def test_overlap_0이면_겹치지_않고_한도를_넘지_않는다(monkeypatch):
+    sent = "이것은 문장이다."
+    text = "제목 (담당: 팀)\n소제목\n" + sent * 60
+    monkeypatch.setattr(chunking, "CHUNK_OVERLAP_CHARS", 0)
+    pieces = chunking._split_page(text, 300)
+    assert len(pieces) > 1 and all(len(p) <= 300 for p in pieces)
+    assert "".join(p.split("\n")[2] for p in pieces) == sent * 60  # 글을 버리지도 겹치지도 않는다
+
+
+def test_overlap이면_다음_조각이_앞_조각의_끝_문장으로_시작하고_한도를_넘지_않는다(monkeypatch):
+    sent = "이것은 문장이다."
+    text = "제목 (담당: 팀)\n소제목\n" + sent * 60
+    monkeypatch.setattr(chunking, "CHUNK_OVERLAP_CHARS", 50)
+    pieces = chunking._split_page(text, 300)
+    assert all(len(p) <= 300 for p in pieces)
+    bodies = [p.split("\n")[2] for p in pieces]
+    for prev, cur in zip(bodies, bodies[1:]):
+        shared = chunking._overlap_tail(prev, 50)
+        assert shared and cur.startswith(shared)  # 앞 조각의 끝 문장이 다음 조각 앞에 있다
+        assert len(shared) <= 50
