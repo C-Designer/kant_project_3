@@ -89,3 +89,11 @@ def test_내부_오류는_원문을_노출하지_않는다(indexed, fake_llm, mo
     monkeypatch.setattr(embed, "embed_query", boom)
     r = run_query("demurrage", "naive")
     assert r.reason == "internal_error" and "secret-detail" not in (r.error or "")
+
+
+def test_temperature를_모델에_보내지_않는다(monkeypatch):
+    # gpt-6-luna는 temperature 지정을 400으로 거부한다 (PR #67·#70 보고)
+    from src.platform.llm import _build_model
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test")
+    assert "temperature" not in _build_model(config.GENERATION_MODEL)._default_params
