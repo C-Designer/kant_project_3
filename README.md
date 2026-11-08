@@ -137,6 +137,34 @@ ls documents | wc -l   # 15
 
 대표 실행: [선하증권 초안 수신 확인 질문](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/531cd320c331b48e34166711d33663f3) (`request_id`: `e703290cd63e4328a6e2c3c316b01c0f`, `answered`, SB10 17쪽·SB05 20쪽). 수신 확인과 기재 사항 승인은 다르다는 답변을 두 페이지의 원문과 대조했다. Langfuse에 비용이 0으로 표시되더라도 실제 청구액이 0이라는 뜻은 아니다.
 
+### 공용 서비스 연결 점검 (#40)
+
+레포 루트에서 `.env`를 설정한 뒤 실행한다. 애플리케이션과 같은 Qdrant 클라이언트를 사용하며, 컬렉션 존재 여부와 Langfuse 키 인증만 읽기 전용으로 확인한다. 색인·LLM 호출·평가 점수 생성은 하지 않는다.
+
+```bash
+uv run python -m src.platform.check_connections
+```
+
+두 서비스가 모두 `ok`이면 종료 코드 0, 하나라도 실패하거나 미설정이면 1이다. `QDRANT_URL`이 비어 있으면 로컬 저장소를 열지 않고 `not_configured`로 표시한다. 로컬 검색이 되더라도 공용 Qdrant 접속이 확인됐다는 뜻은 아니다. `collection_missing`이면 담당자에게 색인 상태를 확인하고, 공유 컬렉션에 기본 색인 명령을 실행하지 않는다. 키와 서버 응답 본문은 출력하지 않는다.
+
+2026-11-08 리드 PC 확인: Langfuse 키 인증 성공, 위 대표 트레이스 조회 HTTP 200, `retrieve`·`build_context`·`generate`·`validate` 존재 및 앞 두 스팬의 출력 기록 확인. 해당 트레이스의 평가 점수는 0개로, `record_score`의 실제 점수 연결 증빙은 아직 없다. 공용 Qdrant는 이 PC의 `QDRANT_URL` 미설정으로 확인하지 못했다.
+
+**search 담당자에게 필요한 변경**
+
+- `src/search/store.py:get_client()`의 원격 `QdrantClient` 생성 시 환경 변수의 API 키를 전달해야 한다. 설정은 `src/config.py`, 키 이름은 `.env.example`에 함께 반영한다. 키 값은 코드·문서·로그에 넣지 않는다.
+- 키가 없는 로컬 모드와 기존 프록시 연결도 유지하고, 변경한 클라이언트로 공유 컬렉션 조회를 확인한다. 현재 platform 작업에서는 영역 소유 규칙에 따라 search 코드를 수정하지 않았다.
+
+**팀원에게 확인받을 항목**
+
+| 확인 | 실행·증빙 | 완료 기준 |
+|---|---|---|
+| 공용 Qdrant 접속 | 인증 지원 반영 후 공유 주소·키를 별도로 전달받아 위 명령 실행 | 본인 PC에서 `qdrant: ok` |
+| Langfuse 키·화면 권한 | 위 명령 실행 후 Google 계정으로 `shipping-rag` 프로젝트의 대표 트레이스 열기 | `langfuse: ok` 및 화면 열람 가능 (키 인증과 계정 권한은 별개) |
+| 본인 요청 추적 | 위 스켈레톤 실행 절의 API 서버·Naive 질의 실행. 공유 색인은 재생성하지 않음 | 응답의 `request_id`에 4개 스팬·실제 모델 입출력이 보이고, 검색 결과와 최종 문맥을 구분할 수 있음 |
+| 평가 점수 연결 (judge 담당, #34) | 실제 평가 후 같은 요청의 점수 확인 | 서비스·평가 트레이스 분리 및 점수 연결 캡처 |
+
+확인 결과는 이름·OS·커밋 해시(`git rev-parse HEAD`)·실행 시각·점검 출력·request_id·캡처로 남긴다. `.env`나 키가 보이는 화면은 공유하지 않는다. 팀원 확인과 Qdrant 인증 연결이 끝나기 전에는 #40을 완료 처리하지 않는다.
+
 ## 최종 선택과 한계
 
 미정. 비교 결과는 `results/comparison.md`.
