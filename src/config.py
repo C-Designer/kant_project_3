@@ -32,7 +32,7 @@ RERANK_CANDIDATES: int | None = None  # TODO(미정, #16)
 
 # 생성
 GENERATION_MODEL = "gpt-6-luna"
-GENERATION_TEMPERATURE = 0.0  # TODO(미정)
+GENERATION_TEMPERATURE: float | None = None  # gpt-6-luna는 기본값(1) 외 거부. None이면 모델에 보내지 않는다
 CONTEXT_TOKEN_LIMIT = 3000  # TODO(미정, #18) 입력 문맥 토큰 한도
 LLM_TIMEOUT_SEC = 30.0  # TODO(미정, #39)
 LLM_MAX_RETRIES = 2  # TODO(미정, #39) 호출 실패 시 재시도 횟수
