@@ -37,10 +37,9 @@
 | 도구 | 하는 일 | 11/5 결과 (gpt-6-luna) |
 |---|---|---|
 | `mock_cases.py` | 정답지로 가짜 답안 340장 생성: 정답 그대로, 시각 바꿔치기, 금지 주장 단정, 잘못된 보류, 근거 없음, 서비스 오류. 종류마다 기대 점수를 붙임 | - |
-| `calibrate.py` | 시험지를 채점시켜 기대 점수와 칸마다 비교 | 30장·62칸 중 60칸 일치. 불일치 2칸은 시험지 오류로 확인 후 수정 |
-| `stability.py` | 같은 답안을 반복 채점해 점수가 바뀌는지 | 10장 × 3회, 40칸 중 변동 0 |
-| `ragas_trial.py` | RAGAS 한국어 주장 추출과 점수 방향 확인 | 근거 없음 0.00, 시각 바꿔치기 0.50·0.75, 정답 0.75~1.00 |
-| `brief_demo.py` | 발제 예시(장비 A 15분) 채점 | 4항목 모두 1 |
+| `calibrate.py` | 시험지를 채점시켜 기대 점수와 칸마다 비교. `--repeat N`이면 같은 답안을 N번 채점해 점수가 바뀐 칸도 적는다 | 30장·62칸 중 60칸 일치. 불일치 2칸은 시험지 오류로 확인 후 수정. 흔들림은 10장 × 3회, 40칸 중 변동 0 |
+
+11/5에 한 일회성 확인(발제 예시 장비 A 15분 채점: 4항목 모두 1, RAGAS 한국어 주장 추출 방향: 근거 없음 0.00·시각 바꿔치기 0.50~0.75·정답 0.75~1.00)은 `brief_demo.py`·`ragas_trial.py`로 했고, 11/9에 `calibrate.py`가 대신해 두 파일을 지웠다(git 기록에 남아 있음). 별도 `stability.py`도 `calibrate.py --repeat`으로 합쳤다.
 
 한계: 시험지는 뚜렷한 답안이라 실제 답안보다 쉽다. RAGAS는 주장을 매번 다른 말로 뽑아 같은 답안도 실행마다 점수가 달라질 수 있다. 실제 채점 후 `review.md`로 다시 확인한다.
 
@@ -49,7 +48,7 @@
 - **Python 3.14는 쓸 수 없다.** RAGAS가 의존하는 `scikit-network`가 Python 3.14용 배포 파일이 없어 설치 중 빌드에 실패한다(Windows, 2026-11-05 확인). 3.12·3.13에서는 동작을 확인했고, 팀 환경은 **3.12로 고정**한다(`.python-version`, `pyproject.toml`의 `requires-python = "==3.12.*"`, `uv.lock`). 설치 방법은 README "Python 환경".
 - **RAGAS 버전은 `ragas==0.4.3`, 함께 `langchain-community==0.3.27`(`<0.3.28`).** 최신 `langchain-community`(0.4.x)에서는 `ragas` import가 `langchain_community.chat_models.vertexai` 모듈을 찾지 못해 실패한다. 이 때문에 LangChain 전체가 0.3 계열(`langchain-core` 1.0 미만, `langchain-openai` 0.3.x)로 맞춰진다. 다른 영역이 LangChain 1.x 기능을 쓰려면 이 제약과 충돌하므로 먼저 judge와 상의한다.
 
-코드 위치: `src/judge/` (`rules.py`, `judge.py`, `ragas_eval.py`, `score.py`, `platform_adapter.py`, `prompts/judge_v1.md`, 검증 도구 `mock_cases.py`·`calibrate.py`·`stability.py`·`ragas_trial.py`·`brief_demo.py`). `platform_adapter.py`가 `platform.llm.call(kind="eval")`와 `platform.tracing.record_score`를 부르는 유일한 창구다. 테스트 `tests/judge/`.
+코드 위치: `src/judge/` (`rules.py`, `judge.py`, `ragas_eval.py`, `score.py`, `platform_adapter.py`, `prompts/judge_v1.md`, 검증 도구 `mock_cases.py`·`calibrate.py`). `platform_adapter.py`가 `platform.llm.call(kind="eval")`와 `platform.tracing.record_score`를 부르는 유일한 창구다. 테스트 `tests/judge/`.
 
 ## 인터페이스
 

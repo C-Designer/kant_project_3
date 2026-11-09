@@ -5,6 +5,10 @@
       --truths data/shipping/evaluation/development.json --limit 30
 
 출력: 종류(kind) × 칸(item)별 "맞힌 수 / 확인한 수"와 틀린 사례 목록 → data/judge_mock/calibration.md
+
+흔들림 측정: --repeat 3 처럼 주면 같은 답안을 여러 번 채점해, 반복 사이에 점수가 바뀐 칸도 함께 적는다.
+gpt-6-luna는 temperature를 고정할 수 없어 같은 답안도 점수가 달라질 수 있다.
+shortcut: 표본은 시드 0 하나뿐이고 서비스 오류 종류도 포함한다. 시드를 바꿔 보고 싶으면 --seed를 만든다.
 """
 
 from __future__ import annotations
@@ -35,6 +39,7 @@ def main() -> None:
     p.add_argument("--limit", type=int, default=None, help="앞에서부터 N건만 (비용 절약)")
     p.add_argument("--kinds", nargs="*", default=None, help="특정 종류만. 예: good time_swap")
     p.add_argument("--per-kind", type=int, default=None, help="종류마다 N건씩 골고루 뽑기 (여러 문항에서 무작위, 고정 시드)")
+    p.add_argument("--repeat", type=int, default=1, help="한 답안을 몇 번 채점할지. 2 이상이면 흔들린 칸도 적는다")
     p.add_argument("--out", type=Path, default=Path("data/judge_mock/calibration.md"))
     args = p.parse_args()
 
@@ -53,9 +58,11 @@ def main() -> None:
 
     hits: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0])
     misses: list[str] = []
-    for case in cases:
+    seen: dict[tuple[str, str], list] = defaultdict(list)  # (답안, 칸) → 반복마다의 점수
+    for case in [c for c in cases for _ in range(args.repeat)]:  # 같은 답안을 repeat번 연달아
         rec = score_one(case.run, truths[case.run.question_id], llm, use_ragas=False)
         for item, expected, actual in compare(case, rec):
+            seen[(case.case_id, item)].append(actual)
             cell = hits[(case.kind, item)]
             cell[1] += 1
             if expected == actual:
@@ -68,6 +75,9 @@ def main() -> None:
     for (kind, item), (ok, total) in sorted(hits.items()):
         lines.append(f"| {kind} | {item} | {ok} / {total} |")
     lines += ["", "## 기대와 다른 사례", ""] + (misses or ["(없음)"])
+    if args.repeat > 1:
+        flipped = [f"- `{cid}` {item}: {v}" for (cid, item), v in seen.items() if len(set(map(str, v))) > 1]
+        lines += ["", f"## 흔들린 칸 ({args.repeat}번 채점, 반복 사이에 점수가 바뀐 칸)", ""] + (flipped or ["(없음)"])
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines[:len(hits) + 6]))
