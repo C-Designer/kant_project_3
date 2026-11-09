@@ -161,7 +161,7 @@ pre.cmd i{font-style:normal;color:var(--muted)}
 <ul>
 <li><code>main</code>에 PR 56개 머지. 뼈대(#59) 위에 search 청킹·hybrid·hybrid_rerank, answer 프롬프트 v1·출력 검증, metrics 질문 선택·러너·지표·비교표, judge 채점 파이프라인·검증 도구, platform <code>llm.call</code>·Langfuse 트레이스·공용 서비스 점검이 들어왔다.</li>
 <li>Issue 44개 중 28개 닫힘. 마일스톤 M1 4/4 · M2 8/8 · M3 15/25 · M4 1/3 · M5 0/2. 오늘(11/9)이 M3 동결·전체 실행 날이다.</li>
-<li>확정: <code>k</code> = 5, 평가 LLM gpt-6-luna, Python 3.12 + uv + LangChain 0.3, <code>/query</code> HTTP 200 유지, Langfuse·Qdrant·API는 리드 Mac Studio 셀프호스트. 머지는 CI <code>pytest</code> 통과 후 PR 올린 사람이 한다. 검수 당번 없음.</li>
+<li>확정: <code>k</code> = 5, 평가 LLM gpt-6-luna, Python 3.12 + uv + LangChain 0.3, <code>/query</code> HTTP 200 유지, Langfuse·Qdrant는 리드 Mac Studio 셀프호스트(API는 각자 로컬). 머지는 CI <code>pytest</code> 통과 후 PR 올린 사람이 한다. 검수 당번 없음.</li>
 </ul>
 
 <h2>어디서 찾나</h2>
@@ -711,7 +711,7 @@ git push</pre>
 </table></div></div>
 </div>
 
-<div class="note">확정: <code>k</code> = 5, 평가 LLM = gpt-6-luna, Python 3.12 + uv + LangChain 0.3(#53), <code>/query</code>는 오류여도 HTTP 200 유지(#80), Langfuse·Qdrant·API는 리드 Mac Studio에 Docker Compose로 셀프호스트하고 Cloudflare Tunnel로 공개(#89). 검수 당번은 두지 않는다. 남은 확인(<code>docs/specs/platform.md</code>): 다른 PC의 공용 서비스 접속, 실제 평가 점수 연결, 재부팅 복구.</div>
+<div class="note">확정: <code>k</code> = 5, 평가 LLM = gpt-6-luna, Python 3.12 + uv + LangChain 0.3(#53), <code>/query</code>는 오류여도 HTTP 200 유지(#80), Langfuse·Qdrant는 리드 Mac Studio에 Docker Compose로 셀프호스트하고 Cloudflare Tunnel로 공개(#89). FastAPI는 각자 로컬에서 띄운다(공용 API는 11/9 중단, #96). 검수 당번은 두지 않는다. 남은 확인(<code>docs/specs/platform.md</code>): 다른 PC의 공용 서비스 접속, 실제 평가 점수 연결, 재부팅 복구.</div>
 <footer>출처: <code>README.md</code>, <code>docs/work-plan.md</code>, <code>docs/specs/*.md</code>, <code>docs/adr/*.md</code>, <code>AGENTS.md</code>, GitHub Issue #8–#47 · 기준일 2026-11-05(main 7f4bd7f). 문서가 바뀌면 이 페이지가 아니라 레포 문서가 기준이다.</footer>
 </div></div>
 <script>
