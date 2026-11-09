@@ -32,7 +32,7 @@
     - 줄바꿈 제거가 맞는지: 같은 방식으로 Hit@k·Recall@k로 확인한다.
     - ~~청크 길이~~ 확정: 한 청크 최대 `config.CHUNK_SIZE`=900자, 겹침 `config.CHUNK_OVERLAP`=0. 쪽이 900자를 넘으면 문장 끝에서 균등 분할한다(`chunk_id`의 `c<n>`이 늘어난다). Basic은 글자÷토큰이 평균 1.93이라 E5의 512토큰 안이다. 300~1300자·겹침 50~200 비교에서 이긴 값이 없었다.
 - 임베딩: 로컬 E5 계열, 모델명·차원 미정. 질의 임베딩도 같은 모델.
-- Qdrant 컬렉션: 이름, 거리 함수, sparse 벡터 포함 여부 미정.
+- Qdrant 컬렉션: 데이터셋(난이도)마다 따로 둔다. Basic은 `shipping_basic`(`config.COLLECTION`), 거리 함수는 코사인, sparse 벡터는 두지 않는다(BM25는 청크 글로 메모리에 따로 만든다). 한 컬렉션에 섞으면 `build_index`가 기존 데이터를 지우고, 검색·BM25 통계에 다른 데이터셋이 섞인다. Intermediate·Advanced 이름은 실제로 시작할 때 정한다.
 - 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버(`QDRANT_API_KEY`가 있으면 함께 전달), 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
 
 검색
