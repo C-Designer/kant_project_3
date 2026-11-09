@@ -3,7 +3,7 @@
 import logging
 from contextlib import ExitStack, contextmanager
 
-from langfuse import get_client as _lf_client
+from langfuse import get_client as _lf_client, propagate_attributes
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +33,12 @@ class _Handle:
 
 
 @contextmanager
-def _observe(name: str, as_type: str = "span", trace_context=None, **kwargs):
+def _observe(name: str, as_type: str = "span", trace_context=None, user_id: str | None = None, **kwargs):
     stack = ExitStack()
     try:
+        if user_id:
+            # 루트보다 먼저 열어야 루트와 하위 스팬 모두에 user_id가 붙는다
+            stack.enter_context(propagate_attributes(user_id=user_id))
         obs = stack.enter_context(
             get_client().start_as_current_observation(
                 name=name, as_type=as_type, trace_context=trace_context, **kwargs
@@ -57,13 +60,14 @@ def span(name: str, *, input=None, as_type: str = "span", **kwargs):
     return _observe(name, as_type, input=input, **kwargs)
 
 
-def request_trace(request_id: str, question: str):
+def request_trace(request_id: str, question: str, user_id: str):
     try:
         ctx = {"trace_id": trace_id_for(request_id)}
     except Exception:
         log.warning("trace id 생성 실패", exc_info=True)
         ctx = None
-    return _observe("query", trace_context=ctx, input=question, metadata={"request_id": request_id})
+    return _observe("query", trace_context=ctx, input=question, user_id=user_id,
+                    metadata={"request_id": request_id})
 
 
 def record_score(request_id: str, name: str, value, comment: str | None = None) -> None:
