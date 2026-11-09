@@ -14,7 +14,7 @@ def get_client() -> QdrantClient:
     with _lock:
         if _client is None:
             if config.QDRANT_URL:
-                _client = QdrantClient(url=config.QDRANT_URL)
+                _client = QdrantClient(url=config.QDRANT_URL, api_key=config.QDRANT_API_KEY)
             elif config.QDRANT_PATH is None:
                 _client = QdrantClient(":memory:")
             else:
