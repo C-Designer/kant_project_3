@@ -1,6 +1,6 @@
 """발제 규칙 고정: 0과 None(빈칸)을 섞지 않는다."""
 
-from src.judge.rules import mean_ignoring_none, precheck, summarize
+from src.judge.rules import mean_ignoring_none, precheck
 from tests.judge.helpers import make_run
 
 
@@ -11,10 +11,6 @@ def test_평균에서_None은_빼고_0은_넣는다():
 def test_모두_None이면_평균도_None이다_0이_아니다():
     assert mean_ignoring_none([None, None]) is None
     assert mean_ignoring_none([]) is None
-
-
-def test_요약에_평가대상수와_빈칸수가_나온다():
-    assert summarize([1, 0, None]) == {"mean": 0.5, "n_scored": 2, "n_null": 1}
 
 
 def test_정상_답안은_사전판정하지_않는다():

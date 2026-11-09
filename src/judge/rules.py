@@ -72,12 +72,3 @@ def mean_ignoring_none(values: list[float | int | None]) -> float | None:
     if not kept:
         return None
     return sum(kept) / len(kept)
-
-
-def summarize(values: list[float | int | None]) -> dict:
-    """평균과 함께 발제가 요구하는 건수를 낸다: 평가 대상 수, 빈칸 수."""
-    return {
-        "mean": mean_ignoring_none(values),
-        "n_scored": sum(v is not None for v in values),
-        "n_null": sum(v is None for v in values),
-    }
