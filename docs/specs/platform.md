@@ -26,6 +26,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - Langfuse·Qdrant는 리드의 **Mac Studio에서 Docker Compose로 셀프호스트**한다(2026-11-09 현황 확인). FastAPI도 같은 Mac에서 실행하며 Cloudflare Tunnel로 공용 HTTPS 주소를 제공한다. Langfuse 화면은 Google 로그인(2026-11-09부터 Cloudflare를 거치지 않는 직접 연동)으로, 리드가 Google 테스트 사용자와 Langfuse 조직 멤버로 함께 등록한 계정만 들어간다. 새 팀원은 리드에게 두 가지 등록을 요청한다. API 화면은 Cloudflare Access의 팀 Google 계정 인증, Qdrant는 API 키 인증을 사용한다. 주소는 README, 키는 각자 `.env`에만 둔다. 다른 PC는 `config.QDRANT_API_KEY`로 공용 Qdrant에 접속하고(`search.store.get_client()`가 전달), 서버 API는 키 없이 기존 인증 필수 로컬 프록시로 연결한다.
 - 트레이스 `query`에 `request_id`. 스팬 `retrieve` → `build_context` → `generate` → `validate`. `retrieve` 출력에는 검색 청크의 본문·점수·메타데이터를, `build_context` 출력에는 최종 문맥을 남겨 "못 찾음"과 "찾았지만 잘림"을 구분한다.
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
+- 셀프호스트 Langfuse 서버는 **v4(4.76.0)**다. SDK `langfuse` 5.x는 v4 서버가 필요하다. 3.x 서버는 SDK가 배열로 보내는 점수를 400("expected object, received array")으로 거절해 점수가 비었다(#34). 2026-11-09에 볼륨 백업 후 3.227.0 → 4.76.0으로 올렸고 `record_score`로 대표 트레이스에 점수 저장을 확인했다.
 - 비밀값·API 키는 트레이스에 넣지 않는다.
 - `uv run python -m src.platform.check_connections`는 공용 Qdrant 컬렉션 존재 여부와 Langfuse 키 인증을 읽기 전용으로 점검한다. 둘 다 성공하면 종료 코드 0, 미설정·실패·컬렉션 없음은 1. `QDRANT_URL`이 없으면 로컬 저장소를 열지 않는다. 키·응답 본문은 출력하지 않는다. 팀원의 화면 권한·4개 스팬 확인·평가 점수 연결은 별도이며 README의 #40 확인표에 기록한다.
 - 2026-11-08 확인: 대표 트레이스의 4개 스팬과 검색 결과·최종 문맥 출력은 조회 가능. 대표 트레이스에 평가 점수는 아직 없고, 다른 PC의 공유 Qdrant 인증 연결은 search 담당 변경과 팀원 검증이 필요하다. VM 제공자 확정 여부와는 별도로 현재 접속 증빙을 관리한다.
@@ -37,7 +38,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - `README` 설치·실행 절, `.env.example`, Qdrant 실행 방법(Mac Studio의 서버를 `QDRANT_URL`로 쓰고, 공용 서버 없이 실행할 때는 로컬 `docker run qdrant/qdrant`로 같은 이미지). 11/11 구현 안 한 팀원이 README대로 설치·실행. 안 되면 README를 고친다.
 - 시연 경로(API 호출 → Langfuse 대표 요청) 11/11 녹화.
 
-남은 확인: 다른 PC의 공용 서비스 접속, 실제 평가 점수 연결, 재부팅 복구. (HTTP 상태 정책·셀프호스트 Langfuse·Qdrant 서버·k=5·평가 모델 gpt-6-luna·Python 3.12/uv는 확정.)
+남은 확인: 다른 PC의 공용 서비스 접속, judge 실제 채점 1건의 점수 연결, 재부팅 복구. (HTTP 상태 정책·셀프호스트 Langfuse·Qdrant 서버·k=5·평가 모델 gpt-6-luna·Python 3.12/uv는 확정.)
 
 코드 위치: `src/platform/` (`llm.py`, `tracing.py`, `jsonl.py`, `security.py`), `src/api/` (`main.py`; 요청·응답 모델은 `contracts.py`에 있어 `schemas.py`는 두지 않는다), `src/config.py`, `src/contracts.py`
 
