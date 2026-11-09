@@ -23,7 +23,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - `kind="eval"`은 별도 트레이스로 서비스 지표에 섞지 않는다.
 
 트레이스(`platform.tracing`)
-- Langfuse·Qdrant는 리드의 **Mac Studio에서 Docker Compose로 셀프호스트**한다(2026-11-09 현황 확인). FastAPI도 같은 Mac에서 실행하며 Cloudflare Tunnel로 공용 HTTPS 주소를 제공한다. Langfuse 화면은 Google 로그인(2026-11-09부터 Cloudflare를 거치지 않는 직접 연동)으로, 리드가 Google 테스트 사용자와 Langfuse 조직 멤버로 함께 등록한 계정만 들어간다. 새 팀원은 리드에게 두 가지 등록을 요청한다. API 화면은 Cloudflare Access의 팀 Google 계정 인증, Qdrant는 API 키 인증을 사용한다. 주소는 README, 키는 각자 `.env`에만 둔다. 다른 PC는 `config.QDRANT_API_KEY`로 공용 Qdrant에 접속하고(`search.store.get_client()`가 전달), 서버 API는 키 없이 기존 인증 필수 로컬 프록시로 연결한다.
+- Langfuse·Qdrant는 리드의 **Mac Studio에서 Docker Compose로 셀프호스트**한다(2026-11-09 현황 확인). 공용 서비스는 이 둘뿐이고 Cloudflare Tunnel로 HTTPS 주소를 제공한다. FastAPI는 각자 로컬에서 띄운다(2026-11-09 공용 API 운영 중단, 발제상 클라우드 배포는 범위 밖). Langfuse 화면은 Google 로그인(2026-11-09부터 Cloudflare를 거치지 않는 직접 연동)으로, 리드가 Google 테스트 사용자와 Langfuse 조직 멤버로 함께 등록한 계정만 들어간다. 새 팀원은 리드에게 두 가지 등록을 요청한다. Qdrant는 API 키 인증을 사용한다. 주소는 README, 키는 각자 `.env`에만 둔다. 다른 PC는 `config.QDRANT_API_KEY`로 공용 Qdrant에 접속하고(`search.store.get_client()`가 전달).
 - 트레이스 `query`에 `request_id`. 스팬 `retrieve` → `build_context` → `generate` → `validate`. `retrieve` 출력에는 검색 청크의 본문·점수·메타데이터를, `build_context` 출력에는 최종 문맥을 남겨 "못 찾음"과 "찾았지만 잘림"을 구분한다.
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
 - 셀프호스트 Langfuse 서버는 **v4(4.76.0)**다. SDK `langfuse` 5.x는 v4 서버가 필요하다. 3.x 서버는 SDK가 배열로 보내는 점수를 400("expected object, received array")으로 거절해 점수가 비었다(#34). 2026-11-09에 볼륨 백업 후 3.227.0 → 4.76.0으로 올렸고 `record_score`로 대표 트레이스에 점수 저장을 확인했다.

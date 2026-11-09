@@ -151,19 +151,18 @@ uv run python -m src.platform.check_connections
 
 ### Mac Studio 서버 확인과 MacBook 점검 (2026-11-09)
 
-공용 서비스는 리드의 Mac Studio에서 Docker Compose와 Cloudflare Tunnel로 운영한다.
+공용 서비스는 리드의 Mac Studio에서 Docker Compose와 Cloudflare Tunnel로 운영한다. 공용 서비스는 Langfuse·Qdrant 두 개다. FastAPI는 각자 로컬에서 띄운다(2026-11-09부터 공용 API 주소는 운영하지 않는다).
 
 | 서비스 | 주소 | 인증 |
 |---|---|---|
 | Langfuse | https://kant-langfuse.zerocode-studio.com | 화면은 허용된 Google 계정, SDK는 프로젝트 키 |
 | Qdrant | https://kant-qdrant.zerocode-studio.com | API 키 |
-| FastAPI | https://kant-api.zerocode-studio.com/docs | Cloudflare Access의 팀 Google 로그인 |
 
 서버 검증: 컨테이너 실행, 로컬 API `/health` 200, 공용 API 비로그인 요청 302(로그인 필요), 공용 Langfuse health 200. 공용 Qdrant는 키 없이 401, 키를 전달하면 컬렉션 조회 200·572개 청크를 확인했다. 서버의 기존 인증 프록시를 적용한 `uv run python -m src.platform.check_connections`는 두 서비스 모두 `ok`였다. 대표 트레이스의 4개 스팬과 출력도 다시 확인했다. 평가 점수는 아직 0개다. 색인을 재생성하지 않았다.
 
 MacBook에서는 다음 순서로 확인한다.
 
-1. 위 API 주소에 팀 Google 계정으로 로그인하고 `/health`와 docs 화면을 확인한다.
+1. 로컬에서 `uv run uvicorn src.api.main:app`으로 API를 띄우고 `http://127.0.0.1:8000/health`와 `/docs` 화면을 확인한다.
 2. Langfuse에 Google 로그인해 `shipping-rag` 프로젝트와 위 대표 트레이스를 연다.
 3. 저장소 환경은 `uv sync --locked`로 설치한다. `.env`에 위 Langfuse·Qdrant 주소와 별도로 전달받은 `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `QDRANT_API_KEY`를 설정한다. `QDRANT_URL`은 `https://kant-qdrant.zerocode-studio.com:443`처럼 포트까지 적는다(포트가 없으면 Qdrant 클라이언트가 6333에 붙어 timeout). 서버 비밀 파일 전체를 복사하지 않는다.
 4. `uv run python -m src.platform.check_connections`로 두 서비스의 `ok`를 확인한다.
