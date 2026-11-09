@@ -17,12 +17,10 @@ import argparse
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Literal, TypeVar, get_args
+from typing import Callable, Literal, get_args
 
 from src import config
 from src.judge import ragas_eval
-from pydantic import BaseModel
-
 from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RetrievalMode, RunRecord, TokenUsage
 from src.judge.judge import judge_one
 from src.judge.rules import JUDGE_ITEMS, LLMCall, mean_ignoring_none, precheck, sum_usage, tag
@@ -228,10 +226,7 @@ def score(
 MODES = get_args(RetrievalMode)  # contracts가 정한 세 방식. 이름을 여기서 다시 적지 않는다
 
 
-M = TypeVar("M", bound=BaseModel)
-
-
-def read_jsonl(path: Path, model: type[M]) -> list[M]:
+def read_jsonl(path: Path, model):
     return [model.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
