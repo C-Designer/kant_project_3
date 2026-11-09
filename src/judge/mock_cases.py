@@ -12,20 +12,20 @@
 - error         서비스 오류              decision 0, 나머지 null (규칙으로 처리)
 
 실행 예
-  python -m src.judge.mock_cases --truths data/shipping/evaluation/development.json --out data/judge_mock
+  python -m src.judge.mock_cases --out data/judge_mock
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from pathlib import Path
 
 from pydantic import BaseModel
 
 from src.contracts import ChunkMeta, Citation, ContextChunk, GroundTruth, RunRecord
-from src.judge.score import load_ground_truths
+from src.judge.score import DEFAULT_EVAL_DIR, load_ground_truths
+from src.metrics.loader import load_questions
 
 ACTION_TO_STATUS = {"answer": "answered", "clarify": "needs_clarification", "abstain": "abstained"}
 TIME_SWAP = [("낮 12시", "오후 3시"), ("오후 3시", "낮 12시"), ("12:00", "15:00"), ("15:00", "12:00")]
@@ -134,12 +134,9 @@ def make_cases(truth: GroundTruth, question: str) -> list[MockCase]:
     return cases
 
 
-def build_all(truth_paths: list[Path]) -> list[MockCase]:
-    truths = load_ground_truths(truth_paths)
-    questions = {}
-    for path in truth_paths:
-        for row in json.loads(path.read_text(encoding="utf-8")):
-            questions[row["id"]] = row["question"]
+def build_all(eval_dir: Path = DEFAULT_EVAL_DIR) -> list[MockCase]:
+    truths = load_ground_truths(eval_dir)
+    questions = {q.id: q.question for q in load_questions(eval_dir)}
     cases: list[MockCase] = []
     for qid, truth in truths.items():
         cases += make_cases(truth, questions[qid])
@@ -148,10 +145,10 @@ def build_all(truth_paths: list[Path]) -> list[MockCase]:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="채점관 시험용 가짜 답안 생성")
-    p.add_argument("--truths", type=Path, nargs="+", required=True)
+    p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR)
     p.add_argument("--out", type=Path, required=True, help="출력 폴더")
     args = p.parse_args()
-    cases = build_all(args.truths)
+    cases = build_all(args.eval_dir)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "cases.jsonl").write_text("\n".join(c.model_dump_json() for c in cases) + "\n", encoding="utf-8")
     (args.out / "runs.jsonl").write_text("\n".join(c.run.model_dump_json() for c in cases) + "\n", encoding="utf-8")

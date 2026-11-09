@@ -21,8 +21,7 @@ import math
 import re
 
 from src.contracts import RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMCall
-from src.judge.rules import add_optional
+from src.judge.rules import LLMCall, sum_usage
 
 
 def _make_recorded_llm(llm: LLMCall):
@@ -41,8 +40,7 @@ def _make_recorded_llm(llm: LLMCall):
 
         def _call(self, prompt) -> LangChainResult:
             res = llm([{"role": "user", "content": prompt.to_string()}])
-            u = self.usage
-            self.usage = TokenUsage(input=add_optional(u.input, res.input_tokens), output=add_optional(u.output, res.output_tokens))
+            self.usage = sum_usage(self.usage, TokenUsage(input=res.input_tokens, output=res.output_tokens))
             return LangChainResult(generations=[[Generation(text=res.text)]])
 
         def generate_text(self, prompt, n=1, temperature=0.01, stop=None, callbacks=None):

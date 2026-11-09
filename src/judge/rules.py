@@ -8,7 +8,13 @@ None을 0이나 1로 바꾸는 코드는 이 파일 어디에도 없어야 한�
 
 from __future__ import annotations
 
+from typing import Callable
+
 from src.contracts import EvalRecord, JudgeItem, RunRecord, TokenUsage
+from src.platform.llm import LLMResult  # 호출 결과 모양: text, input_tokens, output_tokens, latency_ms
+
+# "메시지 목록을 주면 LLMResult를 돌려주는 함수". judge·RAGAS·score가 같은 정의를 쓴다.
+LLMCall = Callable[[list[dict]], LLMResult]
 
 JUDGE_ITEMS = ("facts", "conditions", "evidence", "decision")
 
@@ -72,12 +78,3 @@ def mean_ignoring_none(values: list[float | int | None]) -> float | None:
     if not kept:
         return None
     return sum(kept) / len(kept)
-
-
-def summarize(values: list[float | int | None]) -> dict:
-    """평균과 함께 발제가 요구하는 건수를 낸다: 평가 대상 수, 빈칸 수."""
-    return {
-        "mean": mean_ignoring_none(values),
-        "n_scored": sum(v is not None for v in values),
-        "n_null": sum(v is None for v in values),
-    }

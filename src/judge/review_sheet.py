@@ -29,7 +29,7 @@ from pypdf import PdfReader
 
 from src.contracts import EvalRecord, GroundTruth, RunRecord
 from src.judge.rules import JUDGE_ITEMS
-from src.judge.score import DEFAULT_TRUTHS, MODES, load_ground_truths
+from src.judge.score import DEFAULT_EVAL_DIR, MODES, load_ground_truths, read_jsonl, read_run_folder
 
 ACTION_TO_STATUS = {"answer": "answered", "clarify": "needs_clarification", "abstain": "abstained"}
 ITEM_KO = {"facts": "사실", "conditions": "조건", "evidence": "근거", "decision": "판단"}
@@ -181,17 +181,13 @@ def build_sheet(pairs: Pairs, truths: dict[str, GroundTruth], documents_dir: Pat
     return "\n".join(head + [render_case(i, c, pairs, truths, documents_dir) for i, c in enumerate(cands, 1)])
 
 
-def _read_jsonl(path: Path, model):
-    return [model.model_validate_json(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
-
-
 def main() -> None:
     p = argparse.ArgumentParser(description="대표 사례 원문 대조 시트 만들기")
     src = p.add_mutually_exclusive_group(required=True)
     src.add_argument("--run", help="metrics 러너의 run_id (results/runs/<run_id>/ 의 세 방식 파일과 eval.jsonl)")
     src.add_argument("--runs", type=Path, nargs="+", help="RunRecord JSONL 파일들 (시험용)")
     p.add_argument("--evals", type=Path, help="--runs를 쓸 때 EvalRecord JSONL")
-    p.add_argument("--truths", type=Path, nargs="+", default=DEFAULT_TRUTHS)
+    p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR)
     p.add_argument("--documents", type=Path, default=Path("data/shipping/documents"))
     p.add_argument("--max", type=int, default=12)
     p.add_argument("--out", type=Path)
@@ -199,16 +195,16 @@ def main() -> None:
 
     if a.run:
         folder = Path("results/runs") / a.run
-        runs = [r for m in MODES if (folder / f"{m}.jsonl").exists() for r in _read_jsonl(folder / f"{m}.jsonl", RunRecord)]
-        evals = _read_jsonl(folder / "eval.jsonl", EvalRecord)
+        runs = read_run_folder(folder)
+        evals = read_jsonl(folder / "eval.jsonl", EvalRecord)
         out, title = a.out or Path("data/judge_review") / f"{a.run}.md", f"({a.run})"
     else:
         if not a.evals:
             p.error("--runs를 쓸 때는 --evals가 필요합니다")
-        runs = [r for f in a.runs for r in _read_jsonl(f, RunRecord)]
-        evals = _read_jsonl(a.evals, EvalRecord)
+        runs = [r for f in a.runs for r in read_jsonl(f, RunRecord)]
+        evals = read_jsonl(a.evals, EvalRecord)
         out, title = a.out or Path("data/judge_review/sheet.md"), ""
-    sheet = build_sheet(build_pairs(runs, evals), load_ground_truths(a.truths), a.documents, a.max, title)
+    sheet = build_sheet(build_pairs(runs, evals), load_ground_truths(a.eval_dir), a.documents, a.max, title)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(sheet, encoding="utf-8", newline="\n")
     print(f"시트 저장: {out}  ({sheet.count('## 사례')}건)")

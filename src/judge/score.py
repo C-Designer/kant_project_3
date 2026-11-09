@@ -8,39 +8,57 @@
 
 실행 예
   uv run ... python -m src.judge.score --runs data/judge_mock/runs.jsonl \
-      --truths data/shipping/evaluation/development.json --out data/judge_mock/eval.jsonl
+      --out data/judge_mock/eval.jsonl
 """
 
 from __future__ import annotations
 
 import argparse
-import json
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Literal, get_args
 
 from src import config
 from src.judge import ragas_eval
-from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMCall, llm_call, record_score
+from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RetrievalMode, RunRecord, TokenUsage
 from src.judge.judge import judge_one
-from src.judge.rules import JUDGE_ITEMS, mean_ignoring_none, precheck, sum_usage, tag
+from src.judge.rules import JUDGE_ITEMS, LLMCall, mean_ignoring_none, precheck, sum_usage, tag
+from src.metrics.loader import load_ground_truth
+from src.platform import llm as _llm
+from src.platform import tracing as _tracing
+from src.platform.llm import LLMResult
 
 
-def load_ground_truths(paths: list[Path]) -> dict[str, GroundTruth]:
-    """평가 정답 JSON → GroundTruth. (metrics 로더가 생기면 그것으로 교체)"""
-    truths: dict[str, GroundTruth] = {}
-    for path in paths:
-        for row in json.loads(path.read_text(encoding="utf-8")):
-            book_ids = sorted({e["book_id"] for group in row["evidence_groups"] for e in group})
-            truths[row["id"]] = GroundTruth(
-                question_id=row["id"],
-                evidence_book_ids=book_ids,
-                expected_action=row["expected_action"],
-                reference_answer=row["reference_answer"],
-                rubric={k: v for k, v in row.items() if k not in ("id", "question", "reference_answer", "expected_action")},
-            )
-    return truths
+def llm_call(messages: list[dict[str, str]], *, kind: Literal["service", "eval"] = "eval") -> LLMResult:
+    """judge가 AI를 부르는 유일한 지점: 팀 `platform.llm.call(kind="eval")`. 평가 호출은 서비스 사용량과 섞이지 않는 별도 트레이스로 남는다.
+
+    개발용: 환경 변수 `JUDGE_LLM=local`이면 `src/judge/local_llm.py`(각자 PC에만 있는 파일, 커밋 안 됨)를 쓴다. 이 파일에는 SDK 직접 호출이 없다.
+    """
+    if os.environ.get("JUDGE_LLM") == "local":
+        from src.judge import local_llm  # 없으면 ImportError로 바로 알린다
+
+        return local_llm.call(messages)
+    return _llm.call(messages, kind=kind)
+
+
+def record_score(request_id: str, name: str, value: float | None, comment: str | None = None) -> None:
+    """점수를 Langfuse 트레이스에 붙인다(`platform.tracing.record_score`). 기록 실패는 platform이 삼킨다(요청을 깨지 않음).
+
+    value가 None(해당 없음·평가 불가)이면 보내지 않는다. Langfuse는 값 없는 점수를 거절하고,
+    빈 값을 0이나 1로 바꿔 보내면 안 되기 때문이다. None과 그 이유는 eval.jsonl이 기준이다.
+    """
+    if value is None:
+        return
+    _tracing.record_score(request_id, name, value, comment)
+
+
+DEFAULT_EVAL_DIR = config.DATA_DIR / "evaluation"
+
+
+def load_ground_truths(eval_dir: Path = DEFAULT_EVAL_DIR) -> dict[str, GroundTruth]:
+    """평가 폴더의 정답 JSON → {질문 id: GroundTruth}. 읽는 규칙은 metrics 로더 하나만 쓴다."""
+    return {t.question_id: t for t in load_ground_truth(eval_dir)}
 
 
 def _run_reason(na: str | None, us: str | None) -> str | None:
@@ -159,7 +177,7 @@ def score(
     """spec 인터페이스: score(runs, truths) -> list[EvalRecord]. truths는 목록(spec)이나 id→정답 사전 모두 받는다.
 
     결과는 항상 runs와 같은 순서다.
-    - workers : 동시에 채점할 답안 수. 1이면 하나씩 처리한다(예전과 같음).
+    - workers : 동시에 채점할 답안 수. 1이면 한 번에 하나씩 처리한다.
     - on_record: 한 건의 채점·점수 기록이 끝날 때마다 호출된다(중간 저장용, runs 순서대로).
     - done    : runs 앞쪽에서부터 이미 채점된 결과 목록(이어하기). 질문·방식이 맞는 구간은 다시 부르지 않고 그대로 쓴다.
     """
@@ -195,11 +213,6 @@ def score(
         else:
             records.append(finish(run, scored, record=True))
 
-    if workers == 1:
-        for kind, run, payload in plan:
-            settle(kind, run, payload, _score_one_safely(run, payload, llm, use_ragas) if kind == "score" else None)
-        return records
-
     executor = ThreadPoolExecutor(max_workers=workers)
     try:
         futures = [executor.submit(_score_one_safely, run, payload, llm, use_ragas) if kind == "score" else None for kind, run, payload in plan]
@@ -210,12 +223,16 @@ def score(
     return records
 
 
-DEFAULT_TRUTHS = [Path(f"data/shipping/evaluation/{n}.json") for n in ("development", "additional", "expansion_validation")]
-MODES = ("naive", "hybrid", "hybrid_rerank")
+MODES = get_args(RetrievalMode)  # contracts가 정한 세 방식. 이름을 여기서 다시 적지 않는다
 
 
-def _read_runs(path: Path) -> list[RunRecord]:
-    return [RunRecord.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+def read_jsonl(path: Path, model):
+    return [model.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def read_run_folder(folder: Path) -> list[RunRecord]:
+    """metrics 러너가 만든 results/runs/<run_id>/ 의 세 방식 파일을 방식 순서대로 읽는다 (없는 방식은 건너뜀)."""
+    return [r for mode in MODES if (folder / f"{mode}.jsonl").exists() for r in read_jsonl(folder / f"{mode}.jsonl", RunRecord)]
 
 
 def _read_partial(path: Path, runs: list[RunRecord]) -> list[EvalRecord]:
@@ -237,7 +254,7 @@ def main() -> None:
     src = p.add_mutually_exclusive_group(required=True)
     src.add_argument("--run", help="metrics 러너의 run_id. results/runs/<run_id>/<mode>.jsonl 세 개를 읽고 같은 폴더의 eval.jsonl에 쓴다")
     src.add_argument("--runs", type=Path, help="RunRecord JSONL 파일 하나 (시험지 등)")
-    p.add_argument("--truths", type=Path, nargs="+", default=DEFAULT_TRUTHS)
+    p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR, help="평가 JSON 폴더 (정답은 *.json, 질문은 *_questions.json)")
     p.add_argument("--out", type=Path, help="--runs를 쓸 때 출력 파일")
     p.add_argument("--no-ragas", action="store_true", help="Faithfulness를 건너뜀 (평가 불가로 기록)")
     p.add_argument("--workers", type=int, default=1, help="동시에 채점할 답안 수 (기본 1 = 하나씩). 늘렸을 때 '평가 불가'가 늘면 다시 줄인다")
@@ -246,12 +263,12 @@ def main() -> None:
 
     if args.run:
         folder = Path("results/runs") / args.run
-        runs = [r for mode in MODES if (folder / f"{mode}.jsonl").exists() for r in _read_runs(folder / f"{mode}.jsonl")]
+        runs = read_run_folder(folder)
         args.out = folder / "eval.jsonl"
     else:
         if not args.out:
             p.error("--runs를 쓸 때는 --out이 필요합니다")
-        runs = _read_runs(args.runs)
+        runs = read_jsonl(args.runs, RunRecord)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     partial = args.out.with_name(args.out.name + ".partial")
     done = _read_partial(partial, runs) if args.resume else []
@@ -264,7 +281,7 @@ def main() -> None:
             f.write(rec.model_dump_json() + "\n")
             f.flush()
 
-        records = score(runs, load_ground_truths(args.truths), use_ragas=not args.no_ragas, workers=args.workers, on_record=save, done=done)
+        records = score(runs, load_ground_truths(args.eval_dir), use_ragas=not args.no_ragas, workers=args.workers, on_record=save, done=done)
     # 끝까지 마친 뒤에만 최종 파일을 쓴다 (예전과 같은 모양). 중간 저장 파일은 지운다.
     args.out.write_text("\n".join(r.model_dump_json() for r in records) + "\n", encoding="utf-8")
     partial.unlink()
