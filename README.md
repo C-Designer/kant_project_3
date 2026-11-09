@@ -149,9 +149,31 @@ uv run python -m src.platform.check_connections
 
 2026-11-08 리드 PC 확인: Langfuse 키 인증 성공, 위 대표 트레이스 조회 HTTP 200, `retrieve`·`build_context`·`generate`·`validate` 존재 및 앞 두 스팬의 출력 기록 확인. 해당 트레이스의 평가 점수는 0개로, `record_score`의 실제 점수 연결 증빙은 아직 없다. 공용 Qdrant는 이 PC의 `QDRANT_URL` 미설정으로 확인하지 못했다.
 
+### Mac Studio 서버 확인과 MacBook 점검 (2026-11-09)
+
+공용 서비스는 리드의 Mac Studio에서 Docker Compose와 Cloudflare Tunnel로 운영한다.
+
+| 서비스 | 주소 | 인증 |
+|---|---|---|
+| Langfuse | https://kant-langfuse.zerocode-studio.com | 화면은 허용된 Google 계정, SDK는 프로젝트 키 |
+| Qdrant | https://kant-qdrant.zerocode-studio.com | API 키 |
+| FastAPI | https://kant-api.zerocode-studio.com/docs | Cloudflare Access의 팀 Google 로그인 |
+
+서버 검증: 컨테이너 실행, 로컬 API `/health` 200, 공용 API 비로그인 요청 302(로그인 필요), 공용 Langfuse health 200. 공용 Qdrant는 키 없이 401, 키를 전달하면 컬렉션 조회 200·572개 청크를 확인했다. 서버의 기존 인증 프록시를 적용한 `uv run python -m src.platform.check_connections`는 두 서비스 모두 `ok`였다. 대표 트레이스의 4개 스팬과 출력도 다시 확인했다. 평가 점수는 아직 0개다. 색인을 재생성하지 않았다.
+
+MacBook에서는 다음 순서로 확인한다.
+
+1. 위 API 주소에 팀 Google 계정으로 로그인하고 `/health`와 docs 화면을 확인한다.
+2. Langfuse에 Google 로그인해 `shipping-rag` 프로젝트와 위 대표 트레이스를 연다.
+3. 저장소 환경은 `uv sync --locked`로 설치한다. `.env`에 위 Langfuse·Qdrant 주소와 별도로 전달받은 `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `QDRANT_API_KEY`를 설정한다. 서버 비밀 파일 전체를 복사하지 않는다.
+4. **search의 API 키 전달 수정이 반영된 뒤** `uv run python -m src.platform.check_connections`로 두 서비스의 `ok`를 확인한다. 현재 main은 키를 전달하지 않으므로 직접 연결 점검은 아직 막힌다.
+5. 생성 API 키도 설정한 뒤 로컬 Naive 1문항을 실행하고 request_id로 4개 스팬을 확인한다. 이름·OS·커밋·시각·결과를 기록한다.
+
+서버 API·터널·Docker는 사용자 로그인 후 시작하도록 등록되어 있다. 절전은 꺼져 있다. 실제 재부팅·정전 복구는 검증하지 않았고 정전 후 자동 재시작은 꺼져 있다. MacBook 접속 확인과 judge의 실제 평가 점수 증빙 전에는 #40을 닫지 않는다.
+
 **search 담당자에게 필요한 변경**
 
-- `src/search/store.py:get_client()`의 원격 `QdrantClient` 생성 시 환경 변수의 API 키를 전달해야 한다. 설정은 `src/config.py`, 키 이름은 `.env.example`에 함께 반영한다. 키 값은 코드·문서·로그에 넣지 않는다.
+- `src/search/store.py:get_client()`의 원격 `QdrantClient` 생성 시 환경 변수의 API 키를 전달해야 한다. 설정 `config.QDRANT_API_KEY`와 `.env.example`의 키 이름은 준비되어 있다. 키 값은 코드·문서·로그에 넣지 않는다.
 - 키가 없는 로컬 모드와 기존 프록시 연결도 유지하고, 변경한 클라이언트로 공유 컬렉션 조회를 확인한다. 현재 platform 작업에서는 영역 소유 규칙에 따라 search 코드를 수정하지 않았다.
 
 **팀원에게 확인받을 항목**

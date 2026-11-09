@@ -21,7 +21,8 @@ K = 5  # 확정 (2026-11-05 킥오프)
 CHUNK_SIZE = 900  # 확정(Basic, 개발용·추가 질문 비교). 쪽이 이보다 길면 문장 끝에서 균등 분할
 CHUNK_OVERLAP = 0  # 확정. 겹침은 지원하지 않는다(0이 아니면 chunk_pages가 거부)
 EMBEDDING_MODEL = "intfloat/multilingual-e5-small"  # TODO(미정, #14) 로컬 E5 계열
-QDRANT_URL = os.environ.get("QDRANT_URL") or None  # 팀 VM의 Qdrant 서버 (확정, #58). 없으면 아래 로컬 폴더로 대체
+QDRANT_URL = os.environ.get("QDRANT_URL") or None  # Mac Studio의 공용 Qdrant 서버. 없으면 아래 로컬 폴더로 대체
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY") or None  # 원격 클라이언트 연결은 search 담당이 반영
 QDRANT_PATH: Path | None = DATA_DIR / "qdrant"  # QDRANT_URL이 없을 때만 쓰는 로컬 저장소. None이면 메모리 (테스트용)
 COLLECTION = "shipping_chunks"  # TODO(미정, #14)
 
