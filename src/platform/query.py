@@ -27,13 +27,15 @@ def _reason_for(e: Exception) -> tuple[str, str]:
     return "internal_error", "내부 오류"  # 원문은 로그에만
 
 
-def run_query(question: str, mode, *, request_id: str | None = None, question_id: str = "", user_id: str = "eval") -> RunRecord:
+def run_query(question: str, mode, *, request_id: str | None = None, question_id: str = "",
+              channel: str = "eval", user_id: str | None = None) -> RunRecord:
     request_id = request_id or uuid.uuid4().hex
+    user_id = user_id or config.TRACE_USER
     start = time.perf_counter()
     chunks, context = [], []
     status, answer, reason, citations, error = "error", "", "", [], None
 
-    with tracing.request_trace(request_id, question, user_id) as root, llm.usage_scope() as usage:
+    with tracing.request_trace(request_id, question, user_id, channel) as root, llm.usage_scope() as usage:
         try:
             chunks = search.retrieve(question, mode, config.K)
             context = ctx_mod.build_context(chunks, token_limit=config.CONTEXT_TOKEN_LIMIT)
