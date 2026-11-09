@@ -34,7 +34,7 @@ RERANK_CANDIDATES = 20  # 확정. hybrid가 리랭커에 넘기는 후보 수
 # 생성
 GENERATION_MODEL = "gpt-6-luna"
 GENERATION_TEMPERATURE: float | None = None  # gpt-6-luna는 기본값(1) 외 거부. None이면 모델에 보내지 않는다
-CONTEXT_TOKEN_LIMIT = 3000  # TODO(미정, #18) 입력 문맥 토큰 한도
+CONTEXT_TOKEN_LIMIT = 3000  # 확정 (#18). 입력 문맥 토큰 한도(count_tokens 추정치). Basic k=5 실측 최대 1,857이라 잘리지 않는 안전 한도
 LLM_TIMEOUT_SEC = 30.0  # TODO(미정, #39)
 LLM_MAX_RETRIES = 2  # TODO(미정, #39) 호출 실패 시 재시도 횟수
 REGENERATE_MAX = 1  # TODO(미정, #20) 출력 검증 실패 시 재생성 횟수

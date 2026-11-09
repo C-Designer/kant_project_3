@@ -1,5 +1,31 @@
+from contextlib import contextmanager
+
+from src.answer import context as ctx_mod
 from src.answer.chain import _messages, system_prompt
-from src.contracts import ChunkMeta, ContextChunk
+from src.answer.context import build_context, source_map
+from src.contracts import ChunkMeta, ContextChunk, RetrievedChunk
+
+
+def test_한도를_넘으면_낮은_순위부터_통째로_빼고_기록한다(monkeypatch):
+    recorded = {}
+
+    @contextmanager
+    def span(name, **kwargs):
+        class Handle:
+            def update(self, **values):
+                recorded[name] = values
+
+        yield Handle()
+
+    monkeypatch.setattr(ctx_mod.tracing, "span", span)
+    chunks = [
+        RetrievedChunk(text=t * 100, score=s, metadata=ChunkMeta(book_id="SB11", file_name="SB11.pdf", page=p, chunk_id=f"SB11-p{p}-c1"))
+        for t, s, p in (("가", 0.9, 1), ("나", 0.8, 2))
+    ]
+    context = build_context(chunks, token_limit=60)  # 조각마다 추정 51토큰: 두 번째는 한도를 넘는다
+    assert [(c.source_id, c.text) for c in context] == [("S1", "가" * 100)]  # 남은 조각은 자르지 않는다
+    assert source_map(context)["S1"].chunk_id == "SB11-p1-c1"
+    assert recorded["build_context"]["metadata"]["dropped_chunk_ids"] == ["SB11-p2-c1"]
 
 
 def test_서비스_지시와_질문과_검색_자료를_구분한다():
