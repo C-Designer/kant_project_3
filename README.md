@@ -35,9 +35,9 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 요청 흐름: `/query` → `platform.run_query()` → `search.retrieve()` → `answer.build_context()` → `answer.generate()`(→ `platform.llm.call()`) → 응답. `metrics`가 같은 `run_query()`를 일괄 호출해 `RunRecord`를 만들고, `judge`가 채점해 `EvalRecord`를 붙이고, `metrics`가 비교표로 합친다. 전 구간이 `request_id` 하나로 Langfuse에 남는다.
 
-짝(서로 변경을 먼저 알려주는 사이): `search`↔`answer`, `metrics`↔`judge`, `platform`↔`metrics`. 리뷰·머지는 리드가 한다.
+짝(서로 변경을 먼저 알려주는 사이): `search`↔`answer`, `metrics`↔`judge`, `platform`↔`metrics`. 머지는 CI(`pytest`)가 통과하면 PR을 올린 사람이 한다([branch-strategy.md](docs/branch-strategy.md)).
 
-뼈대(`naive` 1문항 end-to-end + contracts + config)는 리드가 11/5에 머지한다. 그 뒤 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
+뼈대(`naive` 1문항 end-to-end + contracts + config)는 11/5에 머지됐다(#59). 그 위에서 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
 
 스택: Python, pypdf, LangChain, 로컬 E5, Qdrant, FastAPI, Langfuse, RAGAS. 결정은 [ADR 0003](docs/adr/0003-stack.md).
 
@@ -102,7 +102,7 @@ curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
   |---|---|
   | search | `pypdf`, `qdrant-client` 1.20, `langchain-qdrant` 0.2.1, `langchain-huggingface` 0.3.1, `langchain-text-splitters` 0.3.11, `sentence-transformers` 6.2, `rank-bm25`, `fastembed` 0.9 |
   | platform | `fastapi` 0.162, `uvicorn[standard]`, `langfuse` 5.1, `python-dotenv` |
-  | metrics | `pandas` 3.1, `tabulate` |
+  | metrics | 추가 패키지 없음 (비교표는 표준 라이브러리 `csv`. #79에서 `pandas`·`tabulate` 사용을 뺐다) |
 
   실제 실행으로 확인한 기능: 프롬프트→모델→파서 연결(LCEL), 청킹과 출처 메타데이터 유지, BM25 검색, Qdrant 저장·검색, hybrid 결합(EnsembleRetriever), FastAPI `/health`, Langfuse LangChain 콜백 import. E5 모델 실제 추론은 다운로드 용량 때문에 확인하지 않았다(설치만 확인).
 - **3.14는 쓸 수 없다.** RAGAS 의존성(`scikit-network`)이 3.14에서 빌드에 실패한다. 근거는 [docs/specs/judge.md](docs/specs/judge.md) "실행 환경 제약".
@@ -160,7 +160,7 @@ uv run python -m src.platform.check_connections
 | Langfuse | https://kant-langfuse.zerocode-studio.com | 화면은 허용된 Google 계정, SDK는 프로젝트 키 |
 | Qdrant | https://kant-qdrant.zerocode-studio.com | API 키 |
 
-서버 검증: 컨테이너 실행, 로컬 API `/health` 200, 공용 API 비로그인 요청 302(로그인 필요), 공용 Langfuse health 200. 공용 Qdrant는 키 없이 401, 키를 전달하면 컬렉션 조회 200·572개 청크를 확인했다. 서버의 기존 인증 프록시를 적용한 `uv run python -m src.platform.check_connections`는 두 서비스 모두 `ok`였다. 대표 트레이스의 4개 스팬과 출력도 다시 확인했다. 평가 점수는 아직 0개다. 색인을 재생성하지 않았다.
+서버 검증: 컨테이너 실행, 로컬 API `/health` 200, 공용 API 비로그인 요청 302(로그인 필요, 공용 API는 같은 날 운영 중단), 공용 Langfuse health 200. 공용 Qdrant는 키 없이 401, 키를 전달하면 컬렉션 조회 200·572개 청크를 확인했다. 서버의 기존 인증 프록시를 적용한 `uv run python -m src.platform.check_connections`는 두 서비스 모두 `ok`였다. 대표 트레이스의 4개 스팬과 출력도 다시 확인했다. 이 시점 평가 점수는 0개였고, Langfuse 서버를 v4(4.76.0)로 올린 뒤(#96) `record_score`로 대표 트레이스에 점수 저장을 확인했다. 색인을 재생성하지 않았다.
 
 MacBook에서는 다음 순서로 확인한다.
 
