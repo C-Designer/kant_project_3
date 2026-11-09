@@ -87,7 +87,7 @@ curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
   -d '{"question": "선하증권 초안 메일의 수신 확인은 기재 사항에 대한 승인과 같은가요?", "retrieval_mode": "naive"}'
 ```
 
-색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 현재 공유 Qdrant는 API 키가 필수지만 저장소의 Qdrant 클라이언트는 키를 전달하지 않으므로 `QDRANT_URL`에 공유 주소만 입력해서는 연결되지 않는다. 서버 Mac은 인증이 필요한 로컬 프록시로 연결하며, 다른 PC의 공유 Qdrant 연결 방법은 아직 정리되지 않았다.
+색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 공유 Qdrant는 API 키가 필수이므로 다른 PC에서는 `QDRANT_URL`과 함께 별도로 전달받은 `QDRANT_API_KEY`를 넣는다. 서버 Mac은 키 없이 인증이 필요한 로컬 프록시로 연결한다. **공유 주소를 넣은 상태에서 색인을 실행하면 공용 컬렉션이 지워지고 다시 만들어지므로**, 공용 색인은 리드와 정한 뒤 서버에서만 다시 만든다.
 
 **이미 다른 Python(3.13·3.14 등)으로 가상환경을 만들어 둔 경우**: 레포 안의 `.venv` 폴더를 지우고 `uv sync`를 다시 실행한다. 다른 곳에 만든 venv·conda 환경은 이 프로젝트에 쓰지 않는다. VS Code 등 에디터의 Python 인터프리터도 레포의 `.venv`로 바꾼다.
 
@@ -165,16 +165,13 @@ MacBook에서는 다음 순서로 확인한다.
 
 1. 위 API 주소에 팀 Google 계정으로 로그인하고 `/health`와 docs 화면을 확인한다.
 2. Langfuse에 Google 로그인해 `shipping-rag` 프로젝트와 위 대표 트레이스를 연다.
-3. 저장소 환경은 `uv sync --locked`로 설치한다. `.env`에 위 Langfuse·Qdrant 주소와 별도로 전달받은 `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `QDRANT_API_KEY`를 설정한다. 서버 비밀 파일 전체를 복사하지 않는다.
-4. **search의 API 키 전달 수정이 반영된 뒤** `uv run python -m src.platform.check_connections`로 두 서비스의 `ok`를 확인한다. 현재 main은 키를 전달하지 않으므로 직접 연결 점검은 아직 막힌다.
+3. 저장소 환경은 `uv sync --locked`로 설치한다. `.env`에 위 Langfuse·Qdrant 주소와 별도로 전달받은 `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `QDRANT_API_KEY`를 설정한다. `QDRANT_URL`은 `https://kant-qdrant.zerocode-studio.com:443`처럼 포트까지 적는다(포트가 없으면 Qdrant 클라이언트가 6333에 붙어 timeout). 서버 비밀 파일 전체를 복사하지 않는다.
+4. `uv run python -m src.platform.check_connections`로 두 서비스의 `ok`를 확인한다.
 5. 생성 API 키도 설정한 뒤 로컬 Naive 1문항을 실행하고 request_id로 4개 스팬을 확인한다. 이름·OS·커밋·시각·결과를 기록한다.
 
 서버 API·터널·Docker는 사용자 로그인 후 시작하도록 등록되어 있다. 절전은 꺼져 있다. 실제 재부팅·정전 복구는 검증하지 않았고 정전 후 자동 재시작은 꺼져 있다. MacBook 접속 확인과 judge의 실제 평가 점수 증빙 전에는 #40을 닫지 않는다.
 
-**search 담당자에게 필요한 변경**
-
-- `src/search/store.py:get_client()`의 원격 `QdrantClient` 생성 시 환경 변수의 API 키를 전달해야 한다. 설정 `config.QDRANT_API_KEY`와 `.env.example`의 키 이름은 준비되어 있다. 키 값은 코드·문서·로그에 넣지 않는다.
-- 키가 없는 로컬 모드와 기존 프록시 연결도 유지하고, 변경한 클라이언트로 공유 컬렉션 조회를 확인한다. 현재 platform 작업에서는 영역 소유 규칙에 따라 search 코드를 수정하지 않았다.
+`src/search/store.py:get_client()`는 원격 연결 시 `config.QDRANT_API_KEY`를 전달한다(search 담당 합의). 키가 없으면 전달하지 않으므로 로컬 모드와 서버 Mac의 프록시 연결은 그대로다. 키 값은 코드·문서·로그에 넣지 않는다.
 
 **팀원에게 확인받을 항목**
 

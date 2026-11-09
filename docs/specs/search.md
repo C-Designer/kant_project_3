@@ -33,7 +33,7 @@
     - ~~청크 길이~~ 확정: 한 청크 최대 `config.CHUNK_SIZE`=900자, 겹침 `config.CHUNK_OVERLAP`=0. 쪽이 900자를 넘으면 문장 끝에서 균등 분할한다(`chunk_id`의 `c<n>`이 늘어난다). Basic은 글자÷토큰이 평균 1.93이라 E5의 512토큰 안이다. 300~1300자·겹침 50~200 비교에서 이긴 값이 없었다.
 - 임베딩: 로컬 E5 계열, 모델명·차원 미정. 질의 임베딩도 같은 모델.
 - Qdrant 컬렉션: 이름, 거리 함수, sparse 벡터 포함 여부 미정.
-- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버, 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
+- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버(`QDRANT_API_KEY`가 있으면 함께 전달), 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
 
 검색
 
