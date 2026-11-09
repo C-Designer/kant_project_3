@@ -33,7 +33,7 @@ def test_full_pipeline_with_mock(tmp_path, eval_dir):
     qfile = results / "questions.json"
 
     questions_cli.main(
-        ["--eval-dir", str(eval_dir), "--answer", "2", "--clarify", "1", "--abstain", "1", "--seed", "1", "--out", str(qfile)]
+        ["--eval-dir", str(eval_dir), "--answer", "2", "--clarify", "1", "--abstain", "1", "--seed", "1", "--min-per-source", "0", "--min-docs", "0", "--out", str(qfile)]
     )
     assert json.loads(qfile.read_text(encoding="utf-8"))["count"] == 4
 
@@ -53,7 +53,7 @@ def test_report_reads_eval_jsonl_when_present(tmp_path, eval_dir):
     results = tmp_path / "results"
     qfile = results / "questions.json"
     questions_cli.main(
-        ["--eval-dir", str(eval_dir), "--answer", "2", "--clarify", "1", "--abstain", "1", "--seed", "1", "--out", str(qfile)]
+        ["--eval-dir", str(eval_dir), "--answer", "2", "--clarify", "1", "--abstain", "1", "--seed", "1", "--min-per-source", "0", "--min-docs", "0", "--out", str(qfile)]
     )
     run_cli.main(["--questions", str(qfile), "--mock", "--results-dir", str(results)])
     (run_dir,) = (results / "runs").iterdir()
