@@ -87,7 +87,9 @@ curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
   -d '{"question": "선하증권 초안 메일의 수신 확인은 기재 사항에 대한 승인과 같은가요?", "retrieval_mode": "naive"}'
 ```
 
-색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 현재 공유 Qdrant는 API 키가 필수지만 저장소의 Qdrant 클라이언트는 키를 전달하지 않으므로 `QDRANT_URL`에 공유 주소만 입력해서는 연결되지 않는다. 서버 Mac은 인증이 필요한 로컬 프록시로 연결하며, 다른 PC의 공유 Qdrant 연결 방법은 아직 정리되지 않았다.
+**응답을 받은 뒤 API 서버를 강제 종료하지 않는다.** Langfuse SDK는 트레이스를 5초 간격으로 묶어서 보내고, 정상 종료될 때(Ctrl+C, 스크립트 끝) 남은 것을 마저 보낸다. 응답 직후 프로세스를 kill하거나 터미널 창을 닫으면 이 마지막 전송을 건너뛰어 `generate`·`validate`와 루트 `query`가 유실된다. 이때 Langfuse에는 `retrieve`·`build_context`만 있는 이름 없는 트레이스(Unnamed trace)가 남는다. 응답 후 10초 이상 기다렸다가 서버 터미널에서 Ctrl+C로 종료한다.
+
+색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 공유 Qdrant는 API 키가 필수이므로 다른 PC에서는 `QDRANT_URL`과 함께 별도로 전달받은 `QDRANT_API_KEY`를 넣는다. 서버 Mac은 키 없이 인증이 필요한 로컬 프록시로 연결한다. **공유 주소를 넣은 상태에서 색인을 실행하면 공용 컬렉션이 지워지고 다시 만들어지므로**, 공용 색인은 리드와 정한 뒤 서버에서만 다시 만든다.
 
 **이미 다른 Python(3.13·3.14 등)으로 가상환경을 만들어 둔 경우**: 레포 안의 `.venv` 폴더를 지우고 `uv sync`를 다시 실행한다. 다른 곳에 만든 venv·conda 환경은 이 프로젝트에 쓰지 않는다. VS Code 등 에디터의 Python 인터프리터도 레포의 `.venv`로 바꾼다.
 
@@ -132,7 +134,7 @@ ls documents | wc -l   # 15
 ## Langfuse 확인 방법
 
 1. [팀 Langfuse](https://kant-langfuse.zerocode-studio.com)에 등록된 Google 계정으로 로그인하고 `shipping-rag` 프로젝트를 연다.
-2. 아래 대표 요청을 열어 `/query` 응답의 `request_id`와 트레이스의 `query` 메타데이터가 같은지 확인한다.
+2. 아래 대표 요청을 열어 `/query` 응답의 `request_id`와 트레이스의 `query` 메타데이터가 같은지 확인한다. 트레이스 id는 `request_id`와 다르다. 본인 요청은 `uv run python -c 'from src import config; from src.platform.tracing import trace_id_for; print(trace_id_for("<request_id>"))'`로 얻은 id를 Traces에서 찾는다. 이름이 `query`가 아니라 Unnamed trace이면 응답 직후 서버를 강제 종료한 것이다(위 스켈레톤 실행 절).
 3. `retrieve`, `build_context`, `generate`, `validate` 스팬과 모델 입출력·토큰을 확인한다. `retrieve` 출력에서 문맥 축소 전 검색 청크의 본문·점수·출처를, `build_context`에서 최종 문맥을 확인한다. 변경 이전의 트레이스에는 검색 청크 본문이 소급 기록되지 않는다.
 
 대표 실행: [선하증권 초안 수신 확인 질문](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/531cd320c331b48e34166711d33663f3) (`request_id`: `e703290cd63e4328a6e2c3c316b01c0f`, `answered`, SB10 17쪽·SB05 20쪽). 수신 확인과 기재 사항 승인은 다르다는 답변을 두 페이지의 원문과 대조했다. Langfuse에 비용이 0으로 표시되더라도 실제 청구액이 0이라는 뜻은 아니다.
@@ -149,10 +151,31 @@ uv run python -m src.platform.check_connections
 
 2026-11-08 리드 PC 확인: Langfuse 키 인증 성공, 위 대표 트레이스 조회 HTTP 200, `retrieve`·`build_context`·`generate`·`validate` 존재 및 앞 두 스팬의 출력 기록 확인. 해당 트레이스의 평가 점수는 0개로, `record_score`의 실제 점수 연결 증빙은 아직 없다. 공용 Qdrant는 이 PC의 `QDRANT_URL` 미설정으로 확인하지 못했다.
 
-**search 담당자에게 필요한 변경**
+### Mac Studio 서버 확인과 MacBook 점검 (2026-11-09)
 
-- `src/search/store.py:get_client()`의 원격 `QdrantClient` 생성 시 환경 변수의 API 키를 전달해야 한다. 설정은 `src/config.py`, 키 이름은 `.env.example`에 함께 반영한다. 키 값은 코드·문서·로그에 넣지 않는다.
-- 키가 없는 로컬 모드와 기존 프록시 연결도 유지하고, 변경한 클라이언트로 공유 컬렉션 조회를 확인한다. 현재 platform 작업에서는 영역 소유 규칙에 따라 search 코드를 수정하지 않았다.
+공용 서비스는 리드의 Mac Studio에서 Docker Compose와 Cloudflare Tunnel로 운영한다.
+
+| 서비스 | 주소 | 인증 |
+|---|---|---|
+| Langfuse | https://kant-langfuse.zerocode-studio.com | 화면은 허용된 Google 계정, SDK는 프로젝트 키 |
+| Qdrant | https://kant-qdrant.zerocode-studio.com | API 키 |
+| FastAPI | https://kant-api.zerocode-studio.com/docs | Cloudflare Access의 팀 Google 로그인 |
+
+서버 검증: 컨테이너 실행, 로컬 API `/health` 200, 공용 API 비로그인 요청 302(로그인 필요), 공용 Langfuse health 200. 공용 Qdrant는 키 없이 401, 키를 전달하면 컬렉션 조회 200·572개 청크를 확인했다. 서버의 기존 인증 프록시를 적용한 `uv run python -m src.platform.check_connections`는 두 서비스 모두 `ok`였다. 대표 트레이스의 4개 스팬과 출력도 다시 확인했다. 평가 점수는 아직 0개다. 색인을 재생성하지 않았다.
+
+MacBook에서는 다음 순서로 확인한다.
+
+1. 위 API 주소에 팀 Google 계정으로 로그인하고 `/health`와 docs 화면을 확인한다.
+2. Langfuse에 Google 로그인해 `shipping-rag` 프로젝트와 위 대표 트레이스를 연다.
+3. 저장소 환경은 `uv sync --locked`로 설치한다. `.env`에 위 Langfuse·Qdrant 주소와 별도로 전달받은 `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `QDRANT_API_KEY`를 설정한다. `QDRANT_URL`은 `https://kant-qdrant.zerocode-studio.com:443`처럼 포트까지 적는다(포트가 없으면 Qdrant 클라이언트가 6333에 붙어 timeout). 서버 비밀 파일 전체를 복사하지 않는다.
+4. `uv run python -m src.platform.check_connections`로 두 서비스의 `ok`를 확인한다.
+5. 생성 API 키도 설정한 뒤 로컬 Naive 1문항을 실행하고 request_id로 4개 스팬을 확인한다. 이름·OS·커밋·시각·결과를 기록한다.
+
+2026-11-09 MacBook 확인(리드, macOS 26.5.1, Python 3.12.14, 커밋 `b8301e0`): 키 없이 Qdrant 401, 키 포함 572개 청크, `check_connections` 두 서비스 `ok`·종료 코드 0. 로컬 Naive 1문항은 `answered`(SB05 20쪽·SB10 17쪽 인용). 응답 직후 서버를 강제 종료한 1차 요청은 Unnamed trace로 `retrieve`·`build_context`만 남았다. 15초 뒤 Ctrl+C로 종료한 2차 요청(`request_id`: `997860c5f0fc477aaa310e246354ce71`, [트레이스](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/c009bdb9fd7ec4353dfbec924b6198c5))은 `query` 아래 4개 스팬과 `generate` 안의 모델 호출이 모두 남았다.
+
+서버 API·터널·Docker는 사용자 로그인 후 시작하도록 등록되어 있다. 절전은 꺼져 있다. 실제 재부팅·정전 복구는 검증하지 않았고 정전 후 자동 재시작은 꺼져 있다. MacBook 접속 확인과 judge의 실제 평가 점수 증빙 전에는 #40을 닫지 않는다.
+
+`src/search/store.py:get_client()`는 원격 연결 시 `config.QDRANT_API_KEY`를 전달한다(search 담당 합의). 키가 없으면 전달하지 않으므로 로컬 모드와 서버 Mac의 프록시 연결은 그대로다. 키 값은 코드·문서·로그에 넣지 않는다.
 
 **팀원에게 확인받을 항목**
 

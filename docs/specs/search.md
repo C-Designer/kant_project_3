@@ -30,24 +30,24 @@
   - 미정 (검증 전)
     - 제목·부서를 붙일지(`include_doc_context`): 같은 문서의 쪽들이 서로 비슷해져 상위 `k`가 한 문서로 채워지면 Recall@k가 떨어질 수 있다. 켬/끔을 Hit@k·Recall@k로 비교해 정한다.
     - 줄바꿈 제거가 맞는지: 같은 방식으로 Hit@k·Recall@k로 확인한다.
-    - 청크 길이가 임베딩 모델의 입력 한도(E5 계열은 512토큰으로 알려져 있음) 안인지: 모델을 정한 뒤(#14) 그 토크나이저로 토큰 수를 센다. 넘으면 쪽을 나눈다(`chunk_id`의 `c<n>`이 늘어난다).
+    - ~~청크 길이~~ 확정: 한 청크 최대 `config.CHUNK_SIZE`=900자, 겹침 `config.CHUNK_OVERLAP`=0. 쪽이 900자를 넘으면 문장 끝에서 균등 분할한다(`chunk_id`의 `c<n>`이 늘어난다). Basic은 글자÷토큰이 평균 1.93이라 E5의 512토큰 안이다. 300~1300자·겹침 50~200 비교에서 이긴 값이 없었다.
 - 임베딩: 로컬 E5 계열, 모델명·차원 미정. 질의 임베딩도 같은 모델.
 - Qdrant 컬렉션: 이름, 거리 함수, sparse 벡터 포함 여부 미정.
-- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버, 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
+- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버(`QDRANT_API_KEY`가 있으면 함께 전달), 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
 
 검색
 
 | 방식 | 처리 | 미정 |
 |---|---|---|
 | `naive` | dense 상위 k | - |
-| `hybrid` | dense + 키워드(BM25 계열 / Qdrant sparse) 결합 | 키워드 방식, 결합(RRF 등)과 가중치. 청킹이 줄바꿈을 지워 단어가 붙어 있으므로 키워드 비교는 글자 단위(n-gram)여야 한다 |
-| `hybrid_rerank` | `hybrid` 후보 N개를 로컬 리랭커로 재정렬 후 상위 k | 리랭커 모델, N |
+| `hybrid` | dense 상위 `POOL`=20개 + BM25 상위 20개를 RRF(`HYBRID_FUSION`="rrf", 상수 60, 무게 1:1)로 합침. BM25는 2-gram 토큰, k1 1.5·b 0.75 | 청킹이 줄바꿈을 지워 단어가 붙어 있으므로 키워드 비교는 글자 단위(n-gram). 상수·POOL은 `retrieve.py`에 있다 |
+| `hybrid_rerank` | `hybrid` 후보 `config.RERANK_CANDIDATES`=20개를 `config.RERANKER_MODEL`(`BAAI/bge-reranker-v2-m3`)로 재정렬 후 상위 k | - |
 
 - 세 방식은 같은 컬렉션·같은 임베딩. `k`는 호출자가 넘기고 최종 비교에서는 동일.
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
 - 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다. 출력에 문맥 축소 전 검색 청크의 본문·점수·메타데이터를 남기고, 메타데이터에 방식·k·chunk_id 목록·소요 시간을 남긴다.
 
-뼈대(11/5) 상태: `naive`만 동작. `hybrid`·`hybrid_rerank`는 `NotImplementedError`(#15·#16), 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준.
+상태: 세 방식 모두 동작(#68·#71). 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준. Basic·개발용 28문항 비교에서 임베딩(E5 small), 리랭커(bge-reranker-v2-m3), 후보 수(20), hybrid 설정 모두 대안이 이기지 못해 유지했다.
 
 코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `store.py`, `retrieve.py`)
 

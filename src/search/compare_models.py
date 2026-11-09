@@ -51,8 +51,8 @@ def _expected_books(answer: dict) -> set[str]:
 def run(args) -> str:
     data = Path(args.data)
     questions, answers = _load_eval(data, args.questions_file, args.answers_file)
-    rerank.RERANK_CANDIDATES = args.rerank_candidates
-    chunking.MAX_CHUNK_CHARS = args.max_chars
+    config.RERANK_CANDIDATES = args.rerank_candidates
+    config.CHUNK_SIZE = args.max_chars
     original_extract = chunking.extract_pages
     chunking.extract_pages = lambda p, **kw: original_extract(
         p, include_doc_context=(args.doc_context == "on")
@@ -102,7 +102,7 @@ def run(args) -> str:
         f"- 질문: `{args.questions_file}` {len(scored)}개 평가, 해당 없음 {skipped}개 제외\n"
         f"- 청킹: 제목·부서 첫 줄 {args.doc_context}, 한 청크 최대 {args.max_chars}자\n"
         f"- 검색: k={args.k}, hybrid 후보 각 {retrieve.POOL}개(RRF K={retrieve.RRF_K}), "
-        f"리랭커 `{rerank.RERANKER_MODEL}` 후보 {args.rerank_candidates}개\n"
+        f"리랭커 `{config.RERANKER_MODEL}` 후보 {args.rerank_candidates}개\n"
         "- 채점: 문서(book_id) 단위. 정답 근거는 채점에만 사용\n"
         "- 속도는 이 PC의 CPU 기준이며 첫 호출(모델 로딩)은 뺐다\n"
     )
@@ -122,8 +122,8 @@ def main() -> None:
     ap.add_argument("--questions-file", default="development_questions.json")
     ap.add_argument("--answers-file", default="development.json")
     ap.add_argument("--doc-context", choices=["on", "off"], default="on", help="청크 첫 줄에 제목·부서")
-    ap.add_argument("--max-chars", type=int, default=chunking.MAX_CHUNK_CHARS, help="한 청크 최대 글자 수")
-    ap.add_argument("--rerank-candidates", type=int, default=rerank.RERANK_CANDIDATES)
+    ap.add_argument("--max-chars", type=int, default=config.CHUNK_SIZE, help="한 청크 최대 글자 수")
+    ap.add_argument("--rerank-candidates", type=int, default=config.RERANK_CANDIDATES)
     ap.add_argument("--out", help="결과를 쓸 md 파일. 없으면 화면에만 출력")
     args = ap.parse_args()
 
