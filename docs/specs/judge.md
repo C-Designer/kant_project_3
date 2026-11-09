@@ -16,7 +16,7 @@
    (a) 규칙 사전 판정 → (b) RAGAS Faithfulness → (c) Judge 4항목 → (d) 출력 검사·재시도 → EvalRecord → record_score
    ```
 2. **(a) 규칙 사전 판정** (`rules.py`): `status == "error"`면 AI를 부르지 않고 바로 결론낸다. `decision = 0`, `facts / conditions / evidence`와 Faithfulness는 `None` + `unscorable`, `eval_tokens = None`. 해당 문항의 `GroundTruth`가 없으면 모든 항목 `unscorable("정답지 없음")`.
-3. **(b) RAGAS Faithfulness** (`ragas_eval.py`): `user_input` = 질문, `response` = 답변, `retrieved_contexts` = `final_context`의 텍스트. 참고 정답을 `retrieved_contexts`에 덧붙이지 않는다(함수가 `GroundTruth`를 받지 않으며 테스트로 확인).
+3. **(b) RAGAS Faithfulness** (`ragas_eval.py`): `user_input` = 질문, `response` = 답변, `retrieved_contexts` = `final_context`의 텍스트. 참고 정답을 `retrieved_contexts`에 덧붙이지 않는다(함수가 `GroundTruth`를 받지 않으며 테스트로 확인). **같은 답안도 값이 흔들려서**(gpt-6-luna는 temperature를 못 고정) `config.FAITHFULNESS_REPEATS`(=3)번 채점해 값이 나온 회차만 평균한다. 일부 회차만 실패하면 성공한 값만 평균하고, 값이 하나도 없으면 해당 없음 이유가 있는 회차를 먼저 쓰고 없으면 평가 불가 이유를 쓴다. 세 방식에 같은 값을 쓴다. 반복 호출의 토큰은 `eval_tokens`에 합친다. 회차별 결과 `FaithfulnessRun(score, reason)`은 `faithfulness_runs`에 남고, 실패한 회차의 `reason`은 `"해당 없음: ..."` 또는 `"평가 불가: ..."`다(일부만 실패해도 사유를 확인할 수 있다).
    - 결과 해석: 숫자 → 점수 / RAGAS가 NaN(추출된 주장 0개) → `None` + `not_applicable` / 예외 → `None` + `unscorable` + 사유.
    - **보류·되묻기 문장 제외 규칙**: RAGAS가 뽑은 주장 중 ① 자료가 부족·없음을 말하는 문장 ② 보류한다는 문장 ③ 사용자에게 정보를 달라는 문장은 문서 내용이 아니므로 채점에서 뺀다(`META_PATTERNS`). 다 빼고 남는 주장이 없으면 `None` + `not_applicable`(뺀 문장을 이유에 그대로 적음), 남으면 그 주장만 채점한다. 자료를 언급해도 부족·없음이 아니면 빼지 않는다("이 안내는 일반 건화물 대상입니다"는 채점). 이유: 올바른 보류 답안이 "자료로 확인할 수 없다"는 문장 때문에 0점을 받는 것을 막기 위해.
    - `final_context`가 비어도 해당 없음으로 바로 빼지 않는다. `"(검색 자료 없음)"` 한 줄을 넘겨, 답변에 주장이 있으면 뒷받침이 없으므로 0, 주장이 없을 때만 해당 없음.
@@ -64,6 +64,10 @@ class TokenUsage(BaseModel):
     input: int | None
     output: int | None
 
+class FaithfulnessRun(BaseModel):   # Faithfulness 한 회차
+    score: float | None
+    reason: str | None = None        # score가 None일 때만. "해당 없음: ..." 또는 "평가 불가: ..."
+
 class EvalRecord(BaseModel):     # judge가 만들고 metrics가 합친다
     question_id: str
     retrieval_mode: RetrievalMode
@@ -72,6 +76,7 @@ class EvalRecord(BaseModel):     # judge가 만들고 metrics가 합친다
     eval_tokens: TokenUsage | None
     not_applicable: list[str]            # "항목: 이유" (해당 없음)
     unscorable: list[str]                # "항목: 이유" (평가 불가)
+    faithfulness_runs: list[FaithfulnessRun] | None = None  # 회차별 Faithfulness. 흩어짐 확인과 디버깅용 기록
 
 def score(runs: list[RunRecord], truths: list[GroundTruth]) -> list[EvalRecord]
 ```

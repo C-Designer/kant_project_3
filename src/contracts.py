@@ -106,11 +106,17 @@ class TokenUsage(BaseModel):
     output: int | None
 
 
+class FaithfulnessRun(BaseModel):  # Faithfulness 한 회차의 결과
+    score: float | None
+    reason: str | None = None  # score가 None일 때만. "해당 없음: ..." 또는 "평가 불가: ..."
+
+
 class EvalRecord(BaseModel):  # judge가 만들고 metrics가 합친다
     question_id: str
     retrieval_mode: RetrievalMode
-    faithfulness: float | None
+    faithfulness: float | None  # 여러 번 채점했으면 값이 나온 회차의 평균
     judge: dict[str, JudgeItem] | None  # facts, conditions, evidence, decision
     eval_tokens: TokenUsage | None
     not_applicable: list[str]  # 해당 없음 이유
     unscorable: list[str]  # 평가 불가 이유
+    faithfulness_runs: list[FaithfulnessRun] | None = None  # 회차별 점수와 실패 사유. 채점하지 않았으면 None

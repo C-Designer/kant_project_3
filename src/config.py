@@ -41,6 +41,7 @@ REGENERATE_MAX = 1  # TODO(미정, #20) 출력 검증 실패 시 재생성 횟�
 
 # 평가
 EVAL_MODEL: str | None = "gpt-6-luna"  # 확정 (#58). None이면 평가 호출은 거부된다
+FAITHFULNESS_REPEATS = 3  # Faithfulness를 몇 번 채점해 평균낼지. gpt-6-luna는 temperature를 못 고정해 같은 답안도 값이 흔들린다. 세 방식에 같은 값
 
 # 트레이스
 TRACE_USER = os.environ.get("TRACE_USER") or None  # Langfuse user_id로 쓰는 각자의 이름·별칭. API 요청은 Cloudflare Access 로그인 계정을 쓴다

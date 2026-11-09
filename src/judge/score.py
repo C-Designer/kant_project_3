@@ -2,7 +2,7 @@
 
 한 답안의 채점 순서
 1. rules.precheck  : 서비스 오류면 AI를 부르지 않고 규칙대로 결론
-2. Faithfulness    : RAGAS (ragas_eval.py)
+2. Faithfulness    : RAGAS (ragas_eval.py). config.FAITHFULNESS_REPEATS번 채점해 평균
 3. Judge 4항목     : 채점관 AI (judge.py)
 4. 점수를 Langfuse 트레이스에 붙이기 (record_score)
 
@@ -19,11 +19,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable
 
+from src import config
 from src.judge import ragas_eval
-from src.contracts import EvalRecord, GroundTruth, RunRecord
+from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RunRecord, TokenUsage
 from src.judge.platform_adapter import LLMCall, llm_call, record_score
 from src.judge.judge import judge_one
-from src.judge.rules import JUDGE_ITEMS, precheck, sum_usage, tag
+from src.judge.rules import JUDGE_ITEMS, mean_ignoring_none, precheck, sum_usage, tag
 
 
 def load_ground_truths(paths: list[Path]) -> dict[str, GroundTruth]:
@@ -42,6 +43,34 @@ def load_ground_truths(paths: list[Path]) -> dict[str, GroundTruth]:
     return truths
 
 
+def _run_reason(na: str | None, us: str | None) -> str | None:
+    """한 회차의 빈칸 사유. 값이 나온 회차는 None."""
+    if na:
+        return f"해당 없음: {na}"
+    if us:
+        return f"평가 불가: {us}"
+    return None
+
+
+def _faithfulness_repeated(run: RunRecord, llm: LLMCall):
+    """Faithfulness를 FAITHFULNESS_REPEATS번 채점해 값이 나온 회차만 평균한다.
+
+    반환: ragas_eval.faithfulness와 같은 (점수, 토큰, 해당 없음 이유, 평가 불가 이유) + 회차별 결과(점수, 실패 사유).
+    값이 하나도 없으면 해당 없음 이유가 있는 회차를 먼저 쓰고, 없으면 평가 불가 이유를 쓴다.
+    """
+    results = [ragas_eval.faithfulness(run, llm) for _ in range(config.FAITHFULNESS_REPEATS)]
+    runs = [FaithfulnessRun(score=score, reason=_run_reason(na, us)) for score, _, na, us in results]
+    # 어떤 회차만 사용량을 모르면(준비 단계 실패) 모른다고 둔다. 빼고 더하면 실제보다 적게 보인다.
+    usages = [r[1] for r in results]
+    tokens = sum_usage(*[u or TokenUsage(input=None, output=None) for u in usages]) if any(usages) else None
+    mean = mean_ignoring_none([x.score for x in runs])
+    if mean is not None:
+        return mean, tokens, None, None, runs
+    na = next((r[2] for r in results if r[2]), None)
+    us = None if na else next((r[3] for r in results if r[3]), None)
+    return None, tokens, na, us, runs
+
+
 def score_one(run: RunRecord, truth: GroundTruth, llm: LLMCall, *, use_ragas: bool = True) -> EvalRecord:
     early = precheck(run)
     if early is not None:
@@ -51,9 +80,9 @@ def score_one(run: RunRecord, truth: GroundTruth, llm: LLMCall, *, use_ragas: bo
     unscorable: list[str] = []
 
     # Faithfulness
-    faith, faith_tokens = None, None
+    faith, faith_tokens, faith_runs = None, None, None
     if use_ragas:
-        faith, faith_tokens, na, us = ragas_eval.faithfulness(run, llm)
+        faith, faith_tokens, na, us, faith_runs = _faithfulness_repeated(run, llm)
         if na:
             not_applicable.append(tag("faithfulness", na))
         if us:
@@ -79,6 +108,7 @@ def score_one(run: RunRecord, truth: GroundTruth, llm: LLMCall, *, use_ragas: bo
         eval_tokens=sum_usage(faith_tokens, judge_tokens),
         not_applicable=not_applicable,
         unscorable=unscorable,
+        faithfulness_runs=faith_runs,
     )
 
 
