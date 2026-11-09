@@ -122,4 +122,4 @@ class GroundTruth(BaseModel):    # 로더가 judge에 넘기는 정답 측
 
 ## 관련 ADR
 
-- 0001, 0002, 0003
+- 0001, 0002, 0003, 0005

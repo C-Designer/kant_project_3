@@ -18,7 +18,7 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 | [docs/branch-strategy.md](docs/branch-strategy.md) | 브랜치·PR 규칙 |
 | [docs/documentation.md](docs/documentation.md) | ADR과 spec 규약 |
 | [AGENTS.md](AGENTS.md) | 사람·에이전트 공통 작업 규칙 |
-| [docs/adr/](docs/adr/) | 설계 결정 (0002 관심사 5분할·뼈대, 0003 스택) |
+| [docs/adr/](docs/adr/) | 설계 결정 (0002 관심사 5분할·뼈대, 0003 스택, 0004 작성자 머지·CI, 0005 Python 3.12·uv·LangChain 0.3) |
 | [docs/specs/](docs/specs/) | 영역별 현재 동작과 인터페이스 |
 
 ## 코드 구조
@@ -39,7 +39,7 @@ KANT 3차 프로젝트 (proj_3rd): PDF 기반 RAG 질의응답 서비스와 세 
 
 뼈대(`naive` 1문항 end-to-end + contracts + config)는 11/5에 머지됐다(#59). 그 위에서 각자 자기 영역을 깊이 판다. 에이전트 작업 규칙은 [AGENTS.md](AGENTS.md).
 
-스택: Python, pypdf, LangChain, 로컬 E5, Qdrant, FastAPI, Langfuse, RAGAS. 결정은 [ADR 0003](docs/adr/0003-stack.md).
+스택: Python, pypdf, LangChain, 로컬 E5, Qdrant, FastAPI, Langfuse, RAGAS. 결정은 [ADR 0003](docs/adr/0003-stack.md), 실행 환경 고정은 [ADR 0005](docs/adr/0005-python312-uv-langchain03.md).
 
 ## 설치·실행
 

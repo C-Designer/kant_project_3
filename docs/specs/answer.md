@@ -65,4 +65,4 @@ def generate(question: str, context: list[ContextChunk], *, defense: bool = Fals
 
 ## 관련 ADR
 
-- 0001, 0002, 0003
+- 0001, 0002, 0003, 0005

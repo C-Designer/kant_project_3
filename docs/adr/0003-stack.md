@@ -1,6 +1,6 @@
 # 0003. 강의 권장 구성(pypdf · LangChain · 로컬 E5 · Qdrant · FastAPI · Langfuse)을 스택으로 고정한다
 
-- 상태: 채택
+- 상태: 채택 (Python 버전·패키지 관리는 0005에서 고정)
 - 날짜: 2026-11-05
 
 ## 배경
