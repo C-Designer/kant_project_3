@@ -66,7 +66,7 @@ def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]:
             chunks = _rrf([_dense(query, POOL), _keyword(query, POOL)], k)
         else:  # hybrid_rerank: hybrid로 후보를 넉넉히 뽑고 리랭커가 다시 정렬해 k개만 남긴다
             candidates = _rrf(
-                [_dense(query, POOL), _keyword(query, POOL)], rerank.RERANK_CANDIDATES
+                [_dense(query, POOL), _keyword(query, POOL)], config.RERANK_CANDIDATES
             )
             chunks = rerank.rerank(query, candidates, k)
         sp.update(

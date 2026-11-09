@@ -18,17 +18,17 @@ INGEST_REPORT_PATH = DATA_DIR / "ingest-report.json"
 
 # 검색 (세 방식 공통)
 K = 5  # 확정 (2026-11-05 킥오프)
-CHUNK_SIZE = 800  # TODO(미정, #13) 글자 수
-CHUNK_OVERLAP = 100  # TODO(미정, #13)
+CHUNK_SIZE = 900  # 확정(Basic, 개발용·추가 질문 비교). 쪽이 이보다 길면 문장 끝에서 균등 분할
+CHUNK_OVERLAP = 0  # 확정. 겹침은 지원하지 않는다(0이 아니면 chunk_pages가 거부)
 EMBEDDING_MODEL = "intfloat/multilingual-e5-small"  # TODO(미정, #14) 로컬 E5 계열
 QDRANT_URL = os.environ.get("QDRANT_URL") or None  # 팀 VM의 Qdrant 서버 (확정, #58). 없으면 아래 로컬 폴더로 대체
 QDRANT_PATH: Path | None = DATA_DIR / "qdrant"  # QDRANT_URL이 없을 때만 쓰는 로컬 저장소. None이면 메모리 (테스트용)
 COLLECTION = "shipping_chunks"  # TODO(미정, #14)
 
 # 하이브리드·리랭커 (hybrid, hybrid_rerank 구현 시 채운다)
-HYBRID_FUSION: str | None = None  # TODO(미정, #15)
-RERANKER_MODEL: str | None = None  # TODO(미정, #16)
-RERANK_CANDIDATES: int | None = None  # TODO(미정, #16)
+HYBRID_FUSION = "rrf"  # 확정. 순위 합치기(RRF). 상수(K=60)와 후보 수(POOL=20)는 retrieve.py
+RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"  # 확정. 한국어를 포함한 다국어 cross-encoder
+RERANK_CANDIDATES = 20  # 확정. hybrid가 리랭커에 넘기는 후보 수
 
 # 생성
 GENERATION_MODEL = "gpt-6-luna"
