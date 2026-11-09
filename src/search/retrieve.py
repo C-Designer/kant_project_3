@@ -20,10 +20,10 @@ def _meta(payload: dict) -> ChunkMeta:
 def _dense(query: str, n: int) -> list[RetrievedChunk]:
     """E5 의미 검색. 점수(코사인) 높은 순으로 n개."""
     client = store.get_client()
-    if not client.collection_exists(config.COLLECTION):
+    if not store.call(client.collection_exists, config.COLLECTION):
         raise IndexNotFound(f"컬렉션 {config.COLLECTION}이 없다. 먼저 색인한다")
-    hits = client.query_points(
-        config.COLLECTION, query=embed.embed_query(query), limit=n, with_payload=True
+    hits = store.call(
+        client.query_points, config.COLLECTION, query=embed.embed_query(query), limit=n, with_payload=True
     ).points
     return [
         RetrievedChunk(text=h.payload["text"], score=h.score, metadata=_meta(h.payload))

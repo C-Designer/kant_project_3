@@ -45,6 +45,7 @@
 
 - 세 방식은 같은 컬렉션·같은 임베딩. `k`는 호출자가 넘기고 최종 비교에서는 동일.
 - `hybrid_rerank` 소요 시간(질문당, 리랭크 단계만, Basic 개발용 28문항, 후보 20개): CPU 약 6~8초, GPU(RTX 5060 Laptop) 약 1.0초. 후보 수에 거의 비례한다(후보 50개면 CPU 11.8초, GPU 약 2.5초). 느려서 작은 모델로 바꾸는 안은 5종 비교에서 이긴 모델이 없어 두지 않았다.
+- 공용 Qdrant 호출(`collection_exists`, `query_points`, BM25 구축의 `scroll`)은 `store.call`로 감싼다. 한 번 호출의 제한 시간은 `config.QDRANT_TIMEOUT_SEC`=40초. 시간 초과·연결 실패와 502·503·504에서만 `config.QDRANT_MAX_RETRIES`=2번 다시 시도하고(대기 0.5초, 1초), 401·404는 재시도하지 않는다. 정하지 않으면 HTTP 기본값(약 5초)이라 서버가 한 번 느리면 요청이 `internal_error`로 끝난다(#106).
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
 - 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다. 출력에 문맥 축소 전 검색 청크의 본문·점수·메타데이터를 남기고, 메타데이터에 방식·k·chunk_id 목록·소요 시간을 남긴다.
 
