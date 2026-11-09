@@ -8,7 +8,7 @@
 
 | 이름 | 역할 |
 |---|---|
-| 김창동 | 리드 + `platform`. 뼈대와 platform 실무를 직접 맡는다. 모든 PR 리뷰·머지, Issue·마일스톤 추적, 인터페이스 변경 조정, 일정, README·발표자료 통합, 팀 Notion 제출. 모임에 참석한다 |
+| 김창동 | 리드 + `platform`. 뼈대와 platform 실무를 직접 맡는다. 리뷰 요청 대응, Issue·마일스톤 추적, 인터페이스 변경 조정, 일정, README·발표자료 통합, 팀 Notion 제출. 모임에 참석한다 |
 | 윤승환 | `search` |
 | 천희재 | `answer` |
 | 오주헌 | `metrics` |
@@ -23,7 +23,7 @@
 3. **계약은 코드.** 영역 간 인터페이스는 `src/contracts.py`. 바꾸려면 `[interface]` PR과 의존 영역 담당자 확인.
 4. **공통 설정 동결일 11/9(월) 아침.** `config.py`를 동결하고 그 뒤로는 비교 실행만. 동결 후 변경은 전체 재실행.
 5. **모든 팀원이 실행과 오류 분석에 참여한다.** 발제 평가 항목. 11/9~10 전체 실행과 대표 사례 대조를 영역과 무관하게 나눈다.
-6. **리드는 `platform` 담당이자 매니저다.** 뼈대와 platform 실무를 하면서 모든 PR을 리뷰·머지하고, 마일스톤별 Issue를 보고 막힌 Issue를 푼다. platform이 밀리면 리뷰가 우선이다.
+6. **리드는 `platform` 담당이자 매니저다.** 뼈대와 platform 실무를 하면서 마일스톤별 Issue를 보고 막힌 Issue를 푼다. 리뷰 요청(Draft PR)이 오면 platform보다 먼저 본다.
 7. **짝은 협업 상대다.** `search`↔`answer`(조각), `metrics`↔`judge`(실행 결과·채점), `platform`↔`metrics`(`run_query()`). 인터페이스를 주고받는 사이라 서로의 변경을 먼저 알아야 한다. 조율 방식은 짝이 알아서 정한다. 리뷰 의무는 아니다.
 
 ## 분담
@@ -53,7 +53,7 @@
 
 | 날 | 마일스톤 | 이 날 끝에 돼 있어야 하는 것 |
 |---|---|---|
-| 11/5 (목) | **M0·M1** | M0: 분야 해운 · Basic, 담당 확정(완료). 각자 데이터 다운로드. 각자 로컬 환경(uv sync). 리드가 팀 VM에 Langfuse·Qdrant 셀프호스트 시작. 발표 목차 합의. M1: 뼈대 머지 |
+| 11/5 (목) | **M0·M1** | M0: 분야 해운 · Basic, 담당 확정(완료). 각자 데이터 다운로드. 각자 로컬 환경(uv sync). 리드가 Langfuse·Qdrant 셀프호스트 시작(지금은 리드 Mac Studio). 발표 목차 합의. M1: 뼈대 머지 |
 | 11/6 (금) | **M2** | 전원 로컬에서 `naive` 1문항 실행 확인. **영역별 목업을 한 경로로 통합**(`retrieve` → `build_context` → `generate` → 출력 검증 → `run_query` → 러너 → judge → `record_score`). 없는 부분은 담당자가 `contracts.py` 타입으로 목업. 목업 결과는 비교표·발표 수치에 쓰지 않는다 |
 | 11/9 (월) | **M3** | 아침 동결할 설정 합의 → `config.py` 동결 → metrics 전체 실행 → judge 자동 채점 → platform 보안 4개. 실행·오류 분석은 5명이 질문 묶음으로 분담 |
 | 11/10 (화) | **M4** | metrics 비교표 완성. judge 대표 사례 원문 대조(전원 참여, 자기 영역 아닌 결과). 최종 구성 선택과 이유. 영역별 슬라이드 |
@@ -72,15 +72,15 @@
 
 ## 코드 리뷰와 머지
 
-**리뷰와 머지는 리드가 전부 한다.** GitHub 룰셋은 PR 필수·Squash만·직접 push 금지까지만 강제하고 승인은 요구하지 않으므로, 머지 버튼을 리드만 누르는 것은 팀 규칙이다(설정은 [branch-strategy.md](branch-strategy.md)).
+**머지는 PR을 올린 사람이 한다.** GitHub 룰셋은 PR 필수·Squash만·직접 push 금지·CI(`pytest`) 통과를 강제하고 승인은 요구하지 않는다. CI가 통과하면 작성자가 직접 Squash and merge한다. 리뷰는 선택이고, 받고 싶으면 Draft로 올려 받은 뒤 머지한다(설정은 [branch-strategy.md](branch-strategy.md)).
 
 | 항목 | 규칙 |
 |---|---|
-| 리뷰어 | 리드 1명. 짝은 리뷰 의무가 없다 |
-| 리드가 보는 것 | ① 돌아가는가(실행 명령·결과 캡처가 PR에 있는가) ② spec·`contracts.py`와 맞는가, 바꿨으면 spec도 고쳤는가 ③ 키·개인정보·`data/`가 안 들어갔는가 ④ 담당자가 에이전트가 쓴 부분을 설명할 수 있는가 |
-| 안 보는 것 | 스타일, 네이밍, 리팩터 제안. 메모만 남기고 막지 않는다 |
+| 리뷰어 | 필수 아님. CODEOWNERS가 리드를 자동 지정한다. 리뷰를 원하면 Draft로 올린다. 짝은 리뷰 의무가 없다 |
+| 머지 전 작성자가 확인 | ① 돌아가는가(실행 명령·결과 캡처가 PR에 있는가) ② spec·`contracts.py`와 맞는가, 바꿨으면 spec도 고쳤는가 ③ 키·개인정보·`data/`가 안 들어갔는가 ④ 담당자가 에이전트가 쓴 부분을 설명할 수 있는가 |
+| 리뷰에서 안 보는 것 | 스타일, 네이밍, 리팩터 제안. 메모만 남기고 막지 않는다 |
 | PR 크기 | 반나절 단위. 하루 넘게 쌓이면 쪼갠다. 11/11 이후는 버그 수정 PR만 |
-| 인터페이스 변경 | `contracts.py`·`config.py` 변경은 제목에 `[interface]`, 의존 영역 담당자(짝)에게 먼저 알린다. 리드는 짝이 알고 있는지 확인하고 머지 |
+| 인터페이스 변경 | `contracts.py`·`config.py` 변경은 제목에 `[interface]`, 의존 영역 담당자(짝)에게 먼저 알린다. 작성자는 짝이 알고 있는지 확인한 뒤 머지 |
 | 짝 조율 | `search`↔`answer`, `metrics`↔`judge`, `platform`↔`metrics`. 서로의 변경을 알고 있으면 된다. 방식은 짝이 정한다 |
 
 ## 상호 공유
@@ -117,7 +117,7 @@
 
 1. ~~분야·난이도~~ 해운 · Basic 확정
 2. 담당 확인 (Slack 투표 결과: search 윤승환 / answer 천희재 / metrics 오주헌 / judge 김경민 / platform 김창동)
-3. spec 미정 항목: ~~k 기본값~~ 5 · ~~Langfuse~~ 셀프호스트(팀 VM) · ~~평가 LLM~~ gpt-6-luna · ~~Qdrant~~ 팀 VM 서버 · ~~Python 버전·패키지 관리~~ 3.12 + uv(#53) 모두 확정. 남은 것: VM 제공자, HTTP 상태 정책
+3. spec 미정 항목: ~~k 기본값~~ 5 · ~~Langfuse~~ 셀프호스트 · ~~평가 LLM~~ gpt-6-luna · ~~Qdrant~~ 셀프호스트 서버 · ~~Python 버전·패키지 관리~~ 3.12 + uv(#53) 확정. 이후 서버는 리드 Mac Studio(Docker Compose + Cloudflare Tunnel, #89), HTTP 상태 정책은 200 유지(#80)로 확정
 4. ~~데이터 다운로드와 PDF 수 검수 당번~~ 당번 없음. 각자 받는다
 5. 협업 짝 확인 (search↔answer, metrics↔judge, platform↔metrics)
 6. 발표 목차 7장 합의, 발표 시간 공지 확인
@@ -130,5 +130,5 @@
 | 프롬프트가 되묻기·보류를 못 가림 | 11/9 동결 전까지 추가 확인·보류 문항 각 1개 이상 통과를 조건으로 |
 | 동결 후 설정 변경 유혹 | 바꾸면 전체 재실행. 리드가 막는다 |
 | 평가 LLM 비용·한도 | 질문 수를 비용 안에서 정한다. 채점 토큰은 별도 집계 |
-| 팀 VM(Langfuse·Qdrant 셀프호스트)이 늦어지거나 불안정 | 로컬 `docker run qdrant/qdrant`로 개발을 계속한다. VM은 11/6 목업 통합까지, 안 되면 Langfuse만 Cloud 무료 티어로 대체 |
+| 공용 서비스(리드 Mac Studio의 Langfuse·Qdrant)가 불안정 | `QDRANT_URL`을 비운 로컬 모드나 로컬 `docker run qdrant/qdrant`로 개발을 계속한다. 공용 컬렉션에는 색인하지 않는다 |
 | 재실행 실패 | 11/11에 구현 안 한 사람이 README대로 설치 |
