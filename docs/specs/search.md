@@ -11,19 +11,19 @@
 
 ## 동작
 
-뼈대(11/5)에 `naive` + 단순 청킹이 들어 있다. 담당자가 아래 미정을 채우며 깊이 판다.
+세 방식 모두 동작한다(#68·#71, 아래 "상태"). 남은 "미정"은 #14에서 정한다.
 
 색인
 - 데이터 위치 `data/shipping/documents/*.pdf` (git 제외).
 - `pypdf` 페이지 단위 추출, 첫 페이지 = 1.
-- 청킹 (`src/search/chunking.py`의 `chunk_pdf`, Basic 기준). 아래 "현재 구현"은 검증 전의 잠정 값이다.
+- 청킹 (`src/search/chunking.py`의 `extract_pages` → `chunk_pages`, Basic 기준). 청크 길이는 확정이고, 아래 "미정" 항목은 검증 전이다.
   - 현재 구현
-    - 단위: **한 쪽 = 청크 하나**, overlap 없음. Basic PDF 15개, 360쪽 → 청크 360개, 길이 최소 604 / 평균 916 / 최대 1209자.
+    - 단위: 쪽이 `config.CHUNK_SIZE`(900자) 이하면 **한 쪽 = 청크 하나**, 넘으면 문장 끝에서 균등 분할하고 나눈 조각마다 머리 줄(제목·부서, 소제목)을 다시 붙인다. overlap 없음. 청크는 쪽을 넘지 않는다. Basic PDF 15개, 360쪽(정리한 쪽 길이 최소 604 / 평균 916 / 최대 1209자) → 공용 컬렉션 청크 572개(2026-11-09 README 확인).
     - 쪽 구조는 360쪽 전부 같다: 머리말 `<book_id> | <담당 부서>`, 문서 제목, 소제목 1줄, 본문, 꼬리말 `N / 전체쪽수`.
     - 청크 텍스트는 `문서 제목 (담당: 부서)` / 소제목 / 본문 순서다. `<book_id>` 머리말과 꼬리말은 뺀다(출처는 `ChunkMeta`가 따로 가진다). `include_doc_context=False`로 첫 줄(제목·부서)을 뺄 수 있고 기본값은 `True`다.
     - 본문의 줄바꿈은 모두 지운다. PDF 줄 꺾임이 단어 중간에서도 생겨("대\n수") 키워드 검색이 못 찾기 때문이다. 단어 사이의 꺾임은 붙게 되므로("예약을\n신청") 키워드 검색은 글자 단위 비교를 전제한다.
     - 구조가 위와 다른 쪽은 글을 버리지 않고 줄바꿈만 지운 원문을 쓴다. Intermediate·Advanced는 구조가 달라 이 규칙을 아직 적용하지 않는다.
-    - `chunk_id`는 쪽당 청크가 하나라 항상 `-c1`이다.
+    - `chunk_id`는 `<book_id>-p<쪽>-c<n>`. 나누지 않은 쪽은 `-c1`뿐이고, 나눈 쪽은 `-c1`, `-c2`, …
   - 확인한 것
     - Basic에는 표가 없다: 360쪽 모두 표를 그리는 선·사각형이 없고, 대표로 `SB01` 16쪽을 열어 문단 글임을 확인했다.
     - 정정 공지 문서 `SB11`은 24쪽 모두 문장 부호로 끝나고 쪽마다 소제목이 달라, 쪽 경계에서 문장이 끊기지 않는다. 핵심 정정은 1~4쪽, 5~24쪽은 처리 예시와 상담 사례다.
@@ -31,9 +31,9 @@
     - 제목·부서를 붙일지(`include_doc_context`): 같은 문서의 쪽들이 서로 비슷해져 상위 `k`가 한 문서로 채워지면 Recall@k가 떨어질 수 있다. 켬/끔을 Hit@k·Recall@k로 비교해 정한다.
     - 줄바꿈 제거가 맞는지: 같은 방식으로 Hit@k·Recall@k로 확인한다.
     - ~~청크 길이~~ 확정: 한 청크 최대 `config.CHUNK_SIZE`=900자, 겹침 `config.CHUNK_OVERLAP`=0. 쪽이 900자를 넘으면 문장 끝에서 균등 분할한다(`chunk_id`의 `c<n>`이 늘어난다). Basic은 글자÷토큰이 평균 1.93이라 E5의 512토큰 안이다. 300~1300자·겹침 50~200 비교에서 이긴 값이 없었다.
-- 임베딩: 로컬 E5 계열, 모델명·차원 미정. 질의 임베딩도 같은 모델.
-- Qdrant 컬렉션: 이름, 거리 함수, sparse 벡터 포함 여부 미정.
-- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버(`QDRANT_API_KEY`가 있으면 함께 전달), 없으면 `data/qdrant` 로컬 폴더(프로세스당 클라이언트 1개). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
+- 임베딩: 지금 `config.EMBEDDING_MODEL` = `intfloat/multilingual-e5-small`(384차원, `config.py`에 `TODO(미정, #14)`). 질의 임베딩도 같은 모델. 개발용 28문항 비교에서 대안이 이기지 못했다(아래 "상태").
+- Qdrant 컬렉션: 이름 `config.COLLECTION` = `shipping_chunks`(`TODO(미정, #14)`, 데이터셋별 분리 제안 #97), dense 벡터 하나·코사인 거리. sparse 벡터는 넣지 않는다. BM25는 `keyword.py`가 컬렉션의 청크 글을 읽어 메모리에 만든다.
+- 명령 `uv run python -m src.search.index [--only FB01.pdf]`. Qdrant는 `QDRANT_URL`이 있으면 서버(`QDRANT_API_KEY`가 있으면 함께 전달), 없으면 `data/shipping/qdrant` 로컬 폴더(`config.QDRANT_PATH`, 프로세스당 클라이언트 1개). 기본 실행은 컬렉션을 지우고 다시 만들므로 공용 Qdrant 주소로는 실행하지 않는다. 공용 색인은 리드와 정한 뒤 서버에서만 다시 만든다(AGENTS.md). 결과 `data/shipping/ingest-report.json`(문서 수, 페이지 수, 청크 수, 실패 파일과 이유).
 
 검색
 
@@ -50,7 +50,7 @@
 
 상태: 세 방식 모두 동작(#68·#71). 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준. Basic·개발용 28문항 비교에서 임베딩(E5 small), 리랭커(bge-reranker-v2-m3), 후보 수(20), hybrid 설정 모두 대안이 이기지 못해 유지했다.
 
-코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `store.py`, `retrieve.py`)
+코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `store.py`, `retrieve.py`, `keyword.py`(BM25), `rerank.py`, `compare_models.py`(모델 비교 스크립트)). `config_basic.py`·`config_default.py`는 참고용 설정 사본이라 코드가 읽지 않는다(#87). 실제 설정은 `src/config.py`.
 
 ## 인터페이스
 
