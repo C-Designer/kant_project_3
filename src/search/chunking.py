@@ -103,8 +103,7 @@ def extract_pages(
 
 # E5 계열은 한 번에 512토큰까지만 읽고 넘는 뒷부분은 임베딩에 반영되지 않는다.
 # Basic 청크는 글자 수 ÷ 토큰 수가 평균 1.93이라, 글자 수 상한을 두고 넘는 쪽만 나눈다.
-# 토크나이저로 재서 정한 값이고, 모델이나 청킹이 바뀌면 다시 잰다.
-MAX_CHUNK_CHARS = 900
+# 토크나이저로 재서 정한 값(config.CHUNK_SIZE)이고, 모델이나 청킹이 바뀌면 다시 잰다.
 
 # 문장 끝: "다." 또는 "요."로 끝나는 곳. 마침표가 든 이메일 주소(a@b.example) 안에서는 끊지 않는다.
 _SENTENCE_END = re.compile(r"(?<=[다요]\.)")
@@ -160,15 +159,13 @@ def _split_page(text: str, limit: int) -> list[str]:
 def chunk_pages(
     file_name: str, pages: list[tuple[int, str]], *, size: int, overlap: int
 ) -> list[tuple[str, ChunkMeta]]:
-    """쪽마다 청크를 만든다. MAX_CHUNK_CHARS 이하면 한 쪽 = 청크 하나, 넘으면 문장 끝에서 나눈다.
-
-    size와 overlap은 index.py가 넘기는 뼈대의 인자라 받기만 하고 쓰지 않는다.
-    config의 CHUNK_SIZE·CHUNK_OVERLAP 정리는 #14에서 config.py를 고칠 때 함께 한다.
-    """
+    """쪽마다 청크를 만든다. size 이하면 한 쪽 = 청크 하나, 넘으면 문장 끝에서 나눈다. 겹침은 지원하지 않는다."""
+    if overlap:
+        raise ValueError(f"겹침은 지원하지 않는다: overlap={overlap}")
     book_id = book_id_from_file_name(file_name)
     out: list[tuple[str, ChunkMeta]] = []
     for page, text in pages:
-        for n, piece in enumerate(_split_page(text, MAX_CHUNK_CHARS), start=1):
+        for n, piece in enumerate(_split_page(text, size), start=1):
             meta = ChunkMeta(
                 book_id=book_id,
                 file_name=file_name,

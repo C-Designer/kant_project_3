@@ -39,3 +39,18 @@ def test_clean_page_without_doc_context_has_only_subtitle_and_body():
 def test_clean_page_falls_back_without_losing_text_when_structure_differs():
     raw = "다른 구조의 쪽\n본문 첫 줄\n본문 둘째 줄"
     assert _clean_page(raw, "SB01", 1, 24) == "다른 구조의 쪽본문 첫 줄본문 둘째 줄"
+
+
+def test_chunk_pages_splits_long_page_at_config_size_and_rejects_overlap():
+    import pytest
+
+    from src import config
+    from src.search.chunking import chunk_pages
+
+    sentence = "예약 변경은 확인서와 대조해야 한다."
+    page = (1, " ".join([sentence] * 120))  # 900자를 넘는 쪽
+    chunks = chunk_pages("SB01.pdf", [page], size=config.CHUNK_SIZE, overlap=config.CHUNK_OVERLAP)
+    assert len(chunks) > 1 and all(len(t) <= config.CHUNK_SIZE for t, _ in chunks)
+    assert [m.chunk_id for _, m in chunks] == [f"SB01-p1-c{i}" for i in range(1, len(chunks) + 1)]
+    with pytest.raises(ValueError):
+        chunk_pages("SB01.pdf", [page], size=config.CHUNK_SIZE, overlap=100)
