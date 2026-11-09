@@ -18,11 +18,13 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Callable, Literal, TypeVar, get_args
 
 from src import config
 from src.judge import ragas_eval
-from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RunRecord, TokenUsage
+from pydantic import BaseModel
+
+from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RetrievalMode, RunRecord, TokenUsage
 from src.judge.judge import judge_one
 from src.judge.rules import JUDGE_ITEMS, LLMCall, mean_ignoring_none, precheck, sum_usage, tag
 from src.platform import llm as _llm
@@ -185,7 +187,7 @@ def score(
     """spec 인터페이스: score(runs, truths) -> list[EvalRecord]. truths는 목록(spec)이나 id→정답 사전 모두 받는다.
 
     결과는 항상 runs와 같은 순서다.
-    - workers : 동시에 채점할 답안 수. 1이면 하나씩 처리한다(예전과 같음).
+    - workers : 동시에 채점할 답안 수. 1이면 한 번에 하나씩 처리한다.
     - on_record: 한 건의 채점·점수 기록이 끝날 때마다 호출된다(중간 저장용, runs 순서대로).
     - done    : runs 앞쪽에서부터 이미 채점된 결과 목록(이어하기). 질문·방식이 맞는 구간은 다시 부르지 않고 그대로 쓴다.
     """
@@ -221,11 +223,6 @@ def score(
         else:
             records.append(finish(run, scored, record=True))
 
-    if workers == 1:
-        for kind, run, payload in plan:
-            settle(kind, run, payload, _score_one_safely(run, payload, llm, use_ragas) if kind == "score" else None)
-        return records
-
     executor = ThreadPoolExecutor(max_workers=workers)
     try:
         futures = [executor.submit(_score_one_safely, run, payload, llm, use_ragas) if kind == "score" else None for kind, run, payload in plan]
@@ -237,11 +234,19 @@ def score(
 
 
 DEFAULT_TRUTHS = [Path(f"data/shipping/evaluation/{n}.json") for n in ("development", "additional", "expansion_validation")]
-MODES = ("naive", "hybrid", "hybrid_rerank")
+MODES = get_args(RetrievalMode)  # contracts가 정한 세 방식. 이름을 여기서 다시 적지 않는다
 
 
-def _read_runs(path: Path) -> list[RunRecord]:
-    return [RunRecord.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+M = TypeVar("M", bound=BaseModel)
+
+
+def read_jsonl(path: Path, model: type[M]) -> list[M]:
+    return [model.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def read_run_folder(folder: Path) -> list[RunRecord]:
+    """metrics 러너가 만든 results/runs/<run_id>/ 의 세 방식 파일을 방식 순서대로 읽는다 (없는 방식은 건너뜀)."""
+    return [r for mode in MODES if (folder / f"{mode}.jsonl").exists() for r in read_jsonl(folder / f"{mode}.jsonl", RunRecord)]
 
 
 def _read_partial(path: Path, runs: list[RunRecord]) -> list[EvalRecord]:
@@ -272,12 +277,12 @@ def main() -> None:
 
     if args.run:
         folder = Path("results/runs") / args.run
-        runs = [r for mode in MODES if (folder / f"{mode}.jsonl").exists() for r in _read_runs(folder / f"{mode}.jsonl")]
+        runs = read_run_folder(folder)
         args.out = folder / "eval.jsonl"
     else:
         if not args.out:
             p.error("--runs를 쓸 때는 --out이 필요합니다")
-        runs = _read_runs(args.runs)
+        runs = read_jsonl(args.runs, RunRecord)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     partial = args.out.with_name(args.out.name + ".partial")
     done = _read_partial(partial, runs) if args.resume else []

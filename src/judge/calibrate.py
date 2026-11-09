@@ -19,7 +19,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from src.judge.mock_cases import MockCase
-from src.judge.score import llm_call, load_ground_truths, score_one
+from src.judge.score import llm_call, load_ground_truths, read_jsonl, score_one
 
 
 def compare(case: MockCase, rec) -> list[tuple[str, object, object]]:
@@ -42,7 +42,7 @@ def main() -> None:
     p.add_argument("--out", type=Path, default=Path("data/judge_mock/calibration.md"))
     args = p.parse_args()
 
-    cases = [MockCase.model_validate_json(l) for l in args.cases.read_text(encoding="utf-8").splitlines() if l.strip()]
+    cases = read_jsonl(args.cases, MockCase)
     if args.kinds:
         cases = [c for c in cases if c.kind in args.kinds]
     if args.per_kind:

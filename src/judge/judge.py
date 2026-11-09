@@ -15,7 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from src.contracts import GroundTruth, JudgeItem, RunRecord, TokenUsage
-from src.judge.rules import JUDGE_ITEMS, LLMCall, add_optional
+from src.judge.rules import JUDGE_ITEMS, LLMCall, sum_usage
 
 PROMPT_VERSION = "judge_v1"
 PROMPT_PATH = Path(__file__).parent / "prompts" / f"{PROMPT_VERSION}.md"
@@ -130,7 +130,7 @@ def judge_one(run: RunRecord, truth: GroundTruth, llm: LLMCall) -> tuple[dict[st
             last_error = f"채점 호출 실패: {type(e).__name__}"
             tokens = TokenUsage(input=None, output=None)  # 실패한 호출의 사용량은 알 수 없음
             continue
-        tokens = TokenUsage(input=add_optional(tokens.input, res.input_tokens), output=add_optional(tokens.output, res.output_tokens))
+        tokens = sum_usage(tokens, TokenUsage(input=res.input_tokens, output=res.output_tokens))
         try:
             return parse_judge_output(res.text), tokens, None
         except JudgeParseError as e:
