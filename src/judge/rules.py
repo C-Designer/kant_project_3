@@ -8,7 +8,13 @@ None을 0이나 1로 바꾸는 코드는 이 파일 어디에도 없어야 한�
 
 from __future__ import annotations
 
+from typing import Callable
+
 from src.contracts import EvalRecord, JudgeItem, RunRecord, TokenUsage
+from src.platform.llm import LLMResult  # 호출 결과 모양: text, input_tokens, output_tokens, latency_ms
+
+# "메시지 목록을 주면 LLMResult를 돌려주는 함수". judge·RAGAS·score가 같은 정의를 쓴다.
+LLMCall = Callable[[list[dict]], LLMResult]
 
 JUDGE_ITEMS = ("facts", "conditions", "evidence", "decision")
 

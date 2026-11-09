@@ -1,5 +1,5 @@
 from src.contracts import ChunkMeta, Citation, ContextChunk, GroundTruth, RunRecord
-from src.judge.platform_adapter import LLMResult
+from src.platform.llm import LLMResult
 
 
 def make_run(status="answered", answer="SI 마감은 11월 4일 낮 12시입니다.", context=True, error=None) -> RunRecord:

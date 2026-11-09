@@ -21,8 +21,7 @@ import math
 import re
 
 from src.contracts import RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMCall
-from src.judge.rules import add_optional
+from src.judge.rules import LLMCall, add_optional
 
 
 def _make_recorded_llm(llm: LLMCall):

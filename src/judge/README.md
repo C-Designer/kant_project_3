@@ -14,8 +14,7 @@
 | `judge.py` | 채점관 4항목: 메시지 만들기 → 호출 → JSON 검사 → 1회 재시도 |
 | `prompts/judge_v1.md` | 채점관 지시문 |
 | `ragas_eval.py` | RAGAS Faithfulness. 주장 없음 → 해당 없음, 호출 실패 → 평가 불가. 보류·되묻기 문장은 채점에서 제외 |
-| `score.py` | 위를 묶어 `EvalRecord` 생성. `python -m src.judge.score --run <run_id> [--workers 4] [--resume]` (동시 채점·이어하기) |
-| `platform_adapter.py` | platform(`llm.call(kind="eval")`, `record_score`)을 부르는 **유일한 창구** |
+| `score.py` | 위를 묶어 `EvalRecord` 생성. 팀 platform을 부르는 **유일한 창구**(`llm_call`=`llm.call(kind="eval")`, `record_score`)도 여기 있다. `python -m src.judge.score --run <run_id> [--workers 4] [--resume]` (동시 채점·이어하기) |
 | `review_sheet.py` | 사람이 PDF 원문과 대조할 사례를 골라 원문·정답지 근거 쪽과 함께 한 장으로 만든다. `python -m src.judge.review_sheet --run <run_id>` |
 | `mock_cases.py`, `calibrate.py` | 채점관 검증 도구. 시험지(가짜 답안) 생성, 정확도 측정. `calibrate --repeat N`은 같은 답안을 N번 채점해 흔들림도 잼 |
 

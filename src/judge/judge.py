@@ -2,7 +2,7 @@
 
 흐름
 1. build_messages(): 채점 지시문 + 답안 + 문맥 + 정답 기준을 섹션으로 나눠 메시지를 만든다.
-2. AI를 부른다 (platform_adapter.llm_call: 지금은 임시 구현, 통합 후 platform.llm.call(kind="eval")).
+2. AI를 부른다 (score.llm_call → platform.llm.call(kind="eval")).
 3. parse_judge_output(): 돌아온 글이 약속한 JSON 모양인지 검사한다.
 4. 모양이 틀리면 한 번 더 부르고, 그래도 틀리면 네 칸 모두 "평가 불가"로 둔다.
 """
@@ -15,8 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from src.contracts import GroundTruth, JudgeItem, RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMCall
-from src.judge.rules import JUDGE_ITEMS, add_optional
+from src.judge.rules import JUDGE_ITEMS, LLMCall, add_optional
 
 PROMPT_VERSION = "judge_v1"
 PROMPT_PATH = Path(__file__).parent / "prompts" / f"{PROMPT_VERSION}.md"

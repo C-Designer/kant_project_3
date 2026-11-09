@@ -15,16 +15,42 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Literal
 
 from src import config
 from src.judge import ragas_eval
 from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RunRecord, TokenUsage
-from src.judge.platform_adapter import LLMCall, llm_call, record_score
 from src.judge.judge import judge_one
-from src.judge.rules import JUDGE_ITEMS, mean_ignoring_none, precheck, sum_usage, tag
+from src.judge.rules import JUDGE_ITEMS, LLMCall, mean_ignoring_none, precheck, sum_usage, tag
+from src.platform import llm as _llm
+from src.platform import tracing as _tracing
+from src.platform.llm import LLMResult
+
+
+def llm_call(messages: list[dict[str, str]], *, kind: Literal["service", "eval"] = "eval") -> LLMResult:
+    """judge가 AI를 부르는 유일한 지점: 팀 `platform.llm.call(kind="eval")`. 평가 호출은 서비스 사용량과 섞이지 않는 별도 트레이스로 남는다.
+
+    개발용: 환경 변수 `JUDGE_LLM=local`이면 `src/judge/local_llm.py`(각자 PC에만 있는 파일, 커밋 안 됨)를 쓴다. 이 파일에는 SDK 직접 호출이 없다.
+    """
+    if os.environ.get("JUDGE_LLM") == "local":
+        from src.judge import local_llm  # 없으면 ImportError로 바로 알린다
+
+        return local_llm.call(messages)
+    return _llm.call(messages, kind=kind)
+
+
+def record_score(request_id: str, name: str, value: float | None, comment: str | None = None) -> None:
+    """점수를 Langfuse 트레이스에 붙인다(`platform.tracing.record_score`). 기록 실패는 platform이 삼킨다(요청을 깨지 않음).
+
+    value가 None(해당 없음·평가 불가)이면 보내지 않는다. Langfuse는 값 없는 점수를 거절하고,
+    빈 값을 0이나 1로 바꿔 보내면 안 되기 때문이다. None과 그 이유는 eval.jsonl이 기준이다.
+    """
+    if value is None:
+        return
+    _tracing.record_score(request_id, name, value, comment)
 
 
 def load_ground_truths(paths: list[Path]) -> dict[str, GroundTruth]:

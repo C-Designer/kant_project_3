@@ -19,8 +19,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from src.judge.mock_cases import MockCase
-from src.judge.score import load_ground_truths, score_one
-from src.judge.platform_adapter import llm_call
+from src.judge.score import llm_call, load_ground_truths, score_one
 
 
 def compare(case: MockCase, rec) -> list[tuple[str, object, object]]:
