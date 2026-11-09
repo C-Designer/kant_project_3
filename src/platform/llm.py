@@ -76,7 +76,7 @@ def call(messages: list[dict[str, str]], *, kind: Literal["service", "eval"] = "
         obs = tracing._observe(
             "eval_generate", "generation",
             trace_context={"trace_id": tracing.get_client().create_trace_id()},
-            input=messages, model=model_name,
+            input=messages, model=model_name, user_id=config.TRACE_USER, tags=["eval"],
         )
     else:
         model_name = config.GENERATION_MODEL

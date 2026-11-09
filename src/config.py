@@ -42,6 +42,9 @@ REGENERATE_MAX = 1  # TODO(미정, #20) 출력 검증 실패 시 재생성 횟�
 # 평가
 EVAL_MODEL: str | None = "gpt-6-luna"  # 확정 (#58). None이면 평가 호출은 거부된다
 
+# 트레이스
+TRACE_USER = os.environ.get("TRACE_USER") or None  # Langfuse user_id로 쓰는 각자의 이름·별칭. API 요청은 Cloudflare Access 로그인 계정을 쓴다
+
 # 기록 (선택)
 RUN_LOG_PATH: Path | None = None  # 지정하면 run_query가 RunRecord를 JSONL로 덧붙인다
 
