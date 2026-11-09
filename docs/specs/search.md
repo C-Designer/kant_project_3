@@ -44,6 +44,7 @@
 | `hybrid_rerank` | `hybrid` 후보 `config.RERANK_CANDIDATES`=20개를 `config.RERANKER_MODEL`(`BAAI/bge-reranker-v2-m3`)로 재정렬 후 상위 k | - |
 
 - 세 방식은 같은 컬렉션·같은 임베딩. `k`는 호출자가 넘기고 최종 비교에서는 동일.
+- `hybrid_rerank` 소요 시간(질문당, 리랭크 단계만, Basic 개발용 28문항, 후보 20개): CPU 약 6~8초, GPU(RTX 5060 Laptop) 약 1.0초. 후보 수에 거의 비례한다(후보 50개면 CPU 11.8초, GPU 약 2.5초). 느려서 작은 모델로 바꾸는 안은 5종 비교에서 이긴 모델이 없어 두지 않았다.
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
 - 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다. 출력에 문맥 축소 전 검색 청크의 본문·점수·메타데이터를 남기고, 메타데이터에 방식·k·chunk_id 목록·소요 시간을 남긴다.
 
