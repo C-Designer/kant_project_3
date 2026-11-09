@@ -16,7 +16,7 @@
 - 필수 status check: `pytest` (`.github/workflows/ci.yml`). `uv sync --locked` 후 `uv run pytest`. 실패하면 머지 버튼이 막힌다. 체크가 아예 뜨지 않으면(Actions에 실행이 없음) PR을 닫았다가 다시 열면 다시 돈다(2026-11-09 #108에서 한 번 있었다).
 - 필수 승인은 없다. `.github/CODEOWNERS`는 모든 PR에 리드(`@C-Designer`)를 리뷰어로 자동 지정할 뿐 강제하지 않는다.
 - 우회자가 없어 직접 push는 리드도 막힌다.
-- GitHub이 못 막는 것: 누구든 머지 버튼을 누를 수 있다. **PR을 올린 사람이 머지한다**는 팀 규칙이다.
+- GitHub이 못 막는 것: 누구든 머지 버튼을 누를 수 있다. **PR을 올린 사람이 머지한다**는 팀 규칙이다(결정 기록 [ADR 0004](adr/0004-author-merges-after-ci.md)).
 
 ## 팀 규칙
 

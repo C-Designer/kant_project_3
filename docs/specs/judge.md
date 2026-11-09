@@ -86,4 +86,4 @@ def score(runs: list[RunRecord], truths: list[GroundTruth]) -> list[EvalRecord]
 
 ## 관련 ADR
 
-- 0001, 0002, 0003
+- 0001, 0002, 0003, 0005

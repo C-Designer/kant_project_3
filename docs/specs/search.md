@@ -79,4 +79,4 @@ def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]
 
 ## 관련 ADR
 
-- 0001, 0002, 0003
+- 0001, 0002, 0003, 0005

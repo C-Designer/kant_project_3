@@ -66,4 +66,4 @@ def run_query(question: str, mode: RetrievalMode, *, request_id: str | None = No
 
 ## 관련 ADR
 
-- 0001, 0002, 0003
+- 0001, 0002, 0003, 0005

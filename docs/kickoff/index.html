@@ -170,7 +170,7 @@ pre.cmd i{font-style:normal;color:var(--muted)}
 <tr><td>무엇을 만들어야 하나, 발제 규칙</td><td><code>docs/requirements.md</code></td></tr>
 <tr><td>어떻게 채점되나</td><td><code>docs/evaluation.md</code></td></tr>
 <tr><td>내 영역이 지금 어떻게 동작해야 하나</td><td><code>docs/specs/&lt;영역&gt;.md</code> + <code>src/contracts.py</code></td></tr>
-<tr><td>왜 이렇게 나눴나, 왜 이 스택인가</td><td><code>docs/adr/0002</code>, <code>0003</code></td></tr>
+<tr><td>왜 이렇게 나눴나, 왜 이 스택인가</td><td><code>docs/adr/0002</code>, <code>0003</code>, <code>0005</code></td></tr>
 <tr><td>브랜치·PR·커밋 형식</td><td><code>docs/branch-strategy.md</code></td></tr>
 <tr><td>일정·역할·리뷰·Issue 운영</td><td><code>docs/work-plan.md</code></td></tr>
 <tr><td>진행 상황</td><td><a href="https://github.com/C-Designer/kant_project_3/milestones">Milestones</a> · <a href="https://github.com/C-Designer/kant_project_3/issues">Issues</a></td></tr>
@@ -551,7 +551,9 @@ git push</pre>
 │   │   ├── 0000-template.md
 │   │   ├── 0001-adr-and-spec-as-ssot.md      <i>문서 두 종류를 기준으로</i>
 │   │   ├── 0002-areas-by-concern.md          <i>레이어가 아닌 관심사 5영역, 뼈대 먼저</i>
-│   │   └── 0003-stack.md                     <i>pypdf·LangChain·E5·Qdrant·FastAPI·Langfuse·RAGAS</i>
+│   │   ├── 0003-stack.md                     <i>pypdf·LangChain·E5·Qdrant·FastAPI·Langfuse·RAGAS</i>
+│   │   ├── 0004-author-merges-after-ci.md    <i>CI(pytest) 통과 후 PR 올린 사람이 머지</i>
+│   │   └── 0005-python312-uv-langchain03.md  <i>Python 3.12 · uv · LangChain 0.3 고정</i>
 │   ├── specs/
 │   │   ├── _template.md
 │   │   └── search.md  answer.md  metrics.md  judge.md  platform.md   <i>영역당 1개. 범위/동작/인터페이스/미정</i>
