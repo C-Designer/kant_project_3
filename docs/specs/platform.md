@@ -25,7 +25,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 트레이스(`platform.tracing`)
 - Langfuse·Qdrant는 리드의 **Mac Studio에서 Docker Compose로 셀프호스트**한다(2026-11-09 현황 확인). FastAPI도 같은 Mac에서 실행하며 Cloudflare Tunnel로 공용 HTTPS 주소를 제공한다. Langfuse 화면은 Google 로그인(2026-11-09부터 Cloudflare를 거치지 않는 직접 연동)으로, 리드가 Google 테스트 사용자와 Langfuse 조직 멤버로 함께 등록한 계정만 들어간다. 새 팀원은 리드에게 두 가지 등록을 요청한다. API 화면은 Cloudflare Access의 팀 Google 계정 인증, Qdrant는 API 키 인증을 사용한다. 주소는 README, 키는 각자 `.env`에만 둔다. 다른 PC는 `config.QDRANT_API_KEY`로 공용 Qdrant에 접속하고(`search.store.get_client()`가 전달), 서버 API는 키 없이 기존 인증 필수 로컬 프록시로 연결한다.
 - 트레이스 `query`에 `request_id`. 스팬 `retrieve` → `build_context` → `generate` → `validate`. `retrieve` 출력에는 검색 청크의 본문·점수·메타데이터를, `build_context` 출력에는 최종 문맥을 남겨 "못 찾음"과 "찾았지만 잘림"을 구분한다.
-- 트레이스 id는 `trace_id_for(request_id)`로 `request_id`에서 결정적으로 만든다(값은 서로 다르다). 스팬은 SDK가 몇 초 간격으로 묶어 보내고, `tracing.flush()`는 정의만 있고 호출처가 없다. 그래서 응답 직후 프로세스를 강제 종료하면 마지막 스팬과 루트 `query`가 유실된다(2026-11-09 MacBook 확인). 지금은 README대로 응답 후 기다렸다가 Ctrl+C로 종료한다. API 종료 시와 일괄 실행 끝에 `flush()`를 부르는 것은 미정.
+- 트레이스 id는 `trace_id_for(request_id)`로 `request_id`에서 결정적으로 만든다(값은 서로 다르다). 스팬은 SDK가 5초 간격으로 묶어 보내고, 정상 종료 때 SDK가 atexit으로 남은 것을 보낸다. 그래서 API·일괄 실행 코드에서 따로 `tracing.flush()`를 부르지 않는다. kill 같은 강제 종료는 이 전송을 건너뛰어 마지막 스팬과 루트 `query`가 유실되고, 코드로 막을 수 없다(2026-11-09 MacBook 확인). README대로 응답 후 기다렸다가 Ctrl+C로 종료한다.
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
 - 비밀값·API 키는 트레이스에 넣지 않는다.
 - `uv run python -m src.platform.check_connections`는 공용 Qdrant 컬렉션 존재 여부와 Langfuse 키 인증을 읽기 전용으로 점검한다. 둘 다 성공하면 종료 코드 0, 미설정·실패·컬렉션 없음은 1. `QDRANT_URL`이 없으면 로컬 저장소를 열지 않는다. 키·응답 본문은 출력하지 않는다. 팀원의 화면 권한·4개 스팬 확인·평가 점수 연결은 별도이며 README의 #40 확인표에 기록한다.

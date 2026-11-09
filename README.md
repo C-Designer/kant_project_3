@@ -87,7 +87,7 @@ curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
   -d '{"question": "선하증권 초안 메일의 수신 확인은 기재 사항에 대한 승인과 같은가요?", "retrieval_mode": "naive"}'
 ```
 
-**응답을 받은 뒤 API 서버를 바로 끄지 않는다.** 트레이스는 몇 초 간격으로 묶어서 Langfuse에 보내므로, 응답 직후 서버를 강제 종료하면 마지막에 끝난 `generate`·`validate`와 루트 `query`가 유실된다. 이때 Langfuse에는 `retrieve`·`build_context`만 있는 이름 없는 트레이스(Unnamed trace)가 남는다. 응답 후 10초 이상 기다렸다가 서버 터미널에서 Ctrl+C로 종료한다.
+**응답을 받은 뒤 API 서버를 강제 종료하지 않는다.** Langfuse SDK는 트레이스를 5초 간격으로 묶어서 보내고, 정상 종료될 때(Ctrl+C, 스크립트 끝) 남은 것을 마저 보낸다. 응답 직후 프로세스를 kill하거나 터미널 창을 닫으면 이 마지막 전송을 건너뛰어 `generate`·`validate`와 루트 `query`가 유실된다. 이때 Langfuse에는 `retrieve`·`build_context`만 있는 이름 없는 트레이스(Unnamed trace)가 남는다. 응답 후 10초 이상 기다렸다가 서버 터미널에서 Ctrl+C로 종료한다.
 
 색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 공유 Qdrant는 API 키가 필수이므로 다른 PC에서는 `QDRANT_URL`과 함께 별도로 전달받은 `QDRANT_API_KEY`를 넣는다. 서버 Mac은 키 없이 인증이 필요한 로컬 프록시로 연결한다. **공유 주소를 넣은 상태에서 색인을 실행하면 공용 컬렉션이 지워지고 다시 만들어지므로**, 공용 색인은 리드와 정한 뒤 서버에서만 다시 만든다.
 
@@ -134,7 +134,7 @@ ls documents | wc -l   # 15
 ## Langfuse 확인 방법
 
 1. [팀 Langfuse](https://kant-langfuse.zerocode-studio.com)에 등록된 Google 계정으로 로그인하고 `shipping-rag` 프로젝트를 연다.
-2. 아래 대표 요청을 열어 `/query` 응답의 `request_id`와 트레이스의 `query` 메타데이터가 같은지 확인한다. 트레이스 id는 `request_id`와 다르다. 본인 요청은 `uv run python -c 'from src import config; from src.platform.tracing import trace_id_for; print(trace_id_for("<request_id>"))'`로 얻은 id를 Traces에서 찾는다. 이름이 `query`가 아니라 Unnamed trace이면 서버를 너무 빨리 끈 것이다(위 스켈레톤 실행 절).
+2. 아래 대표 요청을 열어 `/query` 응답의 `request_id`와 트레이스의 `query` 메타데이터가 같은지 확인한다. 트레이스 id는 `request_id`와 다르다. 본인 요청은 `uv run python -c 'from src import config; from src.platform.tracing import trace_id_for; print(trace_id_for("<request_id>"))'`로 얻은 id를 Traces에서 찾는다. 이름이 `query`가 아니라 Unnamed trace이면 응답 직후 서버를 강제 종료한 것이다(위 스켈레톤 실행 절).
 3. `retrieve`, `build_context`, `generate`, `validate` 스팬과 모델 입출력·토큰을 확인한다. `retrieve` 출력에서 문맥 축소 전 검색 청크의 본문·점수·출처를, `build_context`에서 최종 문맥을 확인한다. 변경 이전의 트레이스에는 검색 청크 본문이 소급 기록되지 않는다.
 
 대표 실행: [선하증권 초안 수신 확인 질문](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/531cd320c331b48e34166711d33663f3) (`request_id`: `e703290cd63e4328a6e2c3c316b01c0f`, `answered`, SB10 17쪽·SB05 20쪽). 수신 확인과 기재 사항 승인은 다르다는 답변을 두 페이지의 원문과 대조했다. Langfuse에 비용이 0으로 표시되더라도 실제 청구액이 0이라는 뜻은 아니다.
