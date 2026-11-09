@@ -20,7 +20,7 @@
 
 k는 5로 확정(`src/config.py`의 `K`). 미정 항목 없음.
 
-코드 위치: `src/metrics/` (`loader.py`, `questions.py`, `run.py`, `retrieval_metrics.py`, `ops_metrics.py`, `report.py`). 타입은 `src/contracts.py`를 그대로 쓴다. 테스트는 `tests/metrics/` (`uv run pytest tests/metrics`).
+코드 위치: `src/metrics/` (`loader.py`, `questions.py`, `run.py`, `retrieval_metrics.py`, `ops_metrics.py`, `report.py`, `aggregate.py`(뼈대의 `None` 제외 평균 `mean_excluding_none`. `tests/test_rules.py`가 규칙으로 고정)). 타입은 `src/contracts.py`를 그대로 쓴다. 테스트는 `tests/metrics/` (`uv run pytest tests/metrics`).
 
 ## 파일별 역할과 연결
 
@@ -67,7 +67,7 @@ k는 5로 확정(`src/config.py`의 `K`). 미정 항목 없음.
 |---|---|---|
 | `loader.py` | 평가 JSON → `Question(id, question)` + `GroundTruth` | 질문(실행용, 정답 정보 없음)과 정답(채점용)을 분리한다. `evidence_book_ids`는 `evidence_groups`를 평탄화·중복 제거한 목록, `rubric`에는 필수 사실·금지 주장·채점 설명·`evidence_groups` 원본을 담는다. part01/part02의 평가 JSON은 동일하므로 한쪽만 읽고, 같은 `id` 중복은 처리한다. |
 | `questions.py` | `Question` + `GroundTruth` → `results/questions.json` | `expected_action` 유형별(답변 9 / 추가 확인 3 / 보류 3)로, 근거 문서 수(단일/복수) 비율을 풀에 맞춰 시드 고정 층화 무작위로 15개를 고르고 이유와 함께 기록한다. |
-| `run.py` | `questions.json` → `RunRecord` JSONL | 질문 × 3방식을 `platform.run_query()`로 실행한다. 실패도 `status="error"`로 기록, `run_id`는 타임스탬프이며 덮어쓰지 않는다. 뼈대 머지 후 연결. |
+| `run.py` | `questions.json` → `RunRecord` JSONL | 질문 × 3방식을 `platform.run_query()`로 실행한다. 실패도 `status="error"`로 기록, `run_id`는 타임스탬프이며 덮어쓰지 않는다. `--mock`이 아니면 `src.platform.query.run_query`를 부른다. |
 | `retrieval_metrics.py` | `evidence_book_ids`, `retrieved_book_ids`, k → `(hit, recall, 해당 없음 사유)` | 상위 k개를 문서 단위로 중복 제거해 Hit@k·Recall@k를 계산한다. 참고 목록이 비면 `None`, 검색 결과가 비어도 참고 문서가 있으면 0점. |
 | `ops_metrics.py` | `RunRecord` 목록 → 방식별 집계 | 정상 요청 평균 응답시간·건수, 오류율·실패 건수, 입·출력 토큰 합계·확인 요청 수. `None`은 분모에서 빼고 0으로 바꾸지 않는다. 추가 확인·보류는 오류가 아니다. |
 | `report.py` | 검색·운영 지표 + `EvalRecord` → CSV 2개 + md | `question_id` + `retrieval_mode`로 조인해 `comparison_detail.csv`, `comparison_summary.csv`, `comparison.md`를 만든다. 해당 없음·평가 불가는 평균에서 제외, 0점은 포함. 평가 호출 토큰은 `eval_*` 별도 열. |
@@ -82,7 +82,7 @@ k는 5로 확정(`src/config.py`의 `K`). 미정 항목 없음.
 
 ### 구현 순서
 
-`loader` → `retrieval_metrics` → `ops_metrics` → `report` → `questions` → (뼈대 머지 후) `run`. 앞의 네 개는 서로 독립적이라 mock으로 테스트할 수 있고, `run`만 `platform`에 의존한다.
+`loader` → `retrieval_metrics` → `ops_metrics` → `report` → `questions` → (뼈대 머지 후) `run`. 앞의 네 개는 서로 독립적이라 mock으로 테스트할 수 있고, `run`만 `platform`에 의존한다. 여섯 개 모두 구현됐다(#69, 질문 선택 보강 #88, pandas 제거 #79).
 
 ## 인터페이스
 
@@ -113,9 +113,9 @@ class GroundTruth(BaseModel):    # 로더가 judge에 넘기는 정답 측
     rubric: dict                     # 필수 사실, 금지 주장, 채점 설명 등 원본 그대로
 ```
 
-- 명령(`uv run python -m ...`으로 실행. `uv run pytest`만 쓰면 `src`를 못 찾으니 `uv run python -m pytest tests`):
+- 명령(`uv run python -m ...`으로 실행. 테스트는 `uv run pytest tests/metrics`. `pyproject.toml`의 `pythonpath`로 `src`를 찾는다, #57):
   - 질문 선택: `python -m src.metrics.questions` → `results/questions.json` (기본 15개, 시드 20261105, `--min-per-source 4 --min-docs 13`)
-  - 일괄 실행: `python -m src.metrics.run --questions results/questions.json [--modes naive,hybrid,hybrid_rerank] [--label x] [--mock]`
+  - 일괄 실행: `python -m src.metrics.run --questions results/questions.json [--modes naive,hybrid,hybrid_rerank] [--label x] [--results-dir results] [--mock]`
   - 비교표: `python -m src.metrics.report --run <run_id> --k <k>` (`results/runs/<run_id>/eval.jsonl`이 있으면 합치고, 없으면 평가 열은 빈 칸)
 - `judge`에 넘기는 것: `RunRecord` 목록 + `GroundTruth` 목록. 받는 것: `EvalRecord` 목록(`question_id`, `retrieval_mode`로 조인).
 - 집계 함수는 `None`을 분모에서 뺀다. 단위 테스트로 고정.
