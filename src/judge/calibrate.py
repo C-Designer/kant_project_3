@@ -2,7 +2,7 @@
 
 실행 예 (실제 AI 필요: OPENAI_API_KEY)
   python -m src.judge.calibrate --cases data/judge_mock/cases.jsonl \
-      --truths data/shipping/evaluation/development.json --limit 30
+      --limit 30
 
 출력: 종류(kind) × 칸(item)별 "맞힌 수 / 확인한 수"와 틀린 사례 목록 → data/judge_mock/calibration.md
 
@@ -19,7 +19,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from src.judge.mock_cases import MockCase
-from src.judge.score import llm_call, load_ground_truths, read_jsonl, score_one
+from src.judge.score import DEFAULT_EVAL_DIR, llm_call, load_ground_truths, read_jsonl, score_one
 
 
 def compare(case: MockCase, rec) -> list[tuple[str, object, object]]:
@@ -34,7 +34,7 @@ def compare(case: MockCase, rec) -> list[tuple[str, object, object]]:
 def main() -> None:
     p = argparse.ArgumentParser(description="채점관 정확도 측정")
     p.add_argument("--cases", type=Path, required=True)
-    p.add_argument("--truths", type=Path, nargs="+", required=True)
+    p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR)
     p.add_argument("--limit", type=int, default=None, help="앞에서부터 N건만 (비용 절약)")
     p.add_argument("--kinds", nargs="*", default=None, help="특정 종류만. 예: good time_swap")
     p.add_argument("--per-kind", type=int, default=None, help="종류마다 N건씩 골고루 뽑기 (여러 문항에서 무작위, 고정 시드)")
@@ -52,7 +52,7 @@ def main() -> None:
             by_kind[c.kind].append(c)
         cases = [c for kind in sorted(by_kind) for c in rng.sample(by_kind[kind], min(args.per_kind, len(by_kind[kind])))]
     cases = cases[: args.limit]
-    truths = load_ground_truths(args.truths)
+    truths = load_ground_truths(args.eval_dir)
     llm = lambda messages: llm_call(messages, kind="eval")
 
     hits: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0])

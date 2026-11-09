@@ -29,7 +29,7 @@ from pypdf import PdfReader
 
 from src.contracts import EvalRecord, GroundTruth, RunRecord
 from src.judge.rules import JUDGE_ITEMS
-from src.judge.score import DEFAULT_TRUTHS, MODES, load_ground_truths, read_jsonl, read_run_folder
+from src.judge.score import DEFAULT_EVAL_DIR, MODES, load_ground_truths, read_jsonl, read_run_folder
 
 ACTION_TO_STATUS = {"answer": "answered", "clarify": "needs_clarification", "abstain": "abstained"}
 ITEM_KO = {"facts": "사실", "conditions": "조건", "evidence": "근거", "decision": "판단"}
@@ -187,7 +187,7 @@ def main() -> None:
     src.add_argument("--run", help="metrics 러너의 run_id (results/runs/<run_id>/ 의 세 방식 파일과 eval.jsonl)")
     src.add_argument("--runs", type=Path, nargs="+", help="RunRecord JSONL 파일들 (시험용)")
     p.add_argument("--evals", type=Path, help="--runs를 쓸 때 EvalRecord JSONL")
-    p.add_argument("--truths", type=Path, nargs="+", default=DEFAULT_TRUTHS)
+    p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR)
     p.add_argument("--documents", type=Path, default=Path("data/shipping/documents"))
     p.add_argument("--max", type=int, default=12)
     p.add_argument("--out", type=Path)
@@ -204,7 +204,7 @@ def main() -> None:
         runs = [r for f in a.runs for r in read_jsonl(f, RunRecord)]
         evals = read_jsonl(a.evals, EvalRecord)
         out, title = a.out or Path("data/judge_review/sheet.md"), ""
-    sheet = build_sheet(build_pairs(runs, evals), load_ground_truths(a.truths), a.documents, a.max, title)
+    sheet = build_sheet(build_pairs(runs, evals), load_ground_truths(a.eval_dir), a.documents, a.max, title)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(sheet, encoding="utf-8", newline="\n")
     print(f"시트 저장: {out}  ({sheet.count('## 사례')}건)")

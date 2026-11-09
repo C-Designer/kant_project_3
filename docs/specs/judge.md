@@ -80,7 +80,7 @@ class EvalRecord(BaseModel):     # judge가 만들고 metrics가 합친다
 def score(runs: list[RunRecord], truths: list[GroundTruth]) -> list[EvalRecord]
 ```
 
-- 명령: `python -m src.judge.score --run <run_id>` → `results/runs/<run_id>/{naive,hybrid,hybrid_rerank}.jsonl`을 읽어 `results/runs/<run_id>/eval.jsonl`. 정답은 기본으로 `data/shipping/evaluation/{development,additional,expansion_validation}.json`(`--truths`로 변경). 시험지 같은 단일 파일은 `--runs <파일> --out <파일>`.
+- 명령: `python -m src.judge.score --run <run_id>` → `results/runs/<run_id>/{naive,hybrid,hybrid_rerank}.jsonl`을 읽어 `results/runs/<run_id>/eval.jsonl`. 정답은 `data/shipping/evaluation/{development,additional,expansion_validation}.json`을 metrics 로더(`src/metrics/loader.py`)로 읽는다(`--eval-dir`로 폴더 변경). 시험지 같은 단일 파일은 `--runs <파일> --out <파일>`.
 - 속도·안전: `--workers N`은 답안 N건을 동시에 채점한다(기본 1 = 하나씩). 결과 파일의 내용과 순서는 N과 무관하게 같다. 한 건에서 예상 못 한 오류가 나도 그 건만 "평가 불가: 사유"로 남기고 나머지는 계속한다. 채점 중에는 `<출력파일>.partial`에 한 건씩 저장하고, 끊겼으면 같은 명령에 `--resume`을 붙여 이어서 한다(끝까지 마치면 최종 파일을 쓰고 partial은 지운다). 토큰 합산 규칙(모르면 `None`)은 `rules.py`의 `add_optional`·`sum_usage` 한 곳에 있다.
 - 세 방식에 같은 평가 모델·프롬프트·설정. 설정은 `config.py`에 기록.
 

@@ -23,9 +23,9 @@
 ```bash
 uv sync
 uv run pytest tests/judge -q                                   # 규칙·채점표·RAGAS 입력 테스트 (AI 호출 없음)
-uv run python -m src.judge.mock_cases --truths data/shipping/evaluation/development.json --out data/judge_mock
-uv run python -m src.judge.calibrate --cases data/judge_mock/cases.jsonl --truths data/shipping/evaluation/development.json --per-kind 5
-uv run python -m src.judge.calibrate --cases data/judge_mock/cases.jsonl --truths data/shipping/evaluation/development.json --per-kind 2 --repeat 3   # 흔들림 측정
+uv run python -m src.judge.mock_cases --out data/judge_mock
+uv run python -m src.judge.calibrate --cases data/judge_mock/cases.jsonl --per-kind 5
+uv run python -m src.judge.calibrate --cases data/judge_mock/cases.jsonl --per-kind 2 --repeat 3   # 흔들림 측정
 ```
 
 - 실제 AI 호출에는 `.env`의 `OPENAI_API_KEY`가 필요하다(`config.py`가 읽는다).
