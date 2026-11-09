@@ -74,8 +74,8 @@ def load() -> tuple[Bm25Index, list[tuple[str, ChunkMeta]]]:
         chunks: list[tuple[str, ChunkMeta]] = []
         offset = None
         while True:
-            points, offset = client.scroll(
-                config.COLLECTION, limit=256, offset=offset, with_payload=True, with_vectors=False
+            points, offset = store.call(
+                client.scroll, config.COLLECTION, limit=256, offset=offset, with_payload=True, with_vectors=False
             )
             for p in points:
                 meta = ChunkMeta(**{f: p.payload[f] for f in ChunkMeta.model_fields})
