@@ -1,6 +1,6 @@
 # 평가 기준 (발제 STEP 6·7 요약)
 
-필수 과제 4의 채점 규칙이다. 실행·집계는 `src/metrics/`([specs/metrics.md](specs/metrics.md)), 채점은 `src/judge/`([specs/judge.md](specs/judge.md)), 보안 비교는 `platform`([specs/platform.md](specs/platform.md), `src/platform/security.py`는 #42에서 추가). 과제 전체와 API 형식은 [requirements.md](requirements.md).
+필수 과제 4의 채점 규칙이다. 실행·집계는 `src/metrics/`([specs/metrics.md](specs/metrics.md)), 채점은 `src/judge/`([specs/judge.md](specs/judge.md)), 보안 비교는 `platform`([specs/platform.md](specs/platform.md), `src/platform/security.py`). 과제 전체와 API 형식은 [requirements.md](requirements.md).
 
 ## 비교 조건
 
