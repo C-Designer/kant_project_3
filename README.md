@@ -172,7 +172,7 @@ MacBook에서는 다음 순서로 확인한다.
 
 2026-11-09 MacBook 확인(리드, macOS 26.5.1, Python 3.12.14, 커밋 `b8301e0`): 키 없이 Qdrant 401, 키 포함 572개 청크, `check_connections` 두 서비스 `ok`·종료 코드 0. 로컬 Naive 1문항은 `answered`(SB05 20쪽·SB10 17쪽 인용). 응답 직후 서버를 강제 종료한 1차 요청은 Unnamed trace로 `retrieve`·`build_context`만 남았다. 15초 뒤 Ctrl+C로 종료한 2차 요청(`request_id`: `997860c5f0fc477aaa310e246354ce71`, [트레이스](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/c009bdb9fd7ec4353dfbec924b6198c5))은 `query` 아래 4개 스팬과 `generate` 안의 모델 호출이 모두 남았다.
 
-서버 API·터널·Docker는 사용자 로그인 후 시작하도록 등록되어 있다. 절전은 꺼져 있다. 실제 재부팅·정전 복구는 검증하지 않았고 정전 후 자동 재시작은 꺼져 있다. MacBook 접속 확인과 judge의 실제 평가 점수 증빙 전에는 #40을 닫지 않는다.
+서버 API·터널·Docker는 사용자 로그인 후 시작하도록 등록되어 있다. 절전은 꺼져 있다. 실제 재부팅·정전 복구는 검증하지 않았고 정전 후 자동 재시작은 꺼져 있다.
 
 `src/search/store.py:get_client()`는 원격 연결 시 `config.QDRANT_API_KEY`를 전달한다(search 담당 합의). 키가 없으면 전달하지 않으므로 로컬 모드와 서버 Mac의 프록시 연결은 그대로다. 키 값은 코드·문서·로그에 넣지 않는다.
 
@@ -185,7 +185,9 @@ MacBook에서는 다음 순서로 확인한다.
 | 본인 요청 추적 | 위 스켈레톤 실행 절의 API 서버·Naive 질의 실행. 공유 색인은 재생성하지 않음 | 응답의 `request_id`에 4개 스팬·실제 모델 입출력이 보이고, 검색 결과와 최종 문맥을 구분할 수 있음 |
 | 평가 점수 연결 (judge 담당, #34) | 실제 평가 후 같은 요청의 점수 확인 | 서비스·평가 트레이스 분리 및 점수 연결 캡처 |
 
-확인 결과는 이름·OS·커밋 해시(`git rev-parse HEAD`)·실행 시각·점검 출력·request_id·캡처로 남긴다. `.env`나 키가 보이는 화면은 공유하지 않는다. 팀원 확인과 Qdrant 인증 연결이 끝나기 전에는 #40을 완료 처리하지 않는다.
+확인 결과는 이름·OS·커밋 해시(`git rev-parse HEAD`)·실행 시각·점검 출력·request_id·캡처로 남긴다. `.env`나 키가 보이는 화면은 공유하지 않는다.
+
+2026-11-10 확인(리드): 팀원 전원이 각자 PC에서 `qdrant: ok`와 Langfuse 화면 열람을 확인했다. 평가 점수 연결은 #34에서 실제 채점 1건(`request_id` `50821faa505e4048af8a49b59d518ac3`, [트레이스](https://kant-langfuse.zerocode-studio.com/project/shipping-rag/traces/919a08c2bfc4cd6bd9ab89e3366a053c?traceTab=scores))에 점수 5개가 붙고 서비스(`query`)·평가(`eval_generate`) 트레이스가 분리된 것으로 확인했다. #40 완료.
 
 ## 최종 선택과 한계
 
