@@ -380,6 +380,9 @@ def main(argv: list[str] | None = None) -> None:
     _, truths = load_evaluation(args.eval_dir)
     meta_path = run_dir / "run_meta.json"  # 이 실행이 다룬 일반 질문 범위
     meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+    # mock 표시가 생기기 전 실행도 걸러내려고 기록의 request_id(mock-...)도 본다
+    if meta.get("mock") or any(r.request_id.startswith("mock-") for r in runs):
+        raise SystemExit(f"mock 실행은 비교표로 만들 수 없다(연습 결과가 발표 수치에 섞인다): {run_dir}")
     general_ids = set(meta["question_ids"]) if meta.get("question_ids") else None
     eval_path = run_dir / "eval.jsonl"  # judge가 만든다. 아직 없으면 평가 열은 빈 칸
     evals = (
