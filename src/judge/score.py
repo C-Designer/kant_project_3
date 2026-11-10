@@ -7,39 +7,30 @@
 4. 점수를 Langfuse 트레이스에 붙이기 (record_score)
 
 실행 예
-  uv run ... python -m src.judge.score --runs data/judge_mock/runs.jsonl \
-      --out data/judge_mock/eval.jsonl
+  uv run python -m src.judge.score --run <run_id> --workers 4
 """
 
 from __future__ import annotations
 
 import argparse
-import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Callable, Literal, get_args
+from typing import Callable, get_args
 
 from src import config
 from src.judge import ragas_eval
-from src.contracts import EvalRecord, FaithfulnessRun, GroundTruth, RetrievalMode, RunRecord, TokenUsage
+from src.contracts import EvalRecord, GroundTruth, RetrievalMode, RunRecord
 from src.judge.judge import judge_one
-from src.judge.rules import JUDGE_ITEMS, LLMCall, mean_ignoring_none, precheck, sum_usage, tag
+from src.judge.rules import JUDGE_ITEMS, LLMCall, precheck, sum_usage, tag
 from src.metrics.loader import load_ground_truth
 from src.platform import llm as _llm
 from src.platform import tracing as _tracing
 from src.platform.llm import LLMResult
 
 
-def llm_call(messages: list[dict[str, str]], *, kind: Literal["service", "eval"] = "eval") -> LLMResult:
-    """judge가 AI를 부르는 유일한 지점: 팀 `platform.llm.call(kind="eval")`. 평가 호출은 서비스 사용량과 섞이지 않는 별도 트레이스로 남는다.
-
-    개발용: 환경 변수 `JUDGE_LLM=local`이면 `src/judge/local_llm.py`(각자 PC에만 있는 파일, 커밋 안 됨)를 쓴다. 이 파일에는 SDK 직접 호출이 없다.
-    """
-    if os.environ.get("JUDGE_LLM") == "local":
-        from src.judge import local_llm  # 없으면 ImportError로 바로 알린다
-
-        return local_llm.call(messages)
-    return _llm.call(messages, kind=kind)
+def llm_call(messages: list[dict[str, str]]) -> LLMResult:
+    """judge가 AI를 부르는 유일한 지점: 팀 `platform.llm.call(kind="eval")`. 평가 호출은 서비스 사용량과 섞이지 않는 별도 트레이스로 남는다."""
+    return _llm.call(messages, kind="eval")
 
 
 def record_score(request_id: str, name: str, value: float | None, comment: str | None = None) -> None:
@@ -61,34 +52,6 @@ def load_ground_truths(eval_dir: Path = DEFAULT_EVAL_DIR) -> dict[str, GroundTru
     return {t.question_id: t for t in load_ground_truth(eval_dir)}
 
 
-def _run_reason(na: str | None, us: str | None) -> str | None:
-    """한 회차의 빈칸 사유. 값이 나온 회차는 None."""
-    if na:
-        return f"해당 없음: {na}"
-    if us:
-        return f"평가 불가: {us}"
-    return None
-
-
-def _faithfulness_repeated(run: RunRecord, llm: LLMCall):
-    """Faithfulness를 FAITHFULNESS_REPEATS번 채점해 값이 나온 회차만 평균한다.
-
-    반환: ragas_eval.faithfulness와 같은 (점수, 토큰, 해당 없음 이유, 평가 불가 이유) + 회차별 결과(점수, 실패 사유).
-    값이 하나도 없으면 해당 없음 이유가 있는 회차를 먼저 쓰고, 없으면 평가 불가 이유를 쓴다.
-    """
-    results = [ragas_eval.faithfulness(run, llm) for _ in range(config.FAITHFULNESS_REPEATS)]
-    runs = [FaithfulnessRun(score=score, reason=_run_reason(na, us)) for score, _, na, us in results]
-    # 어떤 회차만 사용량을 모르면(준비 단계 실패) 모른다고 둔다. 빼고 더하면 실제보다 적게 보인다.
-    usages = [r[1] for r in results]
-    tokens = sum_usage(*[u or TokenUsage(input=None, output=None) for u in usages]) if any(usages) else None
-    mean = mean_ignoring_none([x.score for x in runs])
-    if mean is not None:
-        return mean, tokens, None, None, runs
-    na = next((r[2] for r in results if r[2]), None)
-    us = None if na else next((r[3] for r in results if r[3]), None)
-    return None, tokens, na, us, runs
-
-
 def score_one(run: RunRecord, truth: GroundTruth, llm: LLMCall, *, use_ragas: bool = True) -> EvalRecord:
     early = precheck(run)
     if early is not None:
@@ -100,7 +63,7 @@ def score_one(run: RunRecord, truth: GroundTruth, llm: LLMCall, *, use_ragas: bo
     # Faithfulness
     faith, faith_tokens, faith_runs = None, None, None
     if use_ragas:
-        faith, faith_tokens, na, us, faith_runs = _faithfulness_repeated(run, llm)
+        faith, faith_tokens, na, us, faith_runs = ragas_eval.faithfulness_repeated(run, llm)
         if na:
             not_applicable.append(tag("faithfulness", na))
         if us:
@@ -181,7 +144,7 @@ def score(
     - on_record: 한 건의 채점·점수 기록이 끝날 때마다 호출된다(중간 저장용, runs 순서대로).
     - done    : runs 앞쪽에서부터 이미 채점된 결과 목록(이어하기). 질문·방식이 맞는 구간은 다시 부르지 않고 그대로 쓴다.
     """
-    llm = llm or (lambda messages: llm_call(messages, kind="eval"))
+    llm = llm or llm_call
     by_id = truths if isinstance(truths, dict) else {t.question_id: t for t in truths}
     done = reusable_prefix(runs, done or [])
     workers = max(1, int(workers))
@@ -251,26 +214,17 @@ def _read_partial(path: Path, runs: list[RunRecord]) -> list[EvalRecord]:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="답안(RunRecord JSONL)을 채점해 EvalRecord JSONL로 저장")
-    src = p.add_mutually_exclusive_group(required=True)
-    src.add_argument("--run", help="metrics 러너의 run_id. results/runs/<run_id>/<mode>.jsonl 세 개를 읽고 같은 폴더의 eval.jsonl에 쓴다")
-    src.add_argument("--runs", type=Path, help="RunRecord JSONL 파일 하나 (시험지 등)")
+    p.add_argument("--run", required=True, help="metrics 러너의 run_id. results/runs/<run_id>/<mode>.jsonl 세 개를 읽고 같은 폴더의 eval.jsonl에 쓴다")
     p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR, help="평가 JSON 폴더 (정답은 *.json, 질문은 *_questions.json)")
-    p.add_argument("--out", type=Path, help="--runs를 쓸 때 출력 파일")
-    p.add_argument("--no-ragas", action="store_true", help="Faithfulness를 건너뜀 (평가 불가로 기록)")
     p.add_argument("--workers", type=int, default=1, help="동시에 채점할 답안 수 (기본 1 = 하나씩). 늘렸을 때 '평가 불가'가 늘면 다시 줄인다")
     p.add_argument("--resume", action="store_true", help="중간에 끊긴 채점을 이어서 한다 (<출력파일>.partial에 남은 건은 다시 채점하지 않음)")
     args = p.parse_args()
 
-    if args.run:
-        folder = Path("results/runs") / args.run
-        runs = read_run_folder(folder)
-        args.out = folder / "eval.jsonl"
-    else:
-        if not args.out:
-            p.error("--runs를 쓸 때는 --out이 필요합니다")
-        runs = read_jsonl(args.runs, RunRecord)
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    partial = args.out.with_name(args.out.name + ".partial")
+    folder = Path("results/runs") / args.run
+    runs = read_run_folder(folder)
+    out = folder / "eval.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    partial = out.with_name(out.name + ".partial")
     done = _read_partial(partial, runs) if args.resume else []
     with partial.open("w", encoding="utf-8") as f:  # 한 건 끝날 때마다 저장. 이어하기면 깨끗한 줄만 먼저 다시 쓴다
         for rec in done:
@@ -281,12 +235,12 @@ def main() -> None:
             f.write(rec.model_dump_json() + "\n")
             f.flush()
 
-        records = score(runs, load_ground_truths(args.eval_dir), use_ragas=not args.no_ragas, workers=args.workers, on_record=save, done=done)
+        records = score(runs, load_ground_truths(args.eval_dir), workers=args.workers, on_record=save, done=done)
     # 끝까지 마친 뒤에만 최종 파일을 쓴다 (예전과 같은 모양). 중간 저장 파일은 지운다.
-    args.out.write_text("\n".join(r.model_dump_json() for r in records) + "\n", encoding="utf-8")
+    out.write_text("\n".join(r.model_dump_json() for r in records) + "\n", encoding="utf-8")
     partial.unlink()
     note = f" (이어하기로 건너뜀 {len(done)}건)" if done else ""
-    print(f"채점 {len(records)}건 → {args.out}{note}")
+    print(f"채점 {len(records)}건 → {out}{note}")
 
 
 if __name__ == "__main__":

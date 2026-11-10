@@ -13,7 +13,6 @@ PDF를 일일이 열지 않고도 "자동 채점이 맞았나"를 판단할 수 
 
 실행 예
   python -m src.judge.review_sheet --run <run_id>
-  python -m src.judge.review_sheet --runs a.jsonl b.jsonl --evals eval.jsonl --max 8   (시험용)
 
 결과는 data/judge_review/ 아래(git 제외)에 저장한다. 최종 기록은 사람이 results/review.md에 쓴다.
 """
@@ -141,8 +140,8 @@ def render_case(n: int, cand: Candidate, pairs: Pairs, truths: dict[str, GroundT
     for mode in cand.modes:
         run, ev = pairs[(cand.qid, mode)]
         out += ["", f"### 방식: `{mode}`  (서비스 상태 `{run.status}`)", "", f"**서비스 답변**: {run.answer}", "",
-                f"**서비스가 인용한 곳**: " + (", ".join(f"{c.source_id}={c.book_id} {c.page}쪽" for c in run.citations) or "(인용 없음)"),
-                f"**모델이 실제로 본 문맥**: " + (", ".join(f"{c.source_id}={c.metadata.book_id} {c.metadata.page}쪽" for c in run.final_context) or "(없음)"),
+                "**서비스가 인용한 곳**: " + (", ".join(f"{c.source_id}={c.book_id} {c.page}쪽" for c in run.citations) or "(인용 없음)"),
+                "**모델이 실제로 본 문맥**: " +(", ".join(f"{c.source_id}={c.metadata.book_id} {c.metadata.page}쪽" for c in run.final_context) or "(없음)"),
                 "", "| 항목 | 점수 | 이유 |", "|---|---|---|",
                 f"| Faithfulness | {_fmt(ev.faithfulness if ev.faithfulness is None else round(ev.faithfulness, 2))} | |"]
         for item in JUDGE_ITEMS:
@@ -183,28 +182,18 @@ def build_sheet(pairs: Pairs, truths: dict[str, GroundTruth], documents_dir: Pat
 
 def main() -> None:
     p = argparse.ArgumentParser(description="대표 사례 원문 대조 시트 만들기")
-    src = p.add_mutually_exclusive_group(required=True)
-    src.add_argument("--run", help="metrics 러너의 run_id (results/runs/<run_id>/ 의 세 방식 파일과 eval.jsonl)")
-    src.add_argument("--runs", type=Path, nargs="+", help="RunRecord JSONL 파일들 (시험용)")
-    p.add_argument("--evals", type=Path, help="--runs를 쓸 때 EvalRecord JSONL")
+    p.add_argument("--run", required=True, help="metrics 러너의 run_id (results/runs/<run_id>/ 의 세 방식 파일과 eval.jsonl)")
     p.add_argument("--eval-dir", type=Path, default=DEFAULT_EVAL_DIR)
     p.add_argument("--documents", type=Path, default=Path("data/shipping/documents"))
     p.add_argument("--max", type=int, default=12)
     p.add_argument("--out", type=Path)
     a = p.parse_args()
 
-    if a.run:
-        folder = Path("results/runs") / a.run
-        runs = read_run_folder(folder)
-        evals = read_jsonl(folder / "eval.jsonl", EvalRecord)
-        out, title = a.out or Path("data/judge_review") / f"{a.run}.md", f"({a.run})"
-    else:
-        if not a.evals:
-            p.error("--runs를 쓸 때는 --evals가 필요합니다")
-        runs = [r for f in a.runs for r in read_jsonl(f, RunRecord)]
-        evals = read_jsonl(a.evals, EvalRecord)
-        out, title = a.out or Path("data/judge_review/sheet.md"), ""
-    sheet = build_sheet(build_pairs(runs, evals), load_ground_truths(a.eval_dir), a.documents, a.max, title)
+    folder = Path("results/runs") / a.run
+    runs = read_run_folder(folder)
+    evals = read_jsonl(folder / "eval.jsonl", EvalRecord)
+    out = a.out or Path("data/judge_review") / f"{a.run}.md"
+    sheet = build_sheet(build_pairs(runs, evals), load_ground_truths(a.eval_dir), a.documents, a.max, f"({a.run})")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(sheet, encoding="utf-8", newline="\n")
     print(f"시트 저장: {out}  ({sheet.count('## 사례')}건)")
