@@ -111,3 +111,37 @@ def test_run_meta_keeps_extra_settings(tmp_path):
     run_dir = run_all(QUESTIONS, MODES, fake_run_query(), tmp_path, run_id="r1", extra={"selection_seed": 20261105})
     meta = json.loads((run_dir / "run_meta.json").read_text(encoding="utf-8"))
     assert meta["selection_seed"] == 20261105
+
+
+# --- run_meta에 실행 시점의 커밋·변경 여부를 남긴다 (이슈 #65: 동결 커밋 해시 기록) ----------------
+
+def _git(cwd, *args):
+    import subprocess
+
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+
+
+def test_git_state_records_commit_and_flags_uncommitted_changes(tmp_path):
+    from src.metrics.run import git_state
+
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@t")
+    _git(tmp_path, "config", "user.name", "t")
+    (tmp_path / "a.txt").write_text("1", encoding="utf-8")
+    _git(tmp_path, "add", "a.txt")
+    _git(tmp_path, "commit", "-q", "-m", "c")
+
+    clean = git_state(tmp_path)
+    assert len(clean["git_commit"]) == 40 and clean["git_dirty"] is False
+
+    (tmp_path / "new.txt").write_text("x", encoding="utf-8")  # 추적되지 않는 파일(results/ 같은 것)은 변경으로 세지 않는다
+    assert git_state(tmp_path)["git_dirty"] is False
+
+    (tmp_path / "a.txt").write_text("2", encoding="utf-8")  # 추적 파일 수정은 변경이다
+    assert git_state(tmp_path)["git_dirty"] is True
+
+
+def test_git_state_is_none_when_git_is_unavailable(tmp_path):
+    from src.metrics.run import git_state
+
+    assert git_state(tmp_path) == {"git_commit": None, "git_dirty": None}  # git 저장소가 아님: 0이나 False로 지어내지 않는다
