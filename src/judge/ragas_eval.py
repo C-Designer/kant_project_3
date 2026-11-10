@@ -10,6 +10,8 @@
 - RAGAS가 NaN 반환   : 답변에서 사실 주장을 하나도 못 뽑음 → None + "해당 없음"
 - 예외 발생          : 채점을 못 함 → None + "평가 불가"
 
+같은 답안도 값이 흔들려 faithfulness_repeated()가 config.FAITHFULNESS_REPEATS번 채점해 값이 나온 회차만 평균한다.
+
 RAGAS는 안에서 AI를 직접 부르기 때문에, 그 호출이 기록계를 거치도록
 RecordedLLM(중간 연결 부품)을 끼워 넣는다.
 """
@@ -20,14 +22,15 @@ import asyncio
 import math
 import re
 
-from src.contracts import RunRecord, TokenUsage
-from src.judge.rules import LLMCall, sum_usage
+from src import config
+from src.contracts import FaithfulnessRun, RunRecord, TokenUsage
+from src.judge.rules import LLMCall, mean_ignoring_none, sum_usage
 
 
 def _make_recorded_llm(llm: LLMCall):
     """RAGAS가 요구하는 LLM 모양(BaseRagasLLM)으로 우리 호출 함수를 감싼다.
 
-    RAGAS를 설치하지 않은 환경에서도 이 파일을 불러올 수 있도록 안에서 import 한다.
+    RAGAS는 불러오는 데 약 4초가 걸려(11/10 측정) 실제로 채점할 때만 안에서 import 한다.
     """
     from langchain_core.outputs import Generation
     from langchain_core.outputs import LLMResult as LangChainResult  # 팀 LLMResult와 이름이 겹치지 않게 구분
@@ -114,11 +117,7 @@ def faithfulness(run: RunRecord, llm: LLMCall) -> tuple[float | None, TokenUsage
     # 그 구분은 RAGAS의 주장 추출에 맡기고, 빈 목록 대신 "문맥 없음" 표시 한 줄을 넘긴다.
     contexts = [c.text for c in run.final_context] or ["(검색 자료 없음)"]
 
-    try:
-        from ragas import SingleTurnSample
-    except ImportError as e:
-        return None, None, None, f"RAGAS 미설치: {e}"
-
+    from ragas import SingleTurnSample
     from ragas.run_config import RunConfig
 
     recorded = None
@@ -142,3 +141,31 @@ def faithfulness(run: RunRecord, llm: LLMCall) -> tuple[float | None, TokenUsage
             return None, recorded.usage, f"사실 주장 없음 (보류·자료 부족·되묻기 문장만 있음: {' / '.join(metric.removed)})", None
         return None, recorded.usage, "사실 주장 없음 (RAGAS가 주장을 추출하지 못함)", None
     return float(score), recorded.usage, None, None
+
+
+def _run_reason(na: str | None, us: str | None) -> str | None:
+    """한 회차의 빈칸 사유. 값이 나온 회차는 None."""
+    if na:
+        return f"해당 없음: {na}"
+    if us:
+        return f"평가 불가: {us}"
+    return None
+
+
+def faithfulness_repeated(run: RunRecord, llm: LLMCall):
+    """Faithfulness를 config.FAITHFULNESS_REPEATS번 채점해 값이 나온 회차만 평균한다.
+
+    반환: (평균 점수, 토큰, 해당 없음 이유, 평가 불가 이유, 회차별 결과).
+    값이 하나도 없으면 해당 없음 이유가 있는 회차를 먼저 쓰고, 없으면 평가 불가 이유를 쓴다.
+    """
+    results = [faithfulness(run, llm) for _ in range(config.FAITHFULNESS_REPEATS)]
+    runs = [FaithfulnessRun(score=s, reason=_run_reason(na, us)) for s, _, na, us in results]
+    # 어떤 회차만 사용량을 모르면(준비 단계 실패) 모른다고 둔다. 빼고 더하면 실제보다 적게 보인다.
+    usages = [u for _, u, _, _ in results]
+    tokens = sum_usage(*[u or TokenUsage(input=None, output=None) for u in usages]) if any(usages) else None
+    mean = mean_ignoring_none([r.score for r in runs])
+    if mean is not None:
+        return mean, tokens, None, None, runs
+    na = next((na for _, _, na, _ in results if na), None)
+    us = None if na else next((us for _, _, _, us in results if us), None)
+    return None, tokens, na, us, runs

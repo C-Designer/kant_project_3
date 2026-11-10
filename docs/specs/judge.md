@@ -32,23 +32,18 @@
 
 ## 검증 (채점관 자체의 품질)
 
-실제 답안이 나오기 전에 정답 점수를 아는 시험지로 채점관을 확인한다. 시험지에는 정답 인용문이 들어가므로 `data/judge_mock/`에만 두고 커밋하지 않는다.
+실제 답안이 나오기 전(11/5), 정답 점수를 아는 가짜 답안 시험지(정답 그대로, 시각 바꿔치기, 금지 주장 단정, 잘못된 보류, 근거 없음, 서비스 오류)로 채점관을 확인했다. 결과(gpt-6-luna): 30장·62칸 중 60칸 일치, 불일치 2칸은 시험지 오류로 확인 후 수정, 흔들림은 10장 × 3회 40칸 중 변동 0.
 
-| 도구 | 하는 일 | 11/5 결과 (gpt-6-luna) |
-|---|---|---|
-| `mock_cases.py` | 정답지로 가짜 답안 340장 생성: 정답 그대로, 시각 바꿔치기, 금지 주장 단정, 잘못된 보류, 근거 없음, 서비스 오류. 종류마다 기대 점수를 붙임 | - |
-| `calibrate.py` | 시험지를 채점시켜 기대 점수와 칸마다 비교. `--repeat N`이면 같은 답안을 N번 채점해 점수가 바뀐 칸도 적는다 | 30장·62칸 중 60칸 일치. 불일치 2칸은 시험지 오류로 확인 후 수정. 흔들림은 10장 × 3회, 40칸 중 변동 0 |
+프롬프트를 고칠 계획이 없어 이 시험 도구(`mock_cases.py`·`calibrate.py`)와 일회성 확인 도구(`brief_demo.py`·`ragas_trial.py`·`stability.py`)는 지웠다(git 기록에 남아 있음). 이후 검증은 실제 답안으로 한다: 같은 답안을 여러 번 채점한 흔들림 측정과 사람 원문 대조(`review_sheet.py`, 대표 사례는 `results/review.md`).
 
-11/5에 한 일회성 확인(발제 예시 장비 A 15분 채점: 4항목 모두 1, RAGAS 한국어 주장 추출 방향: 근거 없음 0.00·시각 바꿔치기 0.50~0.75·정답 0.75~1.00)은 `brief_demo.py`·`ragas_trial.py`로 했고, 11/9에 `calibrate.py`가 대신해 두 파일을 지웠다(git 기록에 남아 있음). 별도 `stability.py`도 `calibrate.py --repeat`으로 합쳤다.
-
-한계: 시험지는 뚜렷한 답안이라 실제 답안보다 쉽다. RAGAS는 주장을 매번 다른 말로 뽑아 같은 답안도 실행마다 점수가 달라질 수 있다. 실제 채점 후 `review.md`로 다시 확인한다.
+한계: 시험지는 뚜렷한 답안이라 실제 답안보다 쉬웠다. RAGAS는 주장을 매번 다른 말로 뽑아 같은 답안도 실행마다 점수가 달라질 수 있다. 실제 채점 후 `review.md`로 다시 확인한다.
 
 ## 실행 환경 제약
 
 - **Python 3.14는 쓸 수 없다.** RAGAS가 의존하는 `scikit-network`가 Python 3.14용 배포 파일이 없어 설치 중 빌드에 실패한다(Windows, 2026-11-05 확인). 3.12·3.13에서는 동작을 확인했고, 팀 환경은 **3.12로 고정**한다(`.python-version`, `pyproject.toml`의 `requires-python = "==3.12.*"`, `uv.lock`). 설치 방법은 README "Python 환경".
 - **RAGAS 버전은 `ragas==0.4.3`, 함께 `langchain-community==0.3.27`(`<0.3.28`).** 최신 `langchain-community`(0.4.x)에서는 `ragas` import가 `langchain_community.chat_models.vertexai` 모듈을 찾지 못해 실패한다. 이 때문에 LangChain 전체가 0.3 계열(`langchain-core` 1.0 미만, `langchain-openai` 0.3.x)로 맞춰진다. 다른 영역이 LangChain 1.x 기능을 쓰려면 이 제약과 충돌하므로 먼저 judge와 상의한다.
 
-코드 위치: `src/judge/` (`rules.py`, `judge.py`, `ragas_eval.py`, `score.py`, `prompts/judge_v1.md`, 사람 확인 시트 `review_sheet.py`, 검증 도구 `mock_cases.py`·`calibrate.py`). `score.py`의 `llm_call`·`record_score`가 `platform.llm.call(kind="eval")`와 `platform.tracing.record_score`를 부르는 유일한 창구다. 테스트 `tests/judge/`.
+코드 위치: `src/judge/` (`rules.py`, `judge.py`, `ragas_eval.py`, `score.py`, `prompts/judge_v1.md`, 사람 확인 시트 `review_sheet.py`). `score.py`의 `llm_call`·`record_score`가 `platform.llm.call(kind="eval")`와 `platform.tracing.record_score`를 부르는 유일한 창구다. 테스트 `tests/judge/`.
 
 ## 인터페이스
 
@@ -80,7 +75,7 @@ class EvalRecord(BaseModel):     # judge가 만들고 metrics가 합친다
 def score(runs: list[RunRecord], truths: list[GroundTruth]) -> list[EvalRecord]
 ```
 
-- 명령: `python -m src.judge.score --run <run_id>` → `results/runs/<run_id>/{naive,hybrid,hybrid_rerank}.jsonl`을 읽어 `results/runs/<run_id>/eval.jsonl`. 정답은 `data/shipping/evaluation/{development,additional,expansion_validation}.json`을 metrics 로더(`src/metrics/loader.py`)로 읽는다(`--eval-dir`로 폴더 변경). 시험지 같은 단일 파일은 `--runs <파일> --out <파일>`. `--no-ragas`는 Faithfulness를 건너뛰고 평가 불가로 기록한다(Judge 4항목만 볼 때).
+- 명령: `python -m src.judge.score --run <run_id>` → `results/runs/<run_id>/{naive,hybrid,hybrid_rerank}.jsonl`을 읽어 `results/runs/<run_id>/eval.jsonl`. 정답은 `data/shipping/evaluation/{development,additional,expansion_validation}.json`을 metrics 로더(`src/metrics/loader.py`)로 읽는다(`--eval-dir`로 폴더 변경).
 - 속도·안전: `--workers N`은 답안 N건을 동시에 채점한다(기본 1 = 하나씩). 결과 파일의 내용과 순서는 N과 무관하게 같다. 한 건에서 예상 못 한 오류가 나도 그 건만 "평가 불가: 사유"로 남기고 나머지는 계속한다. 채점 중에는 `<출력파일>.partial`에 한 건씩 저장하고, 끊겼으면 같은 명령에 `--resume`을 붙여 이어서 한다(끝까지 마치면 최종 파일을 쓰고 partial은 지운다). 토큰 합산 규칙(모르면 `None`)은 `rules.py`의 `add_optional`·`sum_usage` 한 곳에 있다.
 - 세 방식에 같은 평가 모델·프롬프트·설정. 설정은 `config.py`에 기록.
 
