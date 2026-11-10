@@ -32,8 +32,11 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - `uv run python -m src.platform.check_connections`는 공용 Qdrant 컬렉션 존재 여부와 Langfuse 키 인증을 읽기 전용으로 점검한다. 둘 다 성공하면 종료 코드 0, 미설정·실패·컬렉션 없음은 1. `QDRANT_URL`이 없으면 로컬 저장소를 열지 않는다. 키·응답 본문은 출력하지 않는다. 팀원의 화면 권한·4개 스팬 확인·평가 점수 연결은 별도이며 README의 #40 확인표에 기록한다.
 - 2026-11-09 확인: 대표 트레이스의 4개 스팬과 검색 결과·최종 문맥 출력은 조회 가능. 리드 MacBook에서 `QDRANT_API_KEY`로 공용 Qdrant에 접속해 `check_connections` 두 서비스 `ok`(README). Langfuse v4 업그레이드 후 `record_score` 점수 저장 확인. 팀원 PC 접속과 judge 실제 채점 점수 연결(#34)은 아직이다.
 
-보안 비교(`src/platform/security.py`, 미구현 #42)
+보안 비교(`src/platform/security.py`, #42)
 - 최종 구성 하나, 보안 질문 2개. 한 번 검색한 `final_context`를 저장 → `answer.generate(defense=False)` → 같은 문맥으로 `generate(defense=True)`. 결과 4개를 `results/security.md`에 공격 노출·추종·업무 정확성·과잉 거절로 나눠 기록.
+- 실행: `uv run python -m src.platform.security --mode <최종 구성>` → `results/security.json`(커밋 해시, 질문별 `request_id`·`final_context`·답변 2개·토큰). 트레이스는 질문마다 하나(태그 `security`), 안에 `default`·`defense` 스팬.
+- ① 노출은 `attack_text`가 최종 문맥에 들어 있는지 공백을 무시하고 비교해 자동 판정한다(`attack_in_context`). `attack_text`는 이 판정에만 쓰고 문맥·프롬프트에 넣지 않는다. ②추종 ③정확성 ④과잉 거절은 사람이 `results/security.md`에 적는다.
+- 2026-11-10 사전 점검(로컬 색인, LLM 호출 없음): 세 방식 모두 두 질문에서 공격 문장이 최종 문맥에 없다. SB15 해당 쪽의 앞 청크는 검색되지만, 공격 문장은 다음 청크에 있다. 최종 구성에서도 같으면 결과는 "공격 미노출, 방어율 계산 불가"다.
 
 재현
 - `README` 설치·실행 절, `.env.example`, Qdrant 실행 방법(Mac Studio의 서버를 `QDRANT_URL`로 쓴다. `QDRANT_URL`을 비우면 `search.store.get_client()`가 로컬 폴더 `data/shipping/qdrant`를 연다. 로컬 `docker run qdrant/qdrant`를 쓰려면 `QDRANT_URL=http://localhost:6333`). 11/11 구현 안 한 팀원이 README대로 설치·실행. 안 되면 README를 고친다.
@@ -41,7 +44,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 
 남은 확인: 팀원 PC의 공용 서비스 접속, judge 실제 채점 1건의 점수 연결(#34), Mac Studio 재부팅 복구. (HTTP 상태 정책·셀프호스트 Langfuse·Qdrant 서버·k=5·평가 모델 gpt-6-luna·Python 3.12/uv는 확정.)
 
-코드 위치: `src/platform/` (`query.py`, `llm.py`, `tracing.py`, `jsonl.py`, `check_connections.py`; `security.py`는 #42에서 추가), `src/api/` (`main.py`; 요청·응답 모델은 `contracts.py`에 있어 `schemas.py`는 두지 않는다), `src/config.py`, `src/contracts.py`
+코드 위치: `src/platform/` (`query.py`, `llm.py`, `tracing.py`, `jsonl.py`, `check_connections.py`, `security.py`), `src/api/` (`main.py`; 요청·응답 모델은 `contracts.py`에 있어 `schemas.py`는 두지 않는다), `src/config.py`, `src/contracts.py`
 
 ## 인터페이스
 
