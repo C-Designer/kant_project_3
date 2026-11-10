@@ -24,7 +24,7 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-small"  # TODO(미정, #14) 로컬 E
 QDRANT_URL = os.environ.get("QDRANT_URL") or None  # Mac Studio의 공용 Qdrant 서버. 없으면 아래 로컬 폴더로 대체
 QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY") or None  # 공용 Qdrant 접속 키. 서버 Mac은 비워 두고 인증 프록시가 키를 붙인다
 QDRANT_PATH: Path | None = DATA_DIR / "qdrant"  # QDRANT_URL이 없을 때만 쓰는 로컬 저장소. None이면 메모리 (테스트용)
-COLLECTION = "shipping_chunks"  # TODO(미정, #14)
+COLLECTION = "shipping_basic"  # 데이터셋(난이도)마다 컬렉션을 따로 둔다: shipping_basic, 이후 shipping_intermediate 등 (#97)
 QDRANT_TIMEOUT_SEC = 40  # 공용 Qdrant 한 번 호출의 제한 시간(초). 정하지 않으면 HTTP 기본값(약 5초)이 적용돼 서버가 한 번 느리면 요청이 실패한다(#106)
 QDRANT_MAX_RETRIES = 2  # 시간 초과·502·503·504일 때만 다시 시도하는 횟수. 401·404는 재시도하지 않는다(#106)
 
