@@ -1,7 +1,5 @@
 """score.py의 llm_call·record_score가 팀 platform을 그대로 부르는지 확인한다 (실제 AI는 부르지 않음)."""
 
-import pytest
-
 from src.judge import score as score_mod
 from src.judge.score import score_one
 from src.platform import llm as platform_llm
@@ -17,7 +15,6 @@ def test_기본은_팀_platform의_llm_call을_eval로_부른다(monkeypatch):
         return platform_llm.LLMResult("ok", 11, 22, 33)
 
     monkeypatch.setattr(platform_llm, "call", fake_call)
-    monkeypatch.delenv("JUDGE_LLM", raising=False)
     res = score_mod.llm_call([{"role": "user", "content": "hi"}])
     assert (res.text, res.input_tokens, res.output_tokens, res.latency_ms) == ("ok", 11, 22, 33)
     assert seen["kind"] == "eval"  # 서비스 사용량과 섞이지 않는 평가 호출
@@ -55,15 +52,7 @@ def test_platform이_LLMError를_내면_평가불가로_남고_0이나_1로_바�
         raise platform_llm.LLMError("실패", "model_error")
 
     monkeypatch.setattr(platform_llm, "call", failing)
-    monkeypatch.delenv("JUDGE_LLM", raising=False)
     rec = score_one(make_run(), make_truth(), score_mod.llm_call, use_ragas=False)
     assert rec.judge is None
     reasons = [u for u in rec.unscorable if not u.startswith("faithfulness")]
     assert len(reasons) == 4 and all("채점 호출 실패" in u for u in reasons)
-
-
-def test_로컬_스위치가_켜지면_local_llm을_쓴다(monkeypatch):
-    local = pytest.importorskip("src.judge.local_llm")  # 각자 PC에만 있는 파일. 없으면 건너뜀
-    monkeypatch.setattr(local, "call", lambda messages: platform_llm.LLMResult("local", None, None, None))
-    monkeypatch.setenv("JUDGE_LLM", "local")
-    assert score_mod.llm_call([{"role": "user", "content": "hi"}]).text == "local"

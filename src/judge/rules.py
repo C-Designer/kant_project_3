@@ -57,7 +57,7 @@ def precheck(run: RunRecord) -> EvalRecord | None:
 
     reason = f"서비스 오류로 답변 없음 ({run.error or '사유 미기록'})"
     judge = {item: JudgeItem(score=None, reason=f"평가 불가: {reason}") for item in JUDGE_ITEMS}
-    judge["decision"] = JudgeItem(score=0, reason=f"서비스 오류로 답변·되묻기·보류 중 어느 것도 하지 못함")
+    judge["decision"] = JudgeItem(score=0, reason="서비스 오류로 답변·되묻기·보류 중 어느 것도 하지 못함")
     return EvalRecord(
         question_id=run.question_id,
         retrieval_mode=run.retrieval_mode,

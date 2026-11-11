@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import time
 import uuid
 import zlib
@@ -33,6 +34,18 @@ RunQuery = Callable[..., RunRecord]  # run_query(question, mode, *, request_id=N
 def make_run_id(now: datetime | None = None, label: str | None = None) -> str:
     stamp = (now or datetime.now()).strftime("%Y%m%d-%H%M%S")
     return f"{stamp}-{label}" if label else stamp
+
+
+def git_state(cwd: Path | str | None = None) -> dict:
+    """실행 시점의 커밋과 커밋 안 된 변경(추적 파일) 여부. git을 못 쓰면 None: 지어내지 않는다."""
+
+    def git(*args: str) -> str:
+        return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+
+    try:
+        return {"git_commit": git("rev-parse", "HEAD"), "git_dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
+    except (OSError, subprocess.CalledProcessError):
+        return {"git_commit": None, "git_dirty": None}
 
 
 def _call(run_query: RunQuery, q: Question, mode: str, clock: Callable[[], float]) -> RunRecord:
@@ -155,7 +168,13 @@ def main(argv: list[str] | None = None) -> None:
 
     run_query = mock_run_query if args.mock else _real_run_query()
     selection = json.loads(args.questions.read_text(encoding="utf-8"))
-    extra = {"selection_seed": selection.get("seed"), "quota": selection.get("quota"), "questions_file": str(args.questions)}
+    extra = {
+        "selection_seed": selection.get("seed"),
+        "quota": selection.get("quota"),
+        "questions_file": str(args.questions),
+        "mock": args.mock,  # 연습 실행이 비교표에 섞이지 않게(report가 거부한다)
+        **git_state(),  # 동결 커밋 해시 기록(#65)
+    }
     run_dir = run_all(
         load_selection(args.questions), args.modes.split(","), run_query, args.results_dir, label=args.label, extra=extra
     )
