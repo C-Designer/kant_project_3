@@ -35,7 +35,7 @@ RERANK_CANDIDATES = 20  # 확정. hybrid가 리랭커에 넘기는 후보 수
 
 # 하위 질문별 번갈아 선정 (hybrid_rerank_subq, #125)
 SUBQ_MAX = 4  # 하위 질문 최대 개수
-SUBQ_CANDIDATES = 50  # 하위 질문마다 hybrid로 뽑는 후보 수이자 합친 뒤 남기는 후보 수. 하위 질문마다 이 후보 전체를 따로 리랭크한다
+SUBQ_CANDIDATES = 20  # 하위 질문마다 hybrid로 뽑는 후보 수이자 합친 뒤 남기는 후보 수. 하위 질문마다 이 후보 전체를 따로 리랭크한다
 
 # 생성
 GENERATION_MODEL = "gpt-6-luna"
