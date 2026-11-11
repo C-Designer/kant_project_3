@@ -96,7 +96,7 @@
 
 - 결정: 기각(모델 교체 안 함). E5 small 유지. 크기·한국어 추가 학습·다른 계열을 모두 비교했고 이긴 것이 없으며 속도가 가장 빠르다(원본 5.7절 결론, 5.21절 "Basic 결론과 같음").
 - 갱신한 것: 없음. 원본 5.7절에 `embed.py`가 모델 이름에 `e5`가 있으면 접두어를 붙이는 구현과 `tests/test_embed_prefix.py`가 기록돼 있다.
-- 다음 실험 또는 Issue: 미측정으로 남은 것은 Intermediate에서의 small vs base, Advanced에서 KoE5·E5 large·bge-m3-ko, KURE-v1·Qwen3-Embedding-0.6B(원본 8절).
+- 다음 실험 또는 Issue: 미측정으로 남은 것은 Intermediate에서의 small vs base(원본 8절), Advanced에서 KoE5·E5 large·bge-m3-ko(원본 5.21절), KURE-v1·Qwen3-Embedding-0.6B(원본 5.7절 표 "측정 안 함").
 
 ## 실패·이상 기록
 

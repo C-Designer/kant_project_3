@@ -27,4 +27,6 @@ RAG 검색·생성·채점 실험을 실험당 한 파일로 쌓는다. 절차�
 | [0011](search/0011-chunk-size-and-k-under-token-limit.md) | 3000토큰 안에서 청크 크기·k 격자 | 완료 | 보류 | 없음 (탐색용) |
 | [0012](search/0012-subquestion-rerank-parallel.md) | 하위 질문별 rerank 병렬·배치 | 완료 | 기각 | 없음 (탐색용) |
 
+search 영역 실험의 결론 요약은 [search/README.md](search/README.md)에 있다.
+
 0001~0012는 `main`에 있는 `RunRecord`·`EvalRecord` 흐름이 아니라 분석 스크립트로 잰 탐색용 값을 사후에 정리한 것이다(사전 성공 기준 없음). 팀 비교표에 쓰는 값이 아니다.
