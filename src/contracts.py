@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-RetrievalMode = Literal["naive", "hybrid", "hybrid_rerank"]
+RetrievalMode = Literal["naive", "hybrid", "hybrid_rerank", "hybrid_rerank_subq"]
 LLMStatus = Literal["answered", "needs_clarification", "abstained"]
 Status = Literal["answered", "needs_clarification", "abstained", "error"]
 ExpectedAction = Literal["answer", "clarify", "abstain"]
