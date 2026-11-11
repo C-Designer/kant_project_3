@@ -42,14 +42,16 @@
 | `naive` | dense 상위 k | - |
 | `hybrid` | dense 상위 `POOL`=20개 + BM25 상위 20개를 RRF(`HYBRID_FUSION`="rrf", 상수 60, 무게 1:1)로 합침. BM25는 2-gram 토큰, k1 1.5·b 0.75 | 청킹이 줄바꿈을 지워 단어가 붙어 있으므로 키워드 비교는 글자 단위(n-gram). 상수·POOL은 `retrieve.py`에 있다 |
 | `hybrid_rerank` | `hybrid` 후보 `config.RERANK_CANDIDATES`=20개를 `config.RERANKER_MODEL`(`BAAI/bge-reranker-v2-m3`)로 재정렬 후 상위 k | - |
+| `hybrid_rerank_subq` (#125) | LLM이 질문을 하위 질문(최대 `config.SUBQ_MAX`=4개)으로 나눈다. 하위 질문마다 hybrid(E5·BM25 각 상위 `config.SUBQ_CANDIDATES`=50개 RRF)로 후보를 뽑고 하위 질문들의 후보를 RRF로 합쳐 50개를 남긴다. 그 후보 전체를 하위 질문마다 따로 리랭크한 순위의 1위, 2위, …를 번갈아 담아(이미 담은 청크는 건너뜀) k개 | 분해 프롬프트(현재 `subq.SYSTEM`, 강화안은 시험 중) |
 
-- 세 방식은 같은 컬렉션·같은 임베딩. `k`는 호출자가 넘기고 최종 비교에서는 동일.
+- 방식은 모두 같은 컬렉션·같은 임베딩. `k`는 호출자가 넘기고 최종 비교에서는 동일.
+- `hybrid_rerank_subq` 세부: 하위 질문이 2개 미만이거나 분해가 실패(LLM 오류·형식 오류)하면 원래 질문 하나로 같은 경로를 탄다(후보 50개를 원래 질문으로 리랭크). LLM은 `platform.llm.call`로 질문당 1회 부르며(질문 글만 입력) 요청 토큰·시간에 합산된다. 비용은 리랭크가 하위 질문 수만큼 늘어난다(분석 Advanced 60문항, GPU, 메모리 Qdrant: 검색 중앙값 `hybrid_rerank` 1.6초, 이 방식 10.8초, 하위 질문 만들기 LLM 약 3.3초 별도). 효과는 이슈 #125와 `search-notes`의 5.58~5.60(분석 전용): Basic 충분 문항 k=5 46→53, Advanced 35→40, Intermediate 42→43(판정 gpt-6-luna). 선정은 문항 집합이 같은 분석 결과라 새 문항에서의 일반화는 확인하지 못했다.
 - `hybrid_rerank` 소요 시간(질문당, 리랭크 단계만, Basic 개발용 28문항, 후보 20개): CPU 약 6~8초, GPU(RTX 5060 Laptop) 약 1.0초. 후보 수에 거의 비례한다(후보 50개면 CPU 11.8초, GPU 약 2.5초). 느려서 작은 모델로 바꾸는 안은 5종 비교에서 이긴 모델이 없어 두지 않았다.
 - 공용 Qdrant 호출(`collection_exists`, `query_points`, BM25 구축의 `scroll`)은 `store.call`로 감싼다. 한 번 호출의 제한 시간은 `config.QDRANT_TIMEOUT_SEC`=40초. 시간 초과·연결 실패와 502·503·504에서만 `config.QDRANT_MAX_RETRIES`=2번 다시 시도하고(대기 0.5초, 1초), 401·404는 재시도하지 않는다. 정하지 않으면 HTTP 기본값(약 5초)이라 서버가 한 번 느리면 요청이 `internal_error`로 끝난다(#106).
 - 정답 JSON의 근거 목록을 필터나 검색어로 쓰지 않는다.
 - 검색 호출은 `platform.tracing.span("retrieve")`로 감싼다. 출력에 문맥 축소 전 검색 청크의 본문·점수·메타데이터를 남기고, 메타데이터에 방식·k·chunk_id 목록·소요 시간을 남긴다.
 
-상태: 세 방식 모두 동작(#68·#71). 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준. Basic·개발용 28문항 비교에서 임베딩(E5 small), 리랭커(bge-reranker-v2-m3), 후보 수(20), hybrid 설정 모두 대안이 이기지 못해 유지했다.
+상태: 네 방식 모두 동작(#68·#71, `hybrid_rerank_subq`는 #125: 분석 선정과 Basic 60문항×k=5·10에서 120/120 일치). 컬렉션이 없으면 `IndexNotFound`. 청크는 페이지를 넘지 않고 글자 수 기준. Basic·개발용 28문항 비교에서 임베딩(E5 small), 리랭커(bge-reranker-v2-m3), 후보 수(20), hybrid 설정 모두 대안이 이기지 못해 유지했다.
 
 코드 위치: `src/search/` (`index.py`, `chunking.py`, `embed.py`, `store.py`, `retrieve.py`, `keyword.py`(BM25), `rerank.py`, `compare_models.py`(모델 비교 스크립트)). `config_basic.py`·`config_default.py`는 참고용 설정 사본이라 코드가 읽지 않는다(#87). 실제 설정은 `src/config.py`.
 
@@ -69,12 +71,12 @@ class RetrievedChunk(BaseModel):
     score: float
     metadata: ChunkMeta
 
-RetrievalMode = Literal["naive", "hybrid", "hybrid_rerank"]
+RetrievalMode = Literal["naive", "hybrid", "hybrid_rerank", "hybrid_rerank_subq"]
 
 def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]
 ```
 
-- 점수 내림차순, 최대 `k`개. 결과 없으면 빈 목록(예외 아님). 지원하지 않는 `mode`는 `ValueError`.
+- 점수 내림차순, 최대 `k`개. 결과 없으면 빈 목록(예외 아님). 지원하지 않는 `mode`는 `ValueError`. 단 `hybrid_rerank_subq`는 하위 질문별 순위를 번갈아 담은 순서이고 `score`는 그 청크를 뽑은 하위 질문의 리랭커 점수라 내림차순이 아닐 수 있다.
 - 원문에 없는 메타데이터를 만들지 않는다.
 
 ## 관련 ADR

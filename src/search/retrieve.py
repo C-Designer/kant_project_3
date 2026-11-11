@@ -1,9 +1,11 @@
 import time
+from itertools import zip_longest
+from typing import get_args
 
 from src import config
 from src.contracts import ChunkMeta, RetrievalMode, RetrievedChunk
 from src.platform import tracing
-from src.search import embed, keyword, rerank, store
+from src.search import embed, keyword, rerank, store, subq
 
 RRF_K = 60  # RRF 상수. 순위가 1등이든 2등이든 점수 차이가 너무 벌어지지 않게 하는 값 (잠정, #15)
 POOL = 20  # hybrid에서 E5·BM25 각각 상위 몇 개까지 후보로 보는지 (잠정, #15)
@@ -54,21 +56,45 @@ def _rrf(rankings: list[list[RetrievedChunk]], k: int) -> list[RetrievedChunk]:
     return [RetrievedChunk(text=by_id[c].text, score=fused[c], metadata=by_id[c].metadata) for c in top]
 
 
+def _alternate(rankings: list[list[RetrievedChunk]], k: int) -> list[RetrievedChunk]:
+    """순위 목록들의 1위, 2위, …를 번갈아 담는다. 이미 담은 청크는 건너뛰고 k개가 차면 멈춘다."""
+    picked: dict[str, RetrievedChunk] = {}
+    for tier in zip_longest(*rankings):
+        for c in tier:
+            if c is not None and c.metadata.chunk_id not in picked:
+                picked[c.metadata.chunk_id] = c
+                if len(picked) == k:
+                    return list(picked.values())
+    return list(picked.values())
+
+
+def _subq_chunks(terms: list[str], k: int) -> list[RetrievedChunk]:
+    """검색어마다 hybrid로 후보를 뽑아 RRF로 합치고, 그 후보 전체를 검색어마다 따로 리랭크한 순위를 번갈아 담는다."""
+    n = config.SUBQ_CANDIDATES
+    pool = _rrf([_rrf([_dense(t, n), _keyword(t, n)], n) for t in terms], n)
+    return _alternate([rerank.rerank(t, pool, len(pool)) for t in terms], k)
+
+
 def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]:
-    if mode not in ("naive", "hybrid", "hybrid_rerank"):
+    if mode not in get_args(RetrievalMode):
         raise ValueError(f"지원하지 않는 retrieval_mode: {mode}")
 
     with tracing.span("retrieve", input=query) as sp:
         t0 = time.perf_counter()
+        extra = {}
         if mode == "naive":
             chunks = _dense(query, k)
         elif mode == "hybrid":
             chunks = _rrf([_dense(query, POOL), _keyword(query, POOL)], k)
-        else:  # hybrid_rerank: hybrid로 후보를 넉넉히 뽑고 리랭커가 다시 정렬해 k개만 남긴다
+        elif mode == "hybrid_rerank":  # hybrid로 후보를 넉넉히 뽑고 리랭커가 다시 정렬해 k개만 남긴다
             candidates = _rrf(
                 [_dense(query, POOL), _keyword(query, POOL)], config.RERANK_CANDIDATES
             )
             chunks = rerank.rerank(query, candidates, k)
+        else:  # hybrid_rerank_subq: 하위 질문별 리랭크 순위를 번갈아 담는다. 하위 질문이 2개 미만이면 원래 질문 하나
+            subs = subq.decompose(query)
+            chunks = _subq_chunks(subs if len(subs) >= 2 else [query], k)
+            extra = {"sub_questions": subs}
         sp.update(
             output=[c.model_dump() for c in chunks],
             metadata={
@@ -76,6 +102,7 @@ def retrieve(query: str, mode: RetrievalMode, k: int) -> list[RetrievedChunk]:
                 "k": k,
                 "chunk_ids": [c.metadata.chunk_id for c in chunks],
                 "elapsed_ms": int((time.perf_counter() - t0) * 1000),
+                **extra,
             }
         )
         return chunks
