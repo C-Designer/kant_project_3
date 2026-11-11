@@ -286,6 +286,25 @@ def test_markdown_shows_blank_reasons_by_item(data):
     assert "빈칸 이유" in md and "충실도" in md and "미분류" in md
 
 
+def test_markdown_marks_unstable_judge_items_as_on_hold_but_keeps_scores(data):
+    runs, truths, evals = data
+    d = build_detail(runs, truths, evals, K)
+    s = build_summary(d, runs)
+    md = render_markdown(d, s, K)
+    marker = next(line for line in md.splitlines() if line.startswith("| 표시 |"))
+    cells = [c.strip() for c in marker.strip("|").split("|")]
+    # 순서: 표시, Hit, Recall, Faith, 사실, 조건, 근거, 판단, ...
+    assert cells[4] == ""  # 사실은 표시 없음
+    assert cells[5] == cells[6] == "해석 보류"
+    assert cells[7] == "해석 보류 + 채점관 흔들림 범위 안의 차이일 수 있음"
+    assert "0.500 (n=2)" in md  # naive 조건 평균(0, 1)은 지우지 않는다
+    assert "judge_conditions_mean" in read_csv_header(s)  # CSV 열은 그대로
+
+
+def read_csv_header(summary):
+    return summary[0].keys()
+
+
 # --- 집계할 기록이 없으면 빈 표를 만들지 않고 멈춘다 ---------------------------------------------
 
 def test_write_report_refuses_empty_input(tmp_path):
