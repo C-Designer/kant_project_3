@@ -14,4 +14,17 @@ RAG 검색·생성·채점 실험을 실험당 한 파일로 쌓는다. 절차�
 
 | 번호 | 제목 | 상태 | 결정 | run_id |
 |---|---|---|---|---|
-| | | | | |
+| [0001](search/0001-embedding-model-size.md) | 임베딩 모델 크기·후보 비교 | 완료 | 기각 (E5 small 유지) | 없음 (탐색용) |
+| [0002](search/0002-chunking.md) | 청킹 규칙 비교 (크기·겹침·첫 줄·분할·표 분리) | 완료 | 현행 유지 (잠정) | 없음 (탐색용) |
+| [0003](search/0003-hybrid-parameters.md) | hybrid 파라미터 비교 (POOL·RRF·무게·BM25) | 완료 | 현행 유지 (잠정) | 없음 (탐색용) |
+| [0004](search/0004-reranker.md) | 리랭커 후보 수·모델·입력 비교 | 완료 | 기각 (후보 20, bge-reranker-v2-m3 유지) | 없음 (탐색용) |
+| [0005](search/0005-k-and-token-limit.md) | k 늘리기와 3000토큰 한도 | 완료 | 보류 | 없음 (탐색용) |
+| [0006](search/0006-advanced-id-and-table-rules.md) | Advanced 번호 우선·표 붙이기 규칙 | 완료 | 채택 (Advanced 전용 옵션) | 없음 (탐색용) |
+| [0007](search/0007-answerability-and-missed-evidence.md) | 답할 재료 충분 판정과 놓친 근거 진단 | 완료 | 채택 (진단 방법) | 없음 (탐색용) |
+| [0008](search/0008-query-decomposition-and-scoring-attempts.md) | 질문 분해·LLM 점수·Jev 선정 시도 | 완료 | 기각 | 없음 (탐색용) |
+| [0009](search/0009-subquestion-alternating-selection.md) | 하위 질문별 rerank 번갈아 채우기 (`hybrid_rerank_subq`) | 완료 | 채택 (#125, #126, 후보 20 #128) | 없음 (탐색용) |
+| [0010](search/0010-additional-questions-and-limits.md) | 추가 질문 검증과 한계 | 완료 | 보류 | 없음 (탐색용) |
+| [0011](search/0011-chunk-size-and-k-under-token-limit.md) | 3000토큰 안에서 청크 크기·k 격자 | 완료 | 보류 | 없음 (탐색용) |
+| [0012](search/0012-subquestion-rerank-parallel.md) | 하위 질문별 rerank 병렬·배치 | 완료 | 기각 | 없음 (탐색용) |
+
+0001~0012는 `main`에 있는 `RunRecord`·`EvalRecord` 흐름이 아니라 분석 스크립트로 잰 탐색용 값을 사후에 정리한 것이다(사전 성공 기준 없음). 팀 비교표에 쓰는 값이 아니다.
