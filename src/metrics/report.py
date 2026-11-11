@@ -12,9 +12,9 @@ import csv
 import importlib
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, get_args
 
-from src.contracts import EvalRecord, GroundTruth, RunRecord
+from src.contracts import EvalRecord, GroundTruth, RetrievalMode, RunRecord
 from .ops_metrics import summarize_ops
 from .retrieval_metrics import hit_recall
 
@@ -42,7 +42,13 @@ _ITEM_LABELS = {
     UNCLASSIFIED: "미분류",
 }
 
-MODE_ORDER = ("naive", "hybrid", "hybrid_rerank")  # 발제 순서. 표에서 이 순서로 보여 준다.
+MODE_ORDER = get_args(RetrievalMode)  # contracts의 선언 순서(발제 세 방식이 앞). 표에서 이 순서로 보여 준다.
+
+# judge 흔들림 검증(2026-11-10): 같은 답안을 3번 채점하면 이 칸들은 방식 순위가 매번 바뀌었다.
+# 점수는 그대로 두고 표에서 "이 점수만으로 방식 간 우열을 판단하지 않는다"만 표시한다. judge가 표시를 바꾸라고 알리면 이 값만 고친다.
+HOLD_ITEMS = ("conditions", "evidence", "decision")
+HOLD_LABEL = "해석 보류"
+NOISE_NOTE = {"decision": "채점관 흔들림 범위 안의 차이일 수 있음"}  # 3번 일치율이 기준(90%)에 못 미친 칸
 
 def reason_item(reason: str) -> str:
     """"항목: 이유"에서 항목을 읽는다. 첫 콜론 기준. 알 수 없는 항목이거나 형식이 아니면 미분류."""
@@ -221,6 +227,11 @@ def render_markdown(
     def with_n(row, m):
         return f"{_fmt(row[f'{m}_mean'])} (n={row[f'{m}_n']})"
 
+    def hold_mark(item):
+        if item not in HOLD_ITEMS:
+            return ""
+        return " + ".join([HOLD_LABEL, *([NOISE_NOTE[item]] if item in NOISE_NOTE else [])])
+
     quality = _table(
         ["방식", f"Hit@{k}", f"Recall@{k}", "Faithfulness", "사실", "조건", "근거", "판단", "해당 없음", "평가 불가", "오류"],
         [
@@ -238,7 +249,8 @@ def render_markdown(
                 str(r["error_count"]),
             ]
             for r in summary
-        ],
+        ]
+        + [["표시", "", "", "", *(hold_mark(i) for i in JUDGE_ITEMS), "", "", ""]],
     )
     ops = _table(
         ["방식", "정상 평균 응답(ms)", "정상 건수", "오류율(%)", "오류 건수", "입력 토큰", "출력 토큰", "평가 호출 토큰(입력/출력, 별도)"],
@@ -298,6 +310,9 @@ def render_markdown(
             conditions,
             "",
             "평균은 해당 없음·평가 불가(N/A)를 제외하고 0점은 포함한다. 괄호는 평가 대상 수.",
+            "",
+            f"`{HOLD_LABEL}`: 채점관이 같은 답안을 다시 채점하면 방식 간 순위가 바뀐 칸이다. 점수는 그대로 두고, 이 점수만으로 방식의 우열을 판단하지 않는다. "
+            "검색 지표·사실·Faithfulness·운영 지표를 함께 참고한다.",
             "",
             "## 품질 (방식별 평균)",
             "",
@@ -390,7 +405,8 @@ def main(argv: list[str] | None = None) -> None:
         if eval_path.exists()
         else []
     )
-    frozen = load_frozen_config()
+    # 실행 뒤에 이름만 바뀐 설정은 run_meta의 config_overrides에 실행 당시 값을 적어 표에 그 값이 나오게 한다
+    frozen = {**load_frozen_config(), **meta.get("config_overrides", {})}
     settings = {
         "run_id": args.run,
         "실행 시작": meta.get("started_at"),

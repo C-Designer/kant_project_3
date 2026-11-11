@@ -78,6 +78,24 @@ def test_report_reads_eval_jsonl_when_present(tmp_path, eval_dir, stand_in_real_
     assert sum(1 for r in detail if r["faithfulness"] != "") == 1
 
 
+def test_report_shows_run_time_value_from_config_overrides(tmp_path, eval_dir, stand_in_real_run):
+    results = tmp_path / "results"
+    qfile = results / "questions.json"
+    questions_cli.main(
+        ["--eval-dir", str(eval_dir), "--answer", "2", "--clarify", "1", "--abstain", "1", "--seed", "1", "--min-per-source", "0", "--min-docs", "0", "--out", str(qfile)]
+    )
+    run_cli.main(["--questions", str(qfile), "--results-dir", str(results)])
+    (run_dir,) = (results / "runs").iterdir()
+    meta_path = run_dir / "run_meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["config_overrides"] = {"COLLECTION": "shipping_old_name"}
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+
+    report_cli.main(["--run", run_dir.name, "--eval-dir", str(eval_dir), "--k", "3", "--results-dir", str(results)])
+    md = (run_dir / "comparison.md").read_text(encoding="utf-8")
+    assert "| config.COLLECTION | shipping_old_name |" in md
+
+
 def test_report_fails_clearly_for_missing_run(tmp_path, eval_dir):
     with pytest.raises(SystemExit, match="없"):
         report_cli.main(["--run", "nope", "--eval-dir", str(eval_dir), "--k", "3", "--results-dir", str(tmp_path)])

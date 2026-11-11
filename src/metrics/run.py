@@ -1,4 +1,4 @@
-"""일괄 실행 러너: 질문 x 3방식을 `run_query()`로 돌려 RunRecord JSONL로 남긴다.
+"""일괄 실행 러너: 질문 x 방식(기본 필수 3방식)을 `run_query()`로 돌려 RunRecord JSONL로 남긴다.
 
     uv run python -m src.metrics.run --questions results/questions.json --modes naive,hybrid,hybrid_rerank
     uv run python -m src.metrics.run --questions results/questions.json --mock   # platform 없이 연습 실행
@@ -20,12 +20,13 @@ import zlib
 from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Iterable
+from typing import Callable, Iterable, get_args
 
-from src.contracts import RunRecord
+from src.contracts import RetrievalMode, RunRecord
 from .loader import Question
 
-MODES = ("naive", "hybrid", "hybrid_rerank")
+MODES = get_args(RetrievalMode)  # contracts가 정한 방식 전부. 이름을 여기서 다시 적지 않는다
+DEFAULT_MODES = ("naive", "hybrid", "hybrid_rerank")  # 발제의 필수 세 방식. 그 밖의 방식은 --modes로 따로 지정한다
 DEFAULT_RESULTS_DIR = Path("results")
 
 RunQuery = Callable[..., RunRecord]  # run_query(question, mode, *, request_id=None) -> RunRecord
@@ -158,7 +159,7 @@ def _real_run_query() -> RunQuery:
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description="질문 x 방식 일괄 실행")
     p.add_argument("--questions", required=True, type=Path, help="results/questions.json")
-    p.add_argument("--modes", default=",".join(MODES))
+    p.add_argument("--modes", default=",".join(DEFAULT_MODES), help=f"쉼표로 구분. 가능: {', '.join(MODES)}")
     p.add_argument("--results-dir", type=Path, default=DEFAULT_RESULTS_DIR)
     p.add_argument("--label")
     p.add_argument("--mock", action="store_true", help="platform 없이 가짜 run_query로 실행")

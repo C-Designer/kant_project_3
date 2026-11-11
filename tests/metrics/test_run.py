@@ -5,7 +5,7 @@ import pytest
 
 from src.contracts import RunRecord
 from src.metrics.loader import Question
-from src.metrics.run import MODES, load_runs, make_run_id, mock_run_query, run_all
+from src.metrics.run import DEFAULT_MODES, MODES, load_runs, make_run_id, mock_run_query, run_all
 
 QUESTIONS = [Question(id=f"S-{i}", question=f"질문 {i}", source="development") for i in range(1, 4)]
 
@@ -43,32 +43,32 @@ def test_make_run_id_is_timestamp_with_optional_label():
 
 
 def test_runs_every_question_in_every_mode_and_writes_one_line_each(tmp_path):
-    run_dir = run_all(QUESTIONS, MODES, fake_run_query(), tmp_path, run_id="r1")
-    for mode in MODES:
+    run_dir = run_all(QUESTIONS, DEFAULT_MODES, fake_run_query(), tmp_path, run_id="r1")
+    for mode in DEFAULT_MODES:
         lines = (run_dir / f"{mode}.jsonl").read_text(encoding="utf-8").splitlines()
         assert len(lines) == 3
         assert all(RunRecord.model_validate_json(line) for line in lines)
 
 
 def test_question_id_text_and_mode_come_from_the_runner_not_run_query(tmp_path):
-    run_dir = run_all(QUESTIONS, MODES, fake_run_query(blank_id=True), tmp_path, run_id="r1")
+    run_dir = run_all(QUESTIONS, DEFAULT_MODES, fake_run_query(blank_id=True), tmp_path, run_id="r1")
     recs = load_runs(run_dir)
     assert {r.question_id for r in recs} == {"S-1", "S-2", "S-3"}
     assert {r.question for r in recs} == {"질문 1", "질문 2", "질문 3"}
-    assert {r.retrieval_mode for r in recs} == set(MODES)
+    assert {r.retrieval_mode for r in recs} == set(DEFAULT_MODES)
 
 
 def test_run_query_receives_only_question_text_and_mode(tmp_path):
     calls = []
-    run_all(QUESTIONS, MODES, fake_run_query(calls), tmp_path, run_id="r1")
+    run_all(QUESTIONS, DEFAULT_MODES, fake_run_query(calls), tmp_path, run_id="r1")
     assert len(calls) == 9
     assert {c[0] for c in calls} == {"질문 1", "질문 2", "질문 3"}  # 정답·id·source는 넘기지 않는다
-    assert {c[1] for c in calls} == set(MODES)
+    assert {c[1] for c in calls} == set(DEFAULT_MODES)
 
 
 def test_failed_call_is_recorded_as_error_and_run_continues(tmp_path):
     run_dir = run_all(
-        QUESTIONS, MODES, fake_run_query(fail_on=("질문 2", "hybrid")), tmp_path, run_id="r1"
+        QUESTIONS, DEFAULT_MODES, fake_run_query(fail_on=("질문 2", "hybrid")), tmp_path, run_id="r1"
     )
     recs = {(r.question_id, r.retrieval_mode): r for r in load_runs(run_dir)}
     assert len(recs) == 9  # 하나 실패해도 전체가 기록된다
@@ -80,10 +80,10 @@ def test_failed_call_is_recorded_as_error_and_run_continues(tmp_path):
 
 
 def test_same_run_id_is_never_overwritten(tmp_path):
-    run_dir = run_all(QUESTIONS, MODES, fake_run_query(), tmp_path, run_id="r1")
+    run_dir = run_all(QUESTIONS, DEFAULT_MODES, fake_run_query(), tmp_path, run_id="r1")
     before = (run_dir / "naive.jsonl").read_text(encoding="utf-8")
     with pytest.raises(FileExistsError):
-        run_all(QUESTIONS[:1], MODES, fake_run_query(), tmp_path, run_id="r1")
+        run_all(QUESTIONS[:1], DEFAULT_MODES, fake_run_query(), tmp_path, run_id="r1")
     assert (run_dir / "naive.jsonl").read_text(encoding="utf-8") == before
 
 
@@ -94,21 +94,21 @@ def test_unknown_mode_is_rejected_before_anything_is_written(tmp_path):
 
 
 def test_run_meta_records_modes_and_question_ids(tmp_path):
-    run_dir = run_all(QUESTIONS, MODES, fake_run_query(), tmp_path, run_id="r1", label="smoke")
+    run_dir = run_all(QUESTIONS, DEFAULT_MODES, fake_run_query(), tmp_path, run_id="r1", label="smoke")
     meta = json.loads((run_dir / "run_meta.json").read_text(encoding="utf-8"))
     assert meta["run_id"] == "r1" and meta["label"] == "smoke"
-    assert meta["modes"] == list(MODES) and meta["question_ids"] == ["S-1", "S-2", "S-3"]
+    assert meta["modes"] == list(DEFAULT_MODES) and meta["question_ids"] == ["S-1", "S-2", "S-3"]
     assert meta["started_at"] and meta["finished_at"]
 
 
 def test_mock_run_query_returns_valid_records_for_all_modes():
-    for mode in MODES:
+    for mode in DEFAULT_MODES:
         r = mock_run_query("질문", mode)
         assert r.retrieval_mode == mode and r.status in {"answered", "needs_clarification", "abstained", "error"}
 
 
 def test_run_meta_keeps_extra_settings(tmp_path):
-    run_dir = run_all(QUESTIONS, MODES, fake_run_query(), tmp_path, run_id="r1", extra={"selection_seed": 20261105})
+    run_dir = run_all(QUESTIONS, DEFAULT_MODES, fake_run_query(), tmp_path, run_id="r1", extra={"selection_seed": 20261105})
     meta = json.loads((run_dir / "run_meta.json").read_text(encoding="utf-8"))
     assert meta["selection_seed"] == 20261105
 
@@ -145,3 +145,10 @@ def test_git_state_is_none_when_git_is_unavailable(tmp_path):
     from src.metrics.run import git_state
 
     assert git_state(tmp_path) == {"git_commit": None, "git_dirty": None}  # git 저장소가 아님: 0이나 False로 지어내지 않는다
+
+
+def test_every_contract_mode_can_be_run_and_loaded(tmp_path):
+    # 새 방식(예: hybrid_rerank_subq)이 contracts에 들어오면 러너를 따로 고치지 않아도 실행·로딩된다
+    run_dir = run_all(QUESTIONS, MODES, fake_run_query(), tmp_path, run_id="r_all")
+    assert {r.retrieval_mode for r in load_runs(run_dir)} == set(MODES)
+    assert set(DEFAULT_MODES) <= set(MODES)
