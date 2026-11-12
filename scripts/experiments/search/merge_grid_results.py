@@ -165,13 +165,13 @@ def main():
                         L.append(f"| {z} / {p}% | " + " | ".join(f(c, d) for c in cells) + " |")
             L.append("")
 
-    L.append("## 검색 지표 (근거 있는 문항 기준, raw top-k가 아니라 3000토큰 한도에 들어간 앞부분)\n")
+    L.append("## 검색 (근거 있는 문항 기준, raw top-k가 아니라 3000토큰 한도에 들어간 앞부분)\n")
     table("Recall@k (book_id)", lambda c, _: c and c["recall_book"])
     table("Recall@k (page+quote, 그룹 단위)", lambda c, _: c and c["recall_pq"])
     table("Hit@k", lambda c, _: c and c["hit"])
     table("모든그룹 충족률 (page+quote)", lambda c, _: c and c["all_pq"])
     table("3000토큰 한도에 들어간 청크 수(평균)", lambda c, _: c and c["n_used"], 2)
-    L.append("## 답변 행동 일치율·토큰\n")
+    L.append("## 답변 품질 (행동 일치율·토큰은 병렬 호출, RAGAS는 faithfulness만)\n")
     table("답변 행동 일치율(전체)", lambda c, _: c and c.get("act", {}).get("match"))
     table("답변 유형 일치율", lambda c, _: c and c.get("act", {}).get("match_answer"))
     table("되묻기 유형 일치율", lambda c, _: c and c.get("act", {}).get("match_clarify"))
@@ -181,26 +181,25 @@ def main():
     table("출력 토큰 평균", lambda c, _: c and c.get("act", {}).get("tout"), 0)
     table("재생성한 문항 비율(LLM 호출 2회 이상)", lambda c, _: c and c.get("act", {}).get("regen"))
     table("병렬 답변 호출 LLM 시간 평균(초, 24병렬 부하 중 값)", lambda c, _: c and c.get("act", {}).get("llm_s"), 2)
+    if G:
+        L += ["### RAGAS faithfulness (홀수 번째 36문항, 3회 평균)\n", "| 방식 | 크기 / 오버랩 | k | n | faithfulness |", "|---|---|---|---|---|"]
+        for (z, p, m, k), v in sorted(G.items(), key=lambda x: (MODES.index(x[0][2]), x[0][0], x[0][3])):
+            L.append(f"| {m} | {z} / {p}% | {k} | {v['n']} | {f(v['faithfulness'])} |")
+        L.append("")
 
-    L += ["## 검색 시간(retrieve() 한 번, k=11, 초) - 노트북 폴더별\n", "| 방식 | 크기 / 오버랩 | 폴더 | 평균 | 중앙값 | p95 |", "|---|---|---|---|---|---|"]
+    L += ["## 운영 지표 (노트북별로 따로 적는다)\n", "### 검색 시간(retrieve() 한 번, k=11, 초) - 노트북 폴더별\n", "| 방식 | 크기 / 오버랩 | 폴더 | 평균 | 중앙값 | p95 |", "|---|---|---|---|---|---|"]
     for (z, p, m), per in sorted(T.items(), key=lambda x: (MODES.index(x[0][2]), x[0][0], x[0][1])):
         for d, xs in per.items():
             L.append(f"| {m} | {z} / {p}% | {d} | {f(st.mean(xs), 4)} | {f(st.median(xs), 4)} | {f(pct95(xs), 4)} |")
     L.append("")
     if E2E:
-        L += ["## 전체 시간(retrieve~LLM 답변, 직렬, hybrid_rerank, 초) - 노트북 폴더별\n", "| 폴더 | 크기 | k | n(오류) | 평균 | 중앙값 | p95 | 검색 | 문맥 | LLM | 입력 토큰 | 출력 토큰 |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        L += ["### 전체 시간(retrieve~LLM 답변, 직렬, hybrid_rerank, 초) - 노트북 폴더별\n", "| 폴더 | 크기 | k | n(오류) | 평균 | 중앙값 | p95 | 검색 | 문맥 | LLM | 입력 토큰 | 출력 토큰 |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
         for key, v in sorted(k_ for k_ in E2E.items() if len(k_[0]) == 3):
             L.append(f"| {key[0]} | {key[1]} | {key[2]} | {v['n']}({v['err']}) | {f(v['mean'], 2)} | {f(v['median'], 2)} | {f(v['p95'], 2)} | {f(v['retr'], 3)} | {f(v['ctx'], 4)} | {f(v['llm'], 2)} | {f(v['tin'], 0)} | {f(v['tout'], 0)} |")
-        L += ["", "공통 기준점(500자·0%·hybrid_rerank·k=10) - 노트북 사이 비교와 시간대 흔들림\n", "| 폴더 | 시점 | 시각 | n | 평균 | 중앙값 |", "|---|---|---|---|---|---|"]
+        L += ["", "### 공통 기준점(500자·0%·hybrid_rerank·k=10) - 노트북 사이 비교와 시간대 흔들림\n", "| 폴더 | 시점 | 시각 | n | 평균 | 중앙값 |", "|---|---|---|---|---|---|"]
         for key, v in sorted(k_ for k_ in E2E.items() if len(k_[0]) == 2):
             L.append(f"| {key[0]} | {key[1]} | {v['at']} | {v['n']} | {f(v['mean'], 2)} | {f(v['median'], 2)} |")
         L.append("")
-    if G:
-        L += ["## RAGAS faithfulness (홀수 번째 36문항, 3회 평균)\n", "| 방식 | 크기 / 오버랩 | k | n | faithfulness |", "|---|---|---|---|---|"]
-        for (z, p, m, k), v in sorted(G.items(), key=lambda x: (MODES.index(x[0][2]), x[0][0], x[0][3])):
-            L.append(f"| {m} | {z} / {p}% | {k} | {v['n']} | {f(v['faithfulness'])} |")
-        L.append("")
-
     L += ["## 확정값(900자·0%·k=5) 대비 후보 (사전 기준 1·2·토큰만 자동 판정)\n", "| 방식 | 크기 / 오버랩 | k | ΔRecall(book) | ΔRecall(p+q) | Δ행동 일치율 | 입력 토큰 비 | 후보 |", "|---|---|---|---|---|---|---|---|"]
     cand = []
     for mode in MODES:
