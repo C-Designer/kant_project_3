@@ -22,6 +22,8 @@ case "$variable" in
   *) usage ;;
 esac
 [[ "$variable" == baseline ]] || [[ "$value" =~ ^[0-9]+$ ]] || { echo "value는 정수여야 한다: $value" >&2; exit 2; }
+# topK 9 이상은 문맥이 한도 3000을 넘어 잘리므로 한도를 풀어 topK 효과만 본다(2단계, 문서 "2단계 탐색 계획")
+if [[ "$variable" == topk ]] && (( value >= 9 )); then extra+=(-e "EXP_CONTEXT_TOKENS=6000"); fi
 
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 env_file=$(cd "$(dirname "$env_file")" && pwd)/$(basename "$env_file")
