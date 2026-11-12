@@ -1,16 +1,37 @@
 """Langfuse 트레이스 진입점. 추적 오류는 요청을 절대 깨지 않는다."""
 
+import contextvars
 import logging
 from contextlib import ExitStack, contextmanager
 
-from langfuse import get_client as _lf_client, propagate_attributes
+from langfuse import Langfuse, propagate_attributes
+
+from src.answer import masking
 
 log = logging.getLogger(__name__)
 
+_hide_pii: contextvars.ContextVar[bool] = contextvars.ContextVar("hide_pii", default=False)
+
+
+def _mask(*, data, **kwargs):
+    # hide_pii() 안에서만 동작한다. Langfuse에 기록되는 값만 바꾸고 모델에 가는 값은 그대로다
+    return masking.hide(data) if _hide_pii.get() else data
+
+
+@contextmanager
+def hide_pii():
+    """사용자가 마스킹 해제에 동의한 요청: 원문은 모델에 가고, 기록에서는 다시 가린다."""
+    token = _hide_pii.set(True)
+    try:
+        yield
+    finally:
+        _hide_pii.reset(token)
+
 
 def get_client():
-    # 키가 없으면 Langfuse가 스스로 no-op 클라이언트가 된다
-    return _lf_client()
+    # 키가 없으면 Langfuse가 스스로 no-op 클라이언트가 된다.
+    # 공개 키마다 처음 만든 클라이언트의 mask가 프로세스 전체에 쓰여서, 클라이언트 생성을 여기 한 곳에 둔다
+    return Langfuse(mask=_mask)
 
 
 def trace_id_for(request_id: str) -> str:

@@ -13,7 +13,7 @@
 
 API
 - `GET /health` → `{"status": "ok"}`.
-- `POST /query`: 빈 질문·지원하지 않는 `retrieval_mode` → 422. `request_id` 생성 → `run_query()` → 응답. `answer`가 `ValidationFailed`를 올리거나 timeout·재시도 소진이면 `status: error`, `reason` 코드(`model_timeout`, `output_validation`, …), `citations: []`. HTTP 상태는 요청 형식 오류만 422이고, 처리된 요청은 `status: error`여도 200이다(2026-11-08 확정, #38). 실패 여부는 `status`·`reason`으로 본다. reason 코드: `model_timeout`, `model_error`, `output_validation`, `index_missing`, `mode_not_implemented`, `internal_error`. 내부 오류의 원문 메시지는 응답에 싣지 않는다.
+- `POST /query`: 빈 질문·지원하지 않는 `retrieval_mode` → 422. `request_id` 생성 → 질문 마스킹 → `run_query()` → 자리표시자 복원 → 응답(마스킹 규칙은 answer spec 동작 8). 가린 값이 있는데 `needs_clarification`·`abstained`가 나오면 `unmask_offer`에 재질문 안내를 싣는다(`answered`·`error`는 싣지 않는다). 요청에 `unmask: true`가 오면 가리지 않은 질문으로 처리하고 `tracing.hide_pii()` 안에서 실행해 기록에서는 다시 가린다. 이 요청에는 다시 제안하지 않는다. 동의는 요청마다 받고 서버는 원 질문을 보관하지 않는다(클라이언트가 같은 질문을 다시 보낸다). `answer`가 `ValidationFailed`를 올리거나 timeout·재시도 소진이면 `status: error`, `reason` 코드(`model_timeout`, `output_validation`, …), `citations: []`. HTTP 상태는 요청 형식 오류만 422이고, 처리된 요청은 `status: error`여도 200이다(2026-11-08 확정, #38). 실패 여부는 `status`·`reason`으로 본다. reason 코드: `model_timeout`, `model_error`, `output_validation`, `index_missing`, `mode_not_implemented`, `internal_error`. 내부 오류의 원문 메시지는 응답에 싣지 않는다.
 
 설정(`src/config.py`)
 - 동결 대상을 한 곳에: `k`, `context_token_limit`, 생성 모델·temperature, timeout, 재시도 횟수, 임베딩 모델, 컬렉션 이름, 하이브리드·리랭커 설정, 평가 모델. 확정값(2026-11-05 킥오프): `k = 5`(세 방식 공통), 평가 모델 = `gpt-6-luna`(생성 모델과 같음, `kind="eval"`로 별도 호출). temperature는 지정하지 않는다(`None`, 2026-11-08): `gpt-6-luna`가 기본값 1 외의 값을 거부한다. 담당 영역이 확정한 값: 청크 900·overlap 0, hybrid RRF, 리랭커 `BAAI/bge-reranker-v2-m3`·후보 20(search, #86), `context_token_limit` 3000(answer, #18), LLM timeout 30초·재시도 2회(platform, 2026-11-09). 리드 확정(2026-11-10 동결, #41): 임베딩 `intfloat/multilingual-e5-small`·컬렉션 `shipping_basic`(#14), 재생성 1회(#20). 동결 후 변경은 `[interface]` PR + 전체 재실행.
@@ -29,6 +29,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 - `record_score(request_id, name, value, comment)`로 평가 점수를 트레이스에 붙인다.
 - 셀프호스트 Langfuse 서버는 **v4(4.76.0)**다. SDK `langfuse` 5.x는 v4 서버가 필요하다. 3.x 서버는 SDK가 배열로 보내는 점수를 400("expected object, received array")으로 거절해 점수가 비었다(#34). 2026-11-09에 볼륨 백업 후 3.227.0 → 4.76.0으로 올렸고 `record_score`로 대표 트레이스에 점수 저장을 확인했다.
 - 비밀값·API 키는 트레이스에 넣지 않는다.
+- 개인정보: Langfuse 클라이언트는 `get_client()`에서만 만들고 `mask`를 붙인다(공개 키마다 처음 만든 클라이언트의 설정이 프로세스 전체에 쓰인다). `hide_pii()` 안에서 기록되는 입력·출력·메타데이터는 `answer.masking.hide()`로 가린다. 모델에 가는 값은 바뀌지 않으므로, 이 요청의 트레이스에서 모델 입력과 최종 문맥은 실제와 다르다(자료 속 이메일도 가려진다). mask 함수가 예외를 내면 SDK가 그 값 전체를 대체 문구로 바꾼다.
 - `uv run python -m src.platform.check_connections`는 공용 Qdrant 컬렉션 존재 여부와 Langfuse 키 인증을 읽기 전용으로 점검한다. 둘 다 성공하면 종료 코드 0, 미설정·실패·컬렉션 없음은 1. `QDRANT_URL`이 없으면 로컬 저장소를 열지 않는다. 키·응답 본문은 출력하지 않는다. 팀원의 화면 권한·4개 스팬 확인·평가 점수 연결은 별도이며 README의 #40 확인표에 기록한다.
 - 2026-11-09 확인: 대표 트레이스의 4개 스팬과 검색 결과·최종 문맥 출력은 조회 가능. 리드 MacBook에서 `QDRANT_API_KEY`로 공용 Qdrant에 접속해 `check_connections` 두 서비스 `ok`(README). Langfuse v4 업그레이드 후 `record_score` 점수 저장 확인. 팀원 PC 접속과 judge 실제 채점 점수 연결(#34)은 아직이다.
 
@@ -52,6 +53,7 @@ LLM 래퍼(`platform.llm.call(messages, *, kind="service"|"eval")`)
 class QueryRequest(BaseModel):
     question: str                 # 비어 있으면 422
     retrieval_mode: RetrievalMode
+    unmask: bool = False          # 마스킹 해제 재질문에 동의했을 때만 True
 
 class QueryResponse(BaseModel):
     request_id: str
@@ -59,6 +61,7 @@ class QueryResponse(BaseModel):
     answer: str
     reason: str
     citations: list[Citation]
+    unmask_offer: str | None = None  # 가린 채로 답하지 못했을 때만 재질문 안내
 
 def run_query(question: str, mode: RetrievalMode, *, request_id: str | None = None, question_id: str = "",
               channel: str = "eval", user_id: str | None = None) -> RunRecord

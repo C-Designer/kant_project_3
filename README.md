@@ -87,6 +87,8 @@ curl -X POST localhost:8000/query -H 'Content-Type: application/json' \
   -d '{"question": "선하증권 초안 메일의 수신 확인은 기재 사항에 대한 승인과 같은가요?", "retrieval_mode": "naive"}'
 ```
 
+질문의 개인정보(전화번호, 이메일 등)는 `<전화1>` 같은 자리표시자로 가려 처리하고, 응답에서 원래 값으로 되돌린다. 가린 채로 답하지 못하면 응답의 `unmask_offer`에 안내가 붙는다. 가린 값을 모델에 그대로 보내도 된다면 같은 질문에 `"unmask": true`를 붙여 다시 보낸다(기록에는 가린 값으로 남는다).
+
 **응답을 받은 뒤 API 서버를 강제 종료하지 않는다.** Langfuse SDK는 트레이스를 5초 간격으로 묶어서 보내고, 정상 종료될 때(Ctrl+C, 스크립트 끝) 남은 것을 마저 보낸다. 응답 직후 프로세스를 kill하거나 터미널 창을 닫으면 이 마지막 전송을 건너뛰어 `generate`·`validate`와 루트 `query`가 유실된다. 이때 Langfuse에는 `retrieve`·`build_context`만 있는 이름 없는 트레이스(Unnamed trace)가 남는다. 응답 후 10초 이상 기다렸다가 서버 터미널에서 Ctrl+C로 종료한다.
 
 색인 전에 PDF가 `data/shipping/documents/`에 있는지 확인한다. 기본 색인은 기존 컬렉션을 지우고 다시 만들므로, 이미 색인이 있다면 백업하고 실행한다. 공유 Qdrant는 API 키가 필수이므로 다른 PC에서는 `QDRANT_URL`과 함께 별도로 전달받은 `QDRANT_API_KEY`를 넣는다. 서버 Mac은 키 없이 인증이 필요한 로컬 프록시로 연결한다. **공유 주소를 넣은 상태에서 색인을 실행하면 공용 컬렉션이 지워지고 다시 만들어지므로**, 공용 색인은 리드와 정한 뒤 서버에서만 다시 만든다.
