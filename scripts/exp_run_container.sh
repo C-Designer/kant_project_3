@@ -37,7 +37,7 @@ echo "image=$image_id label=$label variable=$variable value=${value:--}"
 exec docker run --rm --name "$name" --cpus=3 --memory=4g --memory-swap=4g \
   -e OMP_NUM_THREADS=3 -e MKL_NUM_THREADS=3 \
   -e "EXP_INDEX_DIR=/app/.scratch/idx/$label" -e "EXP_LABEL=$label" \
-  -e "EXP_VARIABLE=$variable" -e "EXP_VALUE=${value:--}" -e "EXP_MODES=$modes" -e "EXP_IMAGE_ID=$image_id" \
+  -e "EXP_VARIABLE=$variable" -e "EXP_VALUE=${value:--}" -e "EXP_MODES=$modes" -e "EXP_IMAGE_ID=$image_id" -e "EXP_STAGES=${EXP_STAGES:-index,bench,llm}" \
   ${extra[@]+"${extra[@]}"} \
   --env-file "$env_file" \
   --mount "type=bind,src=$repo_root/data,dst=/app/data,readonly" \
