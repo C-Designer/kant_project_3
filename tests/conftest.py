@@ -83,14 +83,15 @@ def pdf_dir(tmp_path):
 
 @pytest.fixture
 def fake_llm(monkeypatch):
-    """script의 항목: str(JSON 텍스트) 또는 (str, 입력토큰, 출력토큰) 또는 예외. 호출 목록은 .calls."""
+    """script의 항목: str(JSON 텍스트) 또는 (str, 입력토큰, 출력토큰) 또는 예외. 호출 수는 .calls, 받은 메시지는 .seen."""
 
     class Fake:
         def __init__(self):
-            self.script, self.calls = [], 0
+            self.script, self.calls, self.seen = [], 0, []
 
         def invoke(self, messages):
             self.calls += 1
+            self.seen.append(messages)
             item = self.script.pop(0)
             if isinstance(item, Exception):
                 raise item

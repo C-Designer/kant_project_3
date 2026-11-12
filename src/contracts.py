@@ -54,6 +54,7 @@ class Citation(BaseModel):
 class QueryRequest(BaseModel):
     question: str
     retrieval_mode: RetrievalMode
+    unmask: bool = False  # 사용자가 마스킹 해제 재질문에 동의했을 때만 True
 
     @field_validator("question")
     @classmethod
@@ -69,6 +70,7 @@ class QueryResponse(BaseModel):
     answer: str
     reason: str
     citations: list[Citation]
+    unmask_offer: str | None = None  # 가린 채로 답하지 못했을 때만 재질문 안내
 
 
 class RunRecord(BaseModel):  # 질문 하나 x 방식 하나. metrics가 만들고 judge가 읽는다
