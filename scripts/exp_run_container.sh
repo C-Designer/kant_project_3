@@ -4,7 +4,7 @@
 #   variable: baseline | chunk_size | overlap | topk | context_size | rerank_candidates   (baseline은 value 생략 가능)
 set -euo pipefail
 
-usage() { echo "사용: $0 <label> <env-file> <baseline|chunk_size|overlap|topk|context_size|rerank_candidates> [value]" >&2; exit 2; }
+usage() { echo "사용: $0 <label> <env-file> <baseline|chunk_size|overlap|topk|context_size|context_size_k8|rerank_candidates> [value]" >&2; exit 2; }
 [[ $# -ge 3 ]] || usage
 label=$1; env_file=$2; variable=$3; value=${4:-}
 [[ "$label" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || { echo "라벨이 올바르지 않다: $label" >&2; exit 2; }
@@ -17,6 +17,7 @@ case "$variable" in
   overlap)            extra=(-e "EXP_CHUNK_OVERLAP=$value") ;;
   topk)               extra=(-e "EXP_TOPK=$value") ;;
   context_size)       extra=(-e "EXP_CONTEXT_TOKENS=$value") ;;
+  context_size_k8)    extra=(-e "EXP_CONTEXT_TOKENS=$value" -e "EXP_TOPK=8") ;;  # 한도가 실제로 걸리는 topK 8에서 잰다
   rerank_candidates)  extra=(-e "EXP_RERANK_CANDIDATES=$value"); modes=hybrid_rerank ;;  # 이 방식에만 영향이 있다
   *) usage ;;
 esac
@@ -37,7 +38,7 @@ echo "image=$image_id label=$label variable=$variable value=${value:--}"
 exec docker run --rm --name "$name" --cpus=3 --memory=4g --memory-swap=4g \
   -e OMP_NUM_THREADS=3 -e MKL_NUM_THREADS=3 \
   -e "EXP_INDEX_DIR=/app/.scratch/idx/$label" -e "EXP_LABEL=$label" \
-  -e "EXP_VARIABLE=$variable" -e "EXP_VALUE=${value:--}" -e "EXP_MODES=$modes" -e "EXP_IMAGE_ID=$image_id" -e "EXP_STAGES=${EXP_STAGES:-index,bench,llm}" \
+  -e "EXP_VARIABLE=$variable" -e "EXP_VALUE=${value:--}" -e "EXP_MODES=$modes" -e "EXP_IMAGE_ID=$image_id" -e "EXP_STAGES=${EXP_STAGES:-index,bench,llm}" -e "EXP_REPEATS=${EXP_REPEATS:-3}" \
   ${extra[@]+"${extra[@]}"} \
   --env-file "$env_file" \
   --mount "type=bind,src=$repo_root/data,dst=/app/data,readonly" \

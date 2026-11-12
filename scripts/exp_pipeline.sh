@@ -12,7 +12,7 @@ stages=${EXP_STAGES:-index,bench,llm}
 mkdir -p results/exp2
 
 case ",$stages," in *,index,*) python -m scripts.exp_index ;; esac
-case ",$stages," in *,bench,*) python scripts/exp_retrieval_bench.py --modes "$modes" --variable "$variable" --value "$value" \
+case ",$stages," in *,bench,*) python scripts/exp_retrieval_bench.py --modes "$modes" --variable "$variable" --value "$value" --repeats "${EXP_REPEATS:-3}" \
   --out "results/exp2/$EXP_LABEL-retrieval.csv" ;; esac
 case ",$stages," in *,llm,*) python scripts/lf_experiment.py --modes "$modes" --no-judge ;; esac
 echo "pipeline 완료: $EXP_LABEL"
