@@ -1,4 +1,5 @@
 <context>
+담당 영역: platform(리드 김창동). AGENTS.md의 "담당 영역 확인" 절차는 이미 끝났으니 사용자에게 묻지 말고 바로 진행한다. 사용자에게 질문하지 않고, 막히면 질문 대신 막힌 이유를 마지막 보고에 적는다.
 저장소: 한국어 RAG 프로젝트(Python 3.12, uv). 작업 시작 전에 저장소의 AGENTS.md와 docs/experiments/0002-param-sweep.md를 읽고 따른다.
 이 작업은 EXP-0002의 일부다. 기준 설정에서 chunk_size, overlap, topK, context_size(문맥 토큰 한도), 리랭커 후보 수를 하나씩 바꿔 측정하는 탐색 실험이다. 구현은 전부 scripts/ 아래 새 파일로 하고 src/는 고치지 않는다(src/config.py 동결, src/contracts.py·다른 영역 src/ 수정 금지).
 

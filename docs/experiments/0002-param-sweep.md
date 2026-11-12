@@ -99,10 +99,10 @@ T1~T4는 서로 기다리지 않고 병렬로 진행한다. 각자 기준 브랜
 
 | 작업 | 브랜치 | 모델 / effort | 만드는 것 |
 |---|---|---|---|
-| T1 | `exp/exp2-inject` | spark / medium | `scripts/exp_config.py`, `scripts/lf_experiment.py`(`--no-judge`, 설정 라벨, CSV) |
+| T1 | `exp/exp2-inject` | gpt-6-luna / medium | `scripts/exp_config.py`, `scripts/lf_experiment.py`(`--no-judge`, 설정 라벨, CSV) |
 | T2 | `exp/exp2-overlap` | gpt-6-astra / medium | `scripts/exp_chunking.py`, `scripts/exp_index.py` |
-| T3 | `exp/exp2-docker` | spark / low | `docker/exp2/Dockerfile`, `scripts/exp_run_container.sh` |
-| T4 | `exp/exp2-latency` | spark / low | `scripts/exp_retrieval_bench.py` |
+| T3 | `exp/exp2-docker` | gpt-6-luna / low | `docker/exp2/Dockerfile`, `scripts/exp_run_container.sh` |
+| T4 | `exp/exp2-latency` | gpt-6-luna / low | `scripts/exp_retrieval_bench.py` |
 
 병합 순서는 T1 → T2 → T4 → T3. 인터페이스가 어긋난 점은 각 작업의 보고 4항("인터페이스에서 어긋난 점")에 나온다.
 

@@ -12,10 +12,10 @@ CC=$HOME/.claude/plugins/cache/openai-codex/codex/1.0.6/scripts/codex-companion.
 
 # 작업 | 브랜치 접미사 | 모델 | effort
 case "${1:-}" in
-  t1) name=inject;  model=spark;       effort=medium ;;
+  t1) name=inject;  model=gpt-6-luna;    effort=medium ;;
   t2) name=overlap; model=gpt-6-astra; effort=medium ;;
-  t3) name=docker;  model=spark;       effort=low ;;
-  t4) name=latency; model=spark;       effort=low ;;
+  t3) name=docker;  model=gpt-6-luna;    effort=low ;;
+  t4) name=latency; model=gpt-6-luna;    effort=low ;;
   *) echo "사용: $0 t1|t2|t3|t4"; exit 1 ;;
 esac
 wt="$ROOT/exp2-$name"
