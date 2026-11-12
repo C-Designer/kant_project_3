@@ -4,7 +4,7 @@
 #   variable: baseline | chunk_size | overlap | topk | context_size | rerank_candidates   (baseline은 value 생략 가능)
 set -euo pipefail
 
-usage() { echo "사용: $0 <label> <env-file> <baseline|chunk_size|overlap|topk|context_size|context_size_k8|rerank_candidates> [value]" >&2; exit 2; }
+usage() { echo "사용: $0 <label> <env-file> <baseline|chunk_size|overlap|topk|context_size|context_size_k8|rerank_candidates|combo> [value]" >&2; exit 2; }
 [[ $# -ge 3 ]] || usage
 label=$1; env_file=$2; variable=$3; value=${4:-}
 [[ "$label" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || { echo "라벨이 올바르지 않다: $label" >&2; exit 2; }
@@ -19,9 +19,11 @@ case "$variable" in
   context_size)       extra=(-e "EXP_CONTEXT_TOKENS=$value") ;;
   context_size_k8)    extra=(-e "EXP_CONTEXT_TOKENS=$value" -e "EXP_TOPK=8") ;;  # 한도가 실제로 걸리는 topK 8에서 잰다
   rerank_candidates)  extra=(-e "EXP_RERANK_CANDIDATES=$value"); modes=hybrid_rerank ;;  # 이 방식에만 영향이 있다
+  combo)              [[ "$value" =~ ^[0-9]+,[0-9]+,[0-9]+$ ]] || usage; IFS=, read -r _c _k _r <<< "$value"  # value = chunk_size,topK,리랭커후보(3단계 조합)
+                      extra=(-e "EXP_CHUNK_SIZE=$_c" -e "EXP_TOPK=$_k" -e "EXP_RERANK_CANDIDATES=$_r") ;;
   *) usage ;;
 esac
-[[ "$variable" == baseline ]] || [[ "$value" =~ ^[0-9]+$ ]] || { echo "value는 정수여야 한다: $value" >&2; exit 2; }
+[[ "$variable" == baseline || "$variable" == combo ]] || [[ "$value" =~ ^[0-9]+$ ]] || { echo "value는 정수여야 한다: $value" >&2; exit 2; }
 # topK 9 이상은 문맥이 한도 3000을 넘어 잘리므로 한도를 풀어 topK 효과만 본다(2단계, 문서 "2단계 탐색 계획")
 if [[ "$variable" == topk ]] && (( value >= 9 )); then extra+=(-e "EXP_CONTEXT_TOKENS=6000"); fi
 
