@@ -10,7 +10,7 @@ label=$1; env_file=$2; variable=$3; value=${4:-}
 [[ "$label" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || { echo "라벨이 올바르지 않다: $label" >&2; exit 2; }
 [[ -f "$env_file" ]] || { echo "env 파일이 없다: $env_file" >&2; exit 2; }
 
-modes=naive,hybrid,hybrid_rerank
+modes=${EXP_MODES:-naive,hybrid,hybrid_rerank}  # 점검용으로만 바꾼다
 case "$variable" in
   baseline) [[ -z "$value" ]] || usage; extra=() ;;
   chunk_size)         extra=(-e "EXP_CHUNK_SIZE=$value") ;;
