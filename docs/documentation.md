@@ -6,7 +6,7 @@
 |---|---|---|
 | `docs/adr/NNNN-<제목>.md` | 왜 이렇게 결정했나 | 불변. 바뀌면 새 ADR로 대체 |
 | `docs/specs/<영역>.md` | 지금 어떻게 동작하나 | 코드와 함께 계속 갱신 |
-| `docs/experiments/NNNN-<제목>.md` | 실험을 어떻게 했고 무엇이 나왔나 | 완료 후 불변. 템플릿 `docs/experiments/_template.md` |
+| `docs/experiments/NNNN-<제목>.md` | 실험을 어떻게 했고 무엇이 나왔나 | 완료 후 불변. 템플릿 `docs/experiments/exp_template.md` |
 
 ## 규칙
 
