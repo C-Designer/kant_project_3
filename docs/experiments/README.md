@@ -26,7 +26,13 @@ RAG 검색·생성·채점 실험을 실험당 한 파일로 쌓는다. 절차�
 | [0010](search/0010-additional-questions-and-limits.md) | 추가 질문 검증과 한계 | 완료 | 보류 | 없음 (탐색용) |
 | [0011](search/0011-chunk-size-and-k-under-token-limit.md) | 3000토큰 안에서 청크 크기·k 격자 | 완료 | 보류 | 없음 (탐색용) |
 | [0012](search/0012-subquestion-rerank-parallel.md) | 하위 질문별 rerank 병렬·배치 | 완료 | 기각 | 없음 (탐색용) |
+| [0014](search/0014-chunk-overlap-k-grid-with-answers.md) | 청크 크기×오버랩×k 격자와 답변 행동·RAGAS·토큰·latency | 완료 | 보류 | 없음 (탐색용) |
+| [0015](search/0015-latency-breakdown-by-size-k-and-tokens.md) | 검색 시간(크기·k·내부 단계)과 답변 LLM 시간 요인(토큰·문항 유형) 분해 | 완료 | 보류 | 없음 (탐색용) |
+| [0016](search/0016-grid-k-4-11.md) | [k 담당 1/4] k = 4·11: 크기·오버랩 격자의 검색 지표·답변 행동·토큰·전체 시간·RAGAS | 계획 | - | 없음 (예정) |
+| [0017](search/0017-grid-k-5-10.md) | [k 담당 2/4] k = 5·10: 크기·오버랩 격자의 검색 지표·답변 행동·토큰·전체 시간·RAGAS | 계획 | - | 없음 (예정) |
+| [0018](search/0018-grid-k-6-9.md) | [k 담당 3/4] k = 6·9: 크기·오버랩 격자의 검색 지표·답변 행동·토큰·전체 시간·RAGAS | 계획 | - | 없음 (예정) |
+| [0019](search/0019-grid-k-7-8.md) | [k 담당 4/4] k = 7·8: 크기·오버랩 격자의 검색 지표·답변 행동·토큰·전체 시간·RAGAS | 계획 | - | 없음 (예정) |
 
 search 영역 실험의 결론 요약은 [search/README.md](search/README.md)에 있다.
 
-0001~0012는 `main`에 있는 `RunRecord`·`EvalRecord` 흐름이 아니라 분석 스크립트로 잰 탐색용 값을 사후에 정리한 것이다(사전 성공 기준 없음). 팀 비교표에 쓰는 값이 아니다.
+search 영역 실험(0001~0012, 0014~0019)은 `main`에 있는 `RunRecord`·`EvalRecord` 흐름이 아니라 분석 스크립트로 잰 탐색용 값을 사후에 정리한 것이다(사전 성공 기준 없음). 팀 비교표에 쓰는 값이 아니다.
