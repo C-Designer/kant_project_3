@@ -138,7 +138,7 @@ def retrieval_metrics(gold, chunks):
 
 `all_*`는 "모든 그룹을 충족했는가"(0/1)이고, 결과 표의 "모든그룹 충족률"이 이 값의 평균이다.
 
-## 7. 실제 예 (`example_result/EXAMPLE_RESULT.md`의 `development/S-DEV-01`)
+## 7. 실제 예 (`development/S-DEV-01`)
 
 - 골든 근거 문서는 `SB01`, `SB14`다(한 그룹 안의 대안).
 - 가져온 문서는 `SB01` 하나다.

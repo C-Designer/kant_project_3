@@ -786,7 +786,7 @@ def stage_ragas(ev):
         return dict(faithfulness=statistics.mean(vals) if vals else None, n_runs=len(vals), errors=errs, tokens_in=tin, tokens_out=tout)
 
     keep = {qid for qid, q in ev.items() if A.ragas_sample == "all" or q["idx"] % 2 == 0}  # odd: 세트마다 홀수 번째 문항(1, 3, 5, ...)
-    targets = [(z, 0, k) for z in RAGAS_SIZES if z in SIZES for k in KS] + [BASE]
+    targets = [(z, p, k) for z in RAGAS_SIZES if z in SIZES for p in PCTS for k in KS] + [BASE]  # 오버랩(--pcts)마다 채점. 이전에는 0%로 고정
     for size, pct, k in dict.fromkeys(targets):
         apath = OUT / "answers" / f"{size}_{pct}.json"
         if not apath.exists():
