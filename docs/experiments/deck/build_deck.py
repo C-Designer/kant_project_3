@@ -2,13 +2,13 @@
 
     python3 build_deck.py   # -> RAG-search-experiments-team.html, RAG-param-sweep-platform.html
 
-표준 라이브러리만 쓴다. 팀 자료의 글·표는 data/team_deck.json(팀 PPTX에서 뽑은 그대로), 스윕 수치는 data/*.json(결과 CSV·Langfuse에서 뽑은 스냅샷).
+표준 라이브러리만 쓴다. 팀 자료의 글·표는 inputs/team_deck.json(팀 PPTX에서 뽑은 그대로), 스윕 수치는 inputs/*.json(결과 CSV·Langfuse에서 뽑은 스냅샷).
 """
 import json, re, sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DATA = HERE / "data"
+DATA = HERE / "inputs"
 D = json.load(open(DATA / "sweep_metrics.json", encoding="utf-8"))
 M = ["naive", "hybrid", "hybrid_rerank"]
 R = "hybrid_rerank"

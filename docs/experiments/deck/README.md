@@ -26,10 +26,10 @@ Chrome이 다른 위치에 있으면 `CHROME=/path/to/chrome bash make_pdf.sh`. 
 |---|---|
 | `build_deck.py` | 두 덱의 모든 장을 만든다. 글·레이아웃·차트·CSS가 다 여기 있다 |
 | `make_pdf.sh` | HTML 생성 + PDF 출력 |
-| `data/team_deck.json` | 팀 PPTX 27장의 글(`paras`)과 표(`tables`)를 그대로 뽑은 것. 키는 원본 슬라이드 번호 |
-| `data/sweep_metrics.json` | 스윕 수치 스냅샷(변수별 점, 기준 3회, c1 3회, 조합 4개). `results/exp2/*.csv`에서 계산 |
-| `data/case.json` | 대표 사례(S-DEV-06)의 질문과 기준·c1 답변. Langfuse 실험 기록에서 가져옴 |
-| `data/security_summary.json` | 보안 비교 집계(설정별 노출, 추종·정확성 건수). `results/exp2/security/*.json`에서 계산 |
+| `inputs/team_deck.json` | 팀 PPTX 27장의 글(`paras`)과 표(`tables`)를 그대로 뽑은 것. 키는 원본 슬라이드 번호 |
+| `inputs/sweep_metrics.json` | 스윕 수치 스냅샷(변수별 점, 기준 3회, c1 3회, 조합 4개). `results/exp2/*.csv`에서 계산 |
+| `inputs/case.json` | 대표 사례(S-DEV-06)의 질문과 기준·c1 답변. Langfuse 실험 기록에서 가져옴 |
+| `inputs/security_summary.json` | 보안 비교 집계(설정별 노출, 추종·정확성 건수). `results/exp2/security/*.json`에서 계산 |
 | `art/cover-team.jpg` | 표지 그림 |
 | `*.html`, `*.pdf` | 산출물 |
 
@@ -51,7 +51,7 @@ Chrome이 다른 위치에 있으면 `CHROME=/path/to/chrome bash make_pdf.sh`. 
 | 스윕: 부록 차트 4장 | `sweep_apx(1,` … `sweep_apx(4,` |
 | 팀 자료: 본문 5장(차트 포함) | `team_obs(5,` … `team_obs(9,`, 7번 장은 `p7, t7 = T[7]` |
 | 팀 자료: 부록 17장 | `team_appendix(i)` (자동 배치) |
-| 팀 자료의 글·숫자 자체 | `data/team_deck.json` (원문을 고치는 것이므로 팀원과 확인) |
+| 팀 자료의 글·숫자 자체 | `inputs/team_deck.json` (원문을 고치는 것이므로 팀원과 확인) |
 | 글자 크기·색·여백 | 파일 끝의 `CSS = '''` |
 | 장 순서 | `page(...)` 호출 순서. 스윕의 결론 장만 `_c = PAGES["B"].pop()` 줄에서 한 칸 앞으로 옮긴다 |
 | 장 빼기 | 해당 `page(...)` 호출을 지운다 |
@@ -62,7 +62,7 @@ Chrome이 다른 위치에 있으면 `CHROME=/path/to/chrome bash make_pdf.sh`. 
 
 ## 수치를 바꿔야 할 때
 
-`data/*.json`은 스냅샷이다. 원자료(`results/exp2/`의 CSV와 보안 JSON)는 저장소에 올리지 않았고 실험을 돌린 Mac Studio의 워크트리에만 있다. 같은 값은 Langfuse 프로젝트 `kant-exp-stone`에도 있다. 새로 실험을 돌려 수치가 바뀌면 JSON의 해당 값을 고치거나 같은 구조로 다시 만든다.
+`inputs/*.json`은 스냅샷이다. 원자료(`results/exp2/`의 CSV와 보안 JSON)는 저장소에 올리지 않았고 실험을 돌린 Mac Studio의 워크트리에만 있다. 같은 값은 Langfuse 프로젝트 `kant-exp-stone`에도 있다. 새로 실험을 돌려 수치가 바뀌면 JSON의 해당 값을 고치거나 같은 구조로 다시 만든다.
 
 - `sweep_metrics.json`: `topk`·`chunk`·`overlap`·`ctx8`·`rerank`는 값별 점의 목록(`v`가 변수 값, 방식별 `recall`·`ms`(검색 시간)·`trunc`(잘린 질문 수)·`ctx`(문맥 토큰)·`faith`·`inp`(입력 토큰 합)·`lat`(평균 응답 ms)). `base3`·`c1x3`은 `[평균, 최소, 최대]`. `combos`는 조합 c1~c4.
 - 기준점의 Faithfulness·응답 시간은 스크립트가 3회 평균(`base3`)으로 바꿔 쓴다.
@@ -80,6 +80,6 @@ Chrome이 다른 위치에 있으면 `CHROME=/path/to/chrome bash make_pdf.sh`. 
 ## 알아둘 점
 
 - 표지 그림은 팀원 다섯 명의 슬랙 프로필 사진을 참고해 AI로 그린 만화풍 그림이다. 원본 프로필 사진은 저장소에 없다. 발표에 쓰기 전에 팀원에게 보여 준다.
-- `data/case.json`에는 평가 질문 한 개(S-DEV-06)의 문장과 생성 답변이 들어 있다. 정답·근거·기대 동작은 넣지 않았다.
+- `inputs/case.json`에는 평가 질문 한 개(S-DEV-06)의 문장과 생성 답변이 들어 있다. 정답·근거·기대 동작은 넣지 않았다.
 - 팀 자료에서 `EXP-0002`는 청킹 실험이다. 스윕 문서도 번호가 `0002`라서, 슬라이드에서는 스윕을 "동일 환경 파라미터 스윕(platform)"으로 부른다.
 - 이 브랜치(`exp/langfuse-experiments`)는 `main`에 합치지 않은 임시 브랜치다.
