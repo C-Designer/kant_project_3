@@ -135,7 +135,7 @@ uv run python scripts/experiments/search/export_question_md.py --in results/exp0
 
 질문별 파일은 `index.md`(질문 목록·판정 요약·한도별 밀려난 청크 수), `questions/<세트>_<문항>.md`, `source_pages/<book>-p<쪽>.md`(원본 쪽 텍스트)가 생긴다. 질문 파일에는 **질문 ↔ 골든 데이터셋 매핑**, 골든 기대와 원본 쪽(접는 블록), **한도별로 밀려나는 청크**(상위 k개 전부 ✅/❌), 청크 본문·메타데이터, LLM 답변 vs 골든 답변이 들어 있다. GPU·LLM이 필요 없다.
 
-세 명령 모두 `--out`/`--out-dir`을 생략하면 결과 폴더의 `report/` 안에 저장된다(결과가 한 폴더에 모인다). 네 노트북을 합칠 때만 `--out results/merged`처럼 따로 지정한다. 실제로 한 경우를 돌려 만든 **전체 예시**는 `example_result/`(요약 `EXAMPLE_RESULT.md` + `report/`)에 있고, Recall·Hit 계산법은 `RECALL_EXPLAINED.md`에 있다.
+세 명령 모두 `--out`/`--out-dir`을 생략하면 결과 폴더의 `report/` 안에 저장된다(결과가 한 폴더에 모인다). 네 노트북을 합칠 때만 `--out results/merged`처럼 따로 지정한다. Recall·Hit 계산법은 `RECALL_EXPLAINED.md`에 있다.
 
 ## 지켜야 할 것
 

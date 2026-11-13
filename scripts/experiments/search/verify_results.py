@@ -133,7 +133,7 @@ def main():
 
     # 4. faithfulness
     if "ragas" not in skip:
-        targets = {(z, 0, k) for z in ragas_sizes if z in sizes for k in ks} | {BASE}
+        targets = {(z, p, k) for z in ragas_sizes if z in sizes for p in pcts for k in ks} | {BASE}  # 오버랩(--pcts)마다. 이전에는 0%로 고정
         for z, p, k in sorted(targets):
             for m in modes:
                 f = root / "ragas" / f"{m}_{z}_{p}_k{k}.json"
@@ -144,6 +144,9 @@ def main():
                 res = [x for v in g["by_ctx"].values() for x in v["results"]]
                 none = sum(1 for x in res if x["faithfulness"] is None)
                 short = sum(1 for x in res if x["n_runs"] != 3)
+                if res and none / len(res) >= 0.4:  # 인터넷 끊김·429 등으로 점수가 대부분 비었는데 프로그램은 DONE으로 끝나는 경우를 잡는다
+                    add("❌", f"ragas/{m}_{z}_{p}_k{k}.json", f"점수 {none}/{len(res)}건이 비어 있다. 이 파일을 지우고 같은 명령으로 다시 채점한다")
+                    continue
                 add("✅" if res and none == 0 and short == 0 else "⚠", f"ragas/{m}_{z}_{p}_k{k}.json", f"채점 {len(res)}건(고유 {g['scored']}), 점수 None {none}, 3회 미만 {short}")
 
     # 5. 사용량
